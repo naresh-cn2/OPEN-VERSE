@@ -1,0 +1,12 @@
+# Dependencies and build outputs
+node_modules/
+dist/
+.env*
+.openverse/
+
+# Local OS files
+.DS_Store
+Thumbs.db
+
+# Engine repository (managed in its own repository: https://github.com/naresh-cn2/cline.git)
+cline/
