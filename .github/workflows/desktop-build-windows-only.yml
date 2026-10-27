@@ -1,0 +1,78 @@
+name: desktop-build-windows-only
+
+# Build-only workflow for OPEN-VERSE Windows desktop installer.
+# Produces an unsigned test installer as a GitHub Actions artifact.
+# Does NOT create a GitHub Release, push tags, or publish to the auto-updater feed.
+# Does NOT require production signing secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_build:
+        description: 'Type "build" to build a test Windows installer (no public release).'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: desktop
+
+jobs:
+  build-windows-test:
+    name: Build Windows installer (test build, unsigned, no release)
+    if: github.event.inputs.confirm_build == 'build'
+    runs-on: windows-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+
+      - name: Build desktop runtime and web frontend
+        run: bun run build
+        working-directory: desktop/apps/examples/desktop-app
+
+      - name: Build Windows NSIS installer (unsigned test build)
+        run: bunx tauri build --bundles nsis --config src-tauri/tauri.release.conf.json
+        working-directory: desktop/apps/examples/desktop-app
+
+      - name: Verify installer exists
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          $setup = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $setup) {
+            Write-Error "No NSIS installer found in src-tauri/target/release/bundle/nsis/"
+            exit 1
+          }
+          Write-Host "Installer found: $($setup.FullName)"
+          Write-Host "Size: $($setup.Length) bytes"
+
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-windows-installer
+          retention-days: 30
+          path: desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error

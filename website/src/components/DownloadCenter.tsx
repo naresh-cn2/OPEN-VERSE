@@ -20,8 +20,8 @@ export const DownloadCenter: React.FC = () => {
   const ASSETS = {
     windows: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
     mac: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
-    linuxDeb: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/open-verse_${DESKTOP_VERSION}_amd64.deb`,
-    linuxRpm: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/open-verse-${DESKTOP_VERSION}-1.x86_64.rpm`,
+    linuxDeb: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
+    linuxRpm: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x86_64.rpm`,
   };
 
   return (
