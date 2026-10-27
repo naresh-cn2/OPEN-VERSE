@@ -182,16 +182,21 @@ const outputs = [
 	[componentThemeOutputPath, generatedComponentTheme],
 ] as const;
 
+export function normalizeLineEndings(source: string): string {
+	return source.replace(/\r\n/g, "\n");
+}
+
 if (checkOnly) {
 	for (const [outputPath, generated] of outputs) {
-		if (readFileSync(outputPath, "utf8") !== generated) {
+		const existing = normalizeLineEndings(readFileSync(outputPath, "utf8"));
+		if (existing !== normalizeLineEndings(generated)) {
 			throw new Error(`${outputPath} is out of date`);
 		}
 	}
 	console.log("@cline/ui generated theme files are current");
 } else {
 	for (const [outputPath, generated] of outputs) {
-		writeFileSync(outputPath, generated);
+		writeFileSync(outputPath, normalizeLineEndings(generated));
 	}
 	console.log("Generated @cline/ui scoped and component themes");
 }
