@@ -29,15 +29,18 @@ const componentThemeHeader = `/*
 `;
 const paletteImport = '@import "@cline/ui/theme/palette.css";';
 
-function stripContractComment(source: string, sourcePath: string): string {
-	const withoutHeader = source.replace(/^\/\*[\s\S]*?\*\/\s*/, "");
-	if (withoutHeader === source) {
+export function stripContractComment(source: string, sourcePath: string): string {
+	// Normalize CRLF to LF so selector matching is consistent across
+	// operating systems (e.g. Windows runners read files with \r\n).
+	const normalized = source.replace(/\r\n/g, "\n");
+	const withoutHeader = normalized.replace(/^\/\*[\s\S]*?\*\/\s*/, "");
+	if (withoutHeader === normalized) {
 		throw new Error(`${sourcePath} must start with a contract comment`);
 	}
 	return withoutHeader.trim();
 }
 
-function replaceSelectorOnce(
+export function replaceSelectorOnce(
 	source: string,
 	selector: string,
 	replacement: string,

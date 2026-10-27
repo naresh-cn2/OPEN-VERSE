@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { stripContractComment } from "../scripts/generate-theme";
 
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const themeDir = join(packageRoot, "theme");
@@ -438,4 +439,25 @@ describe("@cline/ui theme contract", () => {
 		expect(manifest.files).toContain("RADIX-COLORS-LICENSE");
 		expect(existsSync(join(packageRoot, "RADIX-COLORS-LICENSE"))).toBe(true);
 	});
+
+	it("normalizes CRLF line endings when stripping contract comments", () => {
+		const crlfSource =
+			"/*\n * Contract comment\r\n *\r\n */\r\n\r\n:root {\r\n\t--color-test: red;\r\n}\r\n.dark {\r\n\t--color-test: blue;\r\n}\r\n";
+
+		const result = stripContractComment(crlfSource, "test.css");
+
+		expect(result).not.toContain("\r");
+		expect(result).toContain(":root {");
+		expect(result).toContain(".dark {");
+	});
+
+	it("handles shared selector with CRLF line endings", () => {
+		const crlfTokens =
+			"/*\n * Contract comment\r\n *\r\n */\r\n\r\n@import \"@cline/ui/theme/palette.css\";\r\n\r\n:root {\r\n\t--test: red;\r\n}\r\n\r\n.dark {\r\n\t--test: blue;\r\n}\r\n\r\n:root,\r\n.dark {\r\n\t--shared: green;\r\n}\r\n";
+
+		const stripped = stripContractComment(crlfTokens, "test.css");
+		expect(stripped).not.toContain("\r");
+		expect(stripped.includes(":root,\n.dark {")).toBe(true);
+	});
+
 });
