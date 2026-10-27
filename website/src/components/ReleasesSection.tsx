@@ -2,7 +2,7 @@ import React from "react";
 import { Tag, Check, ExternalLink } from "lucide-react";
 
 export const ReleasesSection: React.FC = () => {
-  const GITHUB_RELEASES_URL = "https://github.com/naresh-cn2/cline/releases";
+  const GITHUB_RELEASES_URL = "https://github.com/naresh-cn2/OPEN-VERSE/releases";
 
   const releases = [
     {

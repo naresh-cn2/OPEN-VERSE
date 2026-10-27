@@ -13,15 +13,15 @@ export const DownloadCenter: React.FC = () => {
 
   const DESKTOP_VERSION = "0.0.49";
   const RELEASE_TAG = `desktop-v${DESKTOP_VERSION}`;
-  const GITHUB_REPO_URL = "https://github.com/naresh-cn2/cline";
-  const GITHUB_RELEASES_URL = `https://github.com/naresh-cn2/cline/releases/tag/${RELEASE_TAG}`;
+  const GITHUB_REPO_URL = "https://github.com/naresh-cn2/OPEN-VERSE";
+  const GITHUB_RELEASES_URL = `https://github.com/naresh-cn2/OPEN-VERSE/releases/tag/${RELEASE_TAG}`;
 
   // Direct published installer assets
   const ASSETS = {
-    windows: `https://github.com/naresh-cn2/cline/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-    mac: `https://github.com/naresh-cn2/cline/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
-    linuxDeb: `https://github.com/naresh-cn2/cline/releases/download/${RELEASE_TAG}/open-verse_${DESKTOP_VERSION}_amd64.deb`,
-    linuxRpm: `https://github.com/naresh-cn2/cline/releases/download/${RELEASE_TAG}/open-verse-${DESKTOP_VERSION}-1.x86_64.rpm`,
+    windows: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+    mac: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
+    linuxDeb: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/open-verse_${DESKTOP_VERSION}_amd64.deb`,
+    linuxRpm: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/open-verse-${DESKTOP_VERSION}-1.x86_64.rpm`,
   };
 
   return (

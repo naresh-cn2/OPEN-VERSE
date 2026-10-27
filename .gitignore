@@ -1,6 +1,9 @@
 # Dependencies and build outputs
 node_modules/
 dist/
+.next/
+target/
+*.tsbuildinfo
 .env*
 .openverse/
 
@@ -8,5 +11,5 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Engine repository (managed in its own repository: https://github.com/naresh-cn2/cline.git)
+# Engine repository (original source preserved independently)
 cline/
