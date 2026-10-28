@@ -1,6 +1,6 @@
 {
-	"$schema": "https://schema.tauri.app/config/2",
-	"bundle": {
-		"createUpdaterArtifacts": true
-	}
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "createUpdaterArtifacts": false
+  }
 }
