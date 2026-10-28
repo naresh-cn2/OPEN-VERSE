@@ -113,11 +113,11 @@ describe("Code sidecar runtime capabilities", () => {
 		hubGetConnectionErrorMock.mockReturnValue(null);
 		hubGetUrlMock.mockReturnValue("ws://127.0.0.1:25463/hub");
 		hubIsConnectedMock.mockReturnValue(true);
-		subscribeMock.mockReturnValue(() => {});
+		subscribeMock.mockReturnValue(() => { });
 		updateCapabilitiesMock.mockResolvedValue(undefined);
 		createCoreMock.mockResolvedValue({
 			runtimeAddress: "ws://127.0.0.1:25463/hub",
-			subscribe: vi.fn(() => () => {}),
+			subscribe: vi.fn(() => () => { }),
 			dispose: vi.fn(),
 		});
 	});
@@ -149,8 +149,7 @@ describe("Code sidecar runtime capabilities", () => {
 			}),
 		);
 		const hubOptions = createCoreMock.mock.calls[0][0].hub;
-		expect(hubOptions).not.toHaveProperty("endpoint");
-		expect(hubOptions).not.toHaveProperty("authToken");
+		expect(hubOptions.endpoint).toBe("ws://127.0.0.1:25463/hub");
 		expect(nodeHubClientCtorMock).toHaveBeenCalledWith(
 			expect.objectContaining({
 				url: "ws://127.0.0.1:25463/hub",
@@ -314,7 +313,7 @@ describe("Code sidecar runtime capabilities", () => {
 			workspaceRoot: "/workspace/project",
 			hubClient: { command } as never,
 			sessionManager: { list } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(
 			ctx,
@@ -370,7 +369,7 @@ describe("Code sidecar runtime capabilities", () => {
 			workspaceRoot: "/workspace/project",
 			hubClient: { command } as never,
 			sessionManager: { list } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(ctx, async () => [
 			cloudSearchRecord("cloud-out-of-scope", "generate an image"),
@@ -415,7 +414,7 @@ describe("Code sidecar runtime capabilities", () => {
 			workspaceRoot: "/workspace/project",
 			hubClient: { command } as never,
 			sessionManager: { list } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(
 			ctx,
@@ -444,7 +443,7 @@ describe("Code sidecar runtime capabilities", () => {
 			const ctx = createSidecarContext("/workspace/project");
 			// Never resolves: exercises the withSearchDeadline race timing out
 			// rather than the hub call rejecting.
-			const command = vi.fn(() => new Promise(() => {}));
+			const command = vi.fn(() => new Promise(() => { }));
 			const list = vi.fn(async () => [
 				{
 					sessionId: "session-1",
@@ -460,7 +459,7 @@ describe("Code sidecar runtime capabilities", () => {
 				workspaceRoot: "/workspace/project",
 				hubClient: { command } as never,
 				sessionManager: { list } as never,
-				unsubscribeSessionEvents: () => {},
+				unsubscribeSessionEvents: () => { },
 			});
 			ctx.cloudSessionManager = await createSearchCloudManager(
 				ctx,
@@ -501,7 +500,7 @@ describe("Code sidecar runtime capabilities", () => {
 				command: vi.fn(async () => ({ ok: true, payload: { hits: [] } })),
 			} as never,
 			sessionManager: { list: vi.fn(async () => []) } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(ctx, list);
 
@@ -553,7 +552,7 @@ describe("Code sidecar runtime capabilities", () => {
 				})),
 			} as never,
 			sessionManager: { list: vi.fn(async () => []) } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(ctx, async () => [
 			cloudSearchRecord("shared", "match"),
@@ -599,11 +598,11 @@ describe("Code sidecar runtime capabilities", () => {
 						},
 					]),
 				} as never,
-				unsubscribeSessionEvents: () => {},
+				unsubscribeSessionEvents: () => { },
 			});
 			ctx.cloudSessionManager = await createSearchCloudManager(
 				ctx,
-				async () => await new Promise<CloudSessionRecord[]>(() => {}),
+				async () => await new Promise<CloudSessionRecord[]>(() => { }),
 			);
 
 			const pending = handleCommand(ctx, "search_sessions", {
@@ -631,7 +630,7 @@ describe("Code sidecar runtime capabilities", () => {
 				command: vi.fn(async () => ({ ok: true, payload: { hits: [] } })),
 			} as never,
 			sessionManager: { list: vi.fn(async () => []) } as never,
-			unsubscribeSessionEvents: () => {},
+			unsubscribeSessionEvents: () => { },
 		});
 		ctx.cloudSessionManager = await createSearchCloudManager(
 			ctx,
@@ -680,7 +679,7 @@ describe("Code sidecar runtime capabilities", () => {
 			(message) =>
 				message.event.name === "chat_event" &&
 				(message.event.payload as { stream?: string }).stream ===
-					"chat_tool_call_update",
+				"chat_tool_call_update",
 		);
 		expect(forwarded?.event.payload).toMatchObject({
 			sessionId: "session-1",
@@ -769,7 +768,7 @@ describe("Code sidecar runtime capabilities", () => {
 			runtimeAddress: "ws://127.0.0.1:25463/hub",
 			subscribe: vi.fn((handler: (event: unknown) => void) => {
 				onEvent = handler;
-				return () => {};
+				return () => { };
 			}),
 			dispose: vi.fn(),
 		});
@@ -814,7 +813,7 @@ describe("Code sidecar runtime capabilities", () => {
 			(message) =>
 				message.event.name === "chat_event" &&
 				(message.event.payload as { stream?: string }).stream ===
-					"chat_queued_prompt_start",
+				"chat_queued_prompt_start",
 		);
 		expect(starts).toHaveLength(1);
 
@@ -833,7 +832,7 @@ describe("Code sidecar runtime capabilities", () => {
 				(message) =>
 					message.event.name === "chat_event" &&
 					(message.event.payload as { stream?: string }).stream ===
-						"chat_queued_prompt_start",
+					"chat_queued_prompt_start",
 			),
 		).toHaveLength(2);
 	});
@@ -847,7 +846,7 @@ describe("Code sidecar runtime capabilities", () => {
 			runtimeAddress: "ws://127.0.0.1:25463/hub",
 			subscribe: vi.fn((handler: (event: unknown) => void) => {
 				onEvent = handler;
-				return () => {};
+				return () => { };
 			}),
 			dispose: vi.fn(),
 		});
@@ -883,7 +882,7 @@ describe("Code sidecar runtime capabilities", () => {
 				(message) =>
 					message.event.name === "chat_event" &&
 					(message.event.payload as { stream?: string }).stream ===
-						"chat_queued_prompt_start",
+					"chat_queued_prompt_start",
 			),
 		).toHaveLength(0);
 		expect(
@@ -1407,7 +1406,7 @@ describe("Code sidecar runtime capabilities", () => {
 		let onHubEvent: ((event: Record<string, unknown>) => void) | undefined;
 		subscribeMock.mockImplementation((handler) => {
 			onHubEvent = handler;
-			return () => {};
+			return () => { };
 		});
 		const ctx = createSidecarContext("/workspace/project");
 		const approvalClient = {

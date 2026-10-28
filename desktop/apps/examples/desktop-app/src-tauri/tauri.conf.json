@@ -55,6 +55,11 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
+		"windows": {
+			"nsis": {
+				"installerHooks": "nsis/installer-hooks.nsh"
+			}
+		},
 		"linux": {
 			"deb": {
 				"files": {

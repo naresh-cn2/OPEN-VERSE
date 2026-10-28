@@ -1,11 +1,13 @@
 import { spawn } from "node:child_process";
 import {
 	closeSync,
+	existsSync,
 	mkdirSync,
 	openSync,
 	readFileSync,
 	unlinkSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -651,6 +653,29 @@ async function ensureDetachedHubServerLocked(
 			discovered ?? superseded,
 			expectedUrl,
 		);
+		let legacyToken: string | undefined;
+		try {
+			const legacyPath = join(
+				homedir(),
+				".cline",
+				"data",
+				"locks",
+				"hub",
+				"production.json",
+			);
+			if (legacyPath !== owner.discoveryPath && existsSync(legacyPath)) {
+				const parsed = JSON.parse(readFileSync(legacyPath, "utf-8"));
+				if (
+					typeof parsed?.authToken === "string" &&
+					parsed.authToken.trim()
+				) {
+					legacyToken = parsed.authToken.trim();
+				}
+			}
+		} catch {
+			// best effort
+		}
+
 		if (isReusableHubRecord(expected)) {
 			// Live hub is healthy but discovery is missing/unreadable (or auth
 			// token was empty). Prefer attaching via any known auth token rather
@@ -659,6 +684,7 @@ async function ensureDetachedHubServerLocked(
 				expected.authToken,
 				discovered?.authToken,
 				superseded?.authToken,
+				legacyToken,
 			].filter(
 				(token): token is string =>
 					typeof token === "string" && token.trim().length > 0,
@@ -699,12 +725,17 @@ async function ensureDetachedHubServerLocked(
 					authToken: token,
 				});
 			}
-			const upgradeHint = retiredUnusableDiscovery
-				? " This can happen immediately after upgrading from a build that wrote an empty hub auth token; run 'cline doctor fix' to stop the old daemon and repair local hub discovery."
-				: "";
-			throw new Error(
-				`A compatible Cline Hub is already running at ${expectedUrl}, but its discovery record is missing or unreadable and no usable auth token is available. Run 'cline doctor fix' to repair local hub discovery.${upgradeHint}`,
-			);
+			if (
+				endpointOverrides.allowPortFallback !== true &&
+				endpoint.port !== 0
+			) {
+				const upgradeHint = retiredUnusableDiscovery
+					? " This can happen immediately after upgrading from a build that wrote an empty hub auth token; run 'cline doctor fix' to stop the old daemon and repair local hub discovery."
+					: "";
+				throw new Error(
+					`A compatible Cline Hub is already running at ${expectedUrl}, but its discovery record is missing or unreadable and no usable auth token is available. Run 'cline doctor fix' to repair local hub discovery.${upgradeHint}`,
+				);
+			}
 		}
 		const expectedOutcome = await retireIncompatibleHub(
 			expectedForRetirement,
@@ -716,6 +747,8 @@ async function ensureDetachedHubServerLocked(
 			for (const token of [
 				expectedForRetirement.authToken,
 				discovered?.authToken,
+				superseded?.authToken,
+				legacyToken,
 			].filter(
 				(candidate): candidate is string =>
 					typeof candidate === "string" && candidate.trim().length > 0,

@@ -108,6 +108,7 @@ async function main(desktopCliPath?: string) {
 					workspaceRoot,
 				);
 				observability.logger.log("Hub ready via Cline CLI", { url: hub.url });
+				ctx.hubUrl = hub.url;
 				if (hub.authToken) {
 					ctx.hubAuthToken = hub.authToken;
 				}

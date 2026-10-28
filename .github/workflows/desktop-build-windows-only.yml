@@ -54,7 +54,7 @@ jobs:
         working-directory: desktop/apps/examples/desktop-app
 
       - name: Build Windows NSIS installer (unsigned test build)
-        run: bunx tauri build --bundles nsis --config src-tauri/tauri.test.conf.json
+        run: bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.test.conf.json
         working-directory: desktop/apps/examples/desktop-app
 
       - name: Verify installer exists

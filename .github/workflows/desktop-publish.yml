@@ -719,7 +719,7 @@ jobs:
         # NSIS only: the MSI (WiX) target adds nothing for direct-download
         # distribution and the updater uses the NSIS artifact. $CONFIG_ARGS is
         # deliberately unquoted: it must word-split into separate flags.
-        run: bunx tauri build --bundles nsis $CONFIG_ARGS --config "$SIGN_CONF"
+        run: bunx tauri build --bundles nsis $CONFIG_ARGS --config src-tauri/tauri.windows.conf.json --config "$SIGN_CONF"
         env:
           CONFIG_ARGS: ${{ needs.validate.outputs.channel == 'nightly' && '--config src-tauri/tauri.release.conf.json --config src-tauri/tauri.nightly.conf.json' || needs.validate.outputs.channel == 'beta' && '--config src-tauri/tauri.release.conf.json --config src-tauri/tauri.beta.conf.json' || '--config src-tauri/tauri.release.conf.json' }}
           # Telemetry inlined into the desktop backend at build time, same as macOS.

@@ -16,7 +16,7 @@ describe("ensureHubWithDesktopCli", () => {
 		).resolves.toEqual({ url: "ws://127.0.0.1:25463/hub", authToken: "secret" });
 		expect(run).toHaveBeenCalledWith(
 			"/opt/cline/cline-cli",
-			["hub", "ensure", "--json", "--cwd", "/work"],
+			["hub", "ensure", "--json", "--allow-port-fallback", "--cwd", "/work"],
 			{
 				cwd: "/work",
 				env: {

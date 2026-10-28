@@ -97,7 +97,7 @@ export async function ensureHubWithDesktopCli(
 	const run = options.run ?? runCliCommand;
 	const stdout = await run(
 		cliPath,
-		["hub", "ensure", "--json", "--cwd", workspaceRoot],
+		["hub", "ensure", "--json", "--allow-port-fallback", "--cwd", workspaceRoot],
 		{
 			cwd: workspaceRoot,
 			// The CLI spawns the daemon, so stamp the desktop as its launcher

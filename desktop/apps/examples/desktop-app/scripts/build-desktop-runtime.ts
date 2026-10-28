@@ -32,15 +32,32 @@ const resolveTargetTriple = async (): Promise<string> => {
 		return fromEnv.trim();
 	}
 
-	const rustcVersion = await $`rustc -vV`.text();
-	const hostLine = rustcVersion
-		.split("\n")
-		.find((line) => line.startsWith("host: "));
-	const host = hostLine?.slice("host: ".length).trim();
-	if (!host) {
-		throw new Error("failed to resolve Rust host target triple");
+	try {
+		const rustcVersion = await $`rustc -vV`.text();
+		const hostLine = rustcVersion
+			.split("\n")
+			.find((line) => line.startsWith("host: "));
+		const host = hostLine?.slice("host: ".length).trim();
+		if (host) {
+			return host;
+		}
+	} catch {
+		// rustc not in PATH; fall back to host architecture
 	}
-	return host;
+
+	if (process.platform === "win32") {
+		return process.arch === "arm64"
+			? "aarch64-pc-windows-msvc"
+			: "x86_64-pc-windows-msvc";
+	}
+	if (process.platform === "darwin") {
+		return process.arch === "arm64"
+			? "aarch64-apple-darwin"
+			: "x86_64-apple-darwin";
+	}
+	return process.arch === "arm64"
+		? "aarch64-unknown-linux-gnu"
+		: "x86_64-unknown-linux-gnu";
 };
 
 // Bun cross-compiles --compile binaries, so a CI runner can produce the CLI
@@ -103,7 +120,27 @@ const bundleDesktopBackend = async (): Promise<void> => {
 		recursive: true,
 	});
 	const defines = telemetryDefineArgs();
-	await $`bun build ./sidecar/index.ts --target bun --minify ${defines} --outfile ${DESKTOP_BACKEND_BUNDLE}`;
+	const defineMap: Record<string, string> = {};
+	for (let i = 0; i < defines.length; i += 2) {
+		if (defines[i] === "--define") {
+			const [k, v] = defines[i + 1].split(/=(.*)/s);
+			defineMap[k] = v;
+		}
+	}
+	const buildResult = await Bun.build({
+		entrypoints: ["./sidecar/index.ts"],
+		target: "bun",
+		minify: true,
+		define: defineMap,
+		naming: "index.js",
+		outdir: `${BIN_DIR}/desktop-backend`,
+	});
+	if (!buildResult.success) {
+		for (const log of buildResult.logs) {
+			console.error(log);
+		}
+		throw new Error("Failed to bundle desktop backend");
+	}
 };
 
 // Each compiled CLI embeds a full Bun runtime (~100 MB), and both Linux copies

@@ -65,7 +65,7 @@ describe("HubStartup", () => {
 		await vi.advanceTimersByTimeAsync(1_000);
 		expect(startup.status).toEqual({
 			state: "failed",
-			error: "Cline Hub did not respond within 30 seconds.",
+			error: "OPEN VERSE Hub did not respond within 30 seconds.",
 		});
 		expect(onFailure).toHaveBeenCalledWith(
 			expect.objectContaining({ message: expect.stringContaining("1000ms") }),

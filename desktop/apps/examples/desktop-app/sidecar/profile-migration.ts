@@ -1,8 +1,41 @@
-import { Database } from "bun:sqlite";
 import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { resolveClineDataDir, resolveClineDir } from "@cline/shared/storage";
+
+const require = createRequire(import.meta.url);
+
+type SqliteDatabase = {
+	query: (sql: string) => {
+		all: () => unknown[];
+		get: () => unknown;
+	};
+	prepare: (sql: string) => {
+		run: (...args: unknown[]) => { changes: number };
+	};
+	run: (sql: string) => void;
+	transaction: (fn: () => void) => () => void;
+	close: () => void;
+};
+
+type DatabaseConstructor = new (
+	filename: string,
+	options?: { readonly?: boolean },
+) => SqliteDatabase;
+
+function getDatabaseConstructor(): DatabaseConstructor | null {
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		if (typeof (globalThis as any).Bun !== "undefined") {
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			return require("bun:sqlite").Database;
+		}
+	} catch {
+		// Not running under Bun or bun:sqlite not available
+	}
+	return null;
+}
 
 /**
  * Safely imports existing local sessions from an original ~/.cline installation
@@ -38,6 +71,11 @@ export function migrateOriginalClineProfileIfNeeded(): {
 
 		mkdirSync(openverseDbDir, { recursive: true });
 		mkdirSync(openverseSessionsDir, { recursive: true });
+
+		const Database = getDatabaseConstructor();
+		if (!Database) {
+			return { migratedSessions: 0 };
+		}
 
 		const clineDb = new Database(clineDbPath, { readonly: true });
 		let clineSessions: Record<string, unknown>[];

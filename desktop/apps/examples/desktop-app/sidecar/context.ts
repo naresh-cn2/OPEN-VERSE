@@ -1530,6 +1530,7 @@ export async function resolveLocalHubEndpointAndToken(
 ): Promise<{ url: string; authToken?: string }> {
 	const url =
 		preferredUrl?.trim() ||
+		ctx.hubUrl?.trim() ||
 		(await ensureCompatibleLocalHubUrl({
 			strategy: "require-hub",
 			workspaceRoot: ctx.localWorkspaceRoot,
@@ -1551,18 +1552,21 @@ export async function resolveLocalHubEndpointAndToken(
 	let authToken: string | undefined;
 	for (let attempt = 0; attempt < 10; attempt++) {
 		try {
-			const discoveryPath = join(
-				resolveClineDataDir(),
-				"locks",
-				"hub",
-				"production.json",
-			);
-			if (existsSync(discoveryPath)) {
-				const record = JSON.parse(readFileSync(discoveryPath, "utf-8"));
-				if (typeof record?.authToken === "string" && record.authToken.trim()) {
-					authToken = record.authToken.trim();
-					break;
+			const candidatePaths = [
+				join(resolveClineDataDir(), "locks", "hub", "production.json"),
+				join(homedir(), ".cline", "data", "locks", "hub", "production.json"),
+			];
+			for (const discoveryPath of candidatePaths) {
+				if (existsSync(discoveryPath)) {
+					const record = JSON.parse(readFileSync(discoveryPath, "utf-8"));
+					if (typeof record?.authToken === "string" && record.authToken.trim()) {
+						authToken = record.authToken.trim();
+						break;
+					}
 				}
+			}
+			if (authToken) {
+				break;
 			}
 		} catch {
 			// best effort

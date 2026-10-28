@@ -171,6 +171,8 @@ export type SidecarContext = {
 	hubStartup?: HubStartup;
 	/** Auth token for the local Hub, obtained from the CLI during startup. */
 	hubAuthToken?: string;
+	/** Hub URL obtained from the CLI during startup. */
+	hubUrl?: string;
 };
 export type BunRuntimeApi = {
 	serve: (options: unknown) => { port: number; stop?: () => void };
