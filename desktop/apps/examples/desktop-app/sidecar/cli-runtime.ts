@@ -87,14 +87,13 @@ const runCliCommand: RunCliCommand = (command, args, options) =>
 
 /**
  * Has the bundled CLI start the shared Hub, or reuse a compatible healthy
- * one, before the session manager connects. Returns the Hub URL (never the
- * auth token, which callers may log).
+ * one, before the session manager connects. Returns the Hub URL and auth token.
  */
 export async function ensureHubWithDesktopCli(
 	cliPath: string,
 	workspaceRoot: string,
 	options: { env?: NodeJS.ProcessEnv; run?: RunCliCommand } = {},
-): Promise<{ url: string }> {
+): Promise<{ url: string; authToken?: string }> {
 	const run = options.run ?? runCliCommand;
 	const stdout = await run(
 		cliPath,
@@ -119,9 +118,9 @@ export async function ensureHubWithDesktopCli(
 		.map((value) => value.trim())
 		.filter((value) => value.startsWith("{"))
 		.at(-1);
-	const parsed = line ? (JSON.parse(line) as { url?: unknown }) : undefined;
+	const parsed = line ? (JSON.parse(line) as { url?: unknown; authToken?: unknown }) : undefined;
 	if (typeof parsed?.url !== "string" || !parsed.url) {
 		throw new Error("cline hub ensure did not report a Hub URL");
 	}
-	return { url: parsed.url };
+	return { url: parsed.url, authToken: typeof parsed.authToken === "string" ? parsed.authToken : undefined };
 }

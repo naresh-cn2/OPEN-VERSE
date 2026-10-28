@@ -169,6 +169,8 @@ export type SidecarContext = {
 	hubBuildMismatch: ManagedHubBuildMismatchEvent | null;
 	/** Local Hub setup, which runs after the transport is published. */
 	hubStartup?: HubStartup;
+	/** Auth token for the local Hub, obtained from the CLI during startup. */
+	hubAuthToken?: string;
 };
 export type BunRuntimeApi = {
 	serve: (options: unknown) => { port: number; stop?: () => void };

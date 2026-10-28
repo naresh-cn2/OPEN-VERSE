@@ -1539,6 +1539,15 @@ export async function resolveLocalHubEndpointAndToken(
 		throw new Error("Unable to start or connect to the shared OPEN VERSE Hub.");
 	}
 
+	// Prefer the auth token obtained directly from the CLI during hub startup.
+	// This avoids a race where the discovery record hasn't been written yet.
+	if (ctx.hubAuthToken) {
+		rememberRecoverableLocalHubUrl(url, ctx.hubAuthToken);
+		return { url, authToken: ctx.hubAuthToken };
+	}
+
+	// Fallback: try reading from the discovery record (for cases where the CLI
+	// path wasn't used or the token wasn't captured).
 	let authToken: string | undefined;
 	for (let attempt = 0; attempt < 10; attempt++) {
 		try {

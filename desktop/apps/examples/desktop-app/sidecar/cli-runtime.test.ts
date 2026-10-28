@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { adoptDesktopCliRuntime, ensureHubWithDesktopCli } from "./cli-runtime";
 
 describe("ensureHubWithDesktopCli", () => {
-	it("asks the bundled CLI to start or reuse the Hub and returns only its URL", async () => {
+	it("asks the bundled CLI to start or reuse the Hub and returns its URL and auth token", async () => {
 		const run = vi.fn(
 			async () =>
 				'warming up\n{"url":"ws://127.0.0.1:25463/hub","authToken":"secret","cwd":"/work"}\n',
@@ -13,7 +13,7 @@ describe("ensureHubWithDesktopCli", () => {
 				env: { PATH: "/usr/bin" },
 				run,
 			}),
-		).resolves.toEqual({ url: "ws://127.0.0.1:25463/hub" });
+		).resolves.toEqual({ url: "ws://127.0.0.1:25463/hub", authToken: "secret" });
 		expect(run).toHaveBeenCalledWith(
 			"/opt/cline/cline-cli",
 			["hub", "ensure", "--json", "--cwd", "/work"],
