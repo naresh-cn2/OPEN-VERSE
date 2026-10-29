@@ -159,3 +159,4 @@ jobs:
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip.sig
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
+

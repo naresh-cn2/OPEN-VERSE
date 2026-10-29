@@ -11,7 +11,7 @@
 	},
 	"plugins": {
 		"updater": {
-			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRCRTIxOTY3QzY2MTU1QzYKUldUR1ZXSEdaeG5pUzF2aVpMZnNpZlI4VDgyVWd6UzhwNFVFaFZiZnZ2dEhZSk9tRzR3OUZadjgK",
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENUJENEE1ODRBQ0QzQzMKUldURDA2eUVwZFJiVGJmWjduOFk4VTBnVTVLL2pDRWJLV3lySXlEeHlXRThZTEVCMGorQ0ZMTUcK",
 			"endpoints": [
 				"https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/latest.json"
 			]
