@@ -34,6 +34,7 @@ import {
 	Search,
 	Settings,
 	SlidersHorizontal,
+	Sparkles,
 	Store,
 	Trash2,
 } from "lucide-react";
@@ -47,7 +48,7 @@ import {
 	useState,
 } from "react";
 import { AppUpdateIndicator } from "@/components/app-update-indicator";
-import { ClineLogo } from "@/components/cline-logo";
+import { OpenVerseRobot } from "@/components/open-verse-robot";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -127,6 +128,7 @@ import {
 	workspaceDisplayName,
 	writeSidebarSortModeToWindow,
 } from "@/lib/sidebar-session-organization";
+import { getStoredSession } from "@/lib/open-verse-auth";
 import { cn } from "@/lib/utils";
 import { TASK_WORKTREE_DELETE_WARNING } from "@/lib/work-in-selection";
 import { isTaskWorktreePath } from "@/lib/workspace-paths";
@@ -173,6 +175,7 @@ const SETTINGS_SECTION_ICONS = {
 	Import: Import,
 	Remote: Network,
 	Account: CircleUserRound,
+	Cline: Sparkles,
 	Debug: Bug,
 	About: Info,
 	Customize: Blocks,
@@ -312,7 +315,7 @@ function SettingsSectionNavigation({
 				if (collapsed || !isProviderSection(section)) {
 					return renderSectionButton(section);
 				}
-				return section === "Account" ? renderProvidersGroup() : null;
+				return section === "Cline" ? renderProvidersGroup() : null;
 			})}
 			{collapsed ? (
 				<>
@@ -360,13 +363,25 @@ export function AgentSidebar({
 	const searchHint = searchKey ? formatAccelerator(searchKey) : null;
 	const { isMobile, setOpen, setOpenMobile, state } = useSidebar();
 	const isCollapsed = !isMobile && state === "collapsed";
-	const { user, activeOrganization } = useAccount();
-	const { displayName, email } = user || {};
+	const { user, openVerseUser, activeOrganization } = useAccount();
+	const ovUser =
+		openVerseUser ??
+		(typeof window !== "undefined" ? getStoredSession()?.user : null);
+	const displayName = ovUser?.displayName || user?.displayName;
+	const email = ovUser?.email || user?.email;
 	const username = displayName?.split(" ")?.[0] || email?.split("@")?.[0];
-	const accountName = username?.trim() || "OPEN-VERSE Desktop";
-	const accountScope = user
-		? (activeOrganization?.name ?? "Personal")
-		: undefined;
+	const accountName =
+		username?.trim() ||
+		(ovUser?.isOfflineMode ? "Local Developer" : "OPEN-VERSE Desktop");
+	const accountScope = ovUser?.provider === "google"
+		? "Google Account"
+		: ovUser?.provider === "github"
+			? "GitHub Account"
+			: ovUser?.isOfflineMode
+				? "Local Mode"
+				: user
+					? (activeOrganization?.name ?? "Personal")
+					: undefined;
 	const accountInitial = accountName.charAt(0).toUpperCase();
 	const {
 		deleteThread: deleteHistoryThread,
@@ -920,7 +935,7 @@ export function AgentSidebar({
 									title="Home"
 									type="button"
 								>
-									<ClineLogo className="size-5" />
+									<OpenVerseRobot size={22} glow={false} />
 								</button>
 							</HoverCardTrigger>
 							<HoverCardContent
@@ -1294,7 +1309,7 @@ export function AgentSidebar({
 						isCollapsed ? "px-1.5" : "px-2",
 					)}
 				>
-					{user && !isCollapsed ? (
+					{(user || ovUser) && !isCollapsed ? (
 						<div className="flex min-w-0 items-center gap-2">
 							<button
 								aria-label="Account settings"
@@ -1305,7 +1320,7 @@ export function AgentSidebar({
 									"bg-surface-hover text-sidebar-foreground",
 								)}
 								onClick={() => openSettingsSection("Account")}
-								title={user.email || undefined}
+								title={email || undefined}
 								type="button"
 							>
 								<span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">

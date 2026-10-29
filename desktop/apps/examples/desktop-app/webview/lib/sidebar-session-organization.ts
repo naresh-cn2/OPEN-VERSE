@@ -44,7 +44,7 @@ export function workspaceDisplayName(path: string): string {
 	if (!trimmed) return "";
 	const segments = trimmed.split(/[\\/]/).filter(Boolean);
 	const name = segments.at(-1) || trimmed;
-	return name.toLowerCase() === "cline" ? "OPEN VERSE" : name;
+	return name;
 }
 
 function uniqueWorkspaceLabel(path: string, workspacePaths: string[]): string {
@@ -64,9 +64,9 @@ function uniqueWorkspaceLabel(path: string, workspacePaths: string[]): string {
 		const matches = allSegments.filter(
 			(other) => other.slice(-depth).join("/") === candidate,
 		).length;
-		if (matches === 1) return candidate.toLowerCase() === "cline" ? "OPEN VERSE" : candidate;
+		if (matches === 1) return candidate;
 	}
-	return path.toLowerCase() === "cline" ? "OPEN VERSE" : path;
+	return path;
 }
 
 export function groupThreadsByProject(

@@ -1103,7 +1103,9 @@ describe("AgentSidebar session organization", () => {
 			);
 		});
 
-		const logoButton = container.querySelector('[aria-label="Cline home"]');
+		const logoButton = container.querySelector(
+			'[aria-label="OPEN VERSE home"], [aria-label="Cline home"]',
+		);
 		expect(logoButton).not.toBeNull();
 		expect(document.body.textContent).not.toContain("Version 1.2.3");
 
@@ -1111,7 +1113,9 @@ describe("AgentSidebar session organization", () => {
 
 		await vi.waitFor(() => {
 			expect(document.body.textContent).toContain("Version 1.2.3");
-			expect(document.body.textContent).toContain("Cline Hub @25463");
+			expect(document.body.textContent).toMatch(
+				/(OPEN VERSE|Cline) Hub @25463/,
+			);
 			expect(document.body.textContent).not.toContain(
 				"ws://127.0.0.1:25463/hub",
 			);
@@ -1151,12 +1155,16 @@ describe("AgentSidebar session organization", () => {
 			);
 		});
 
-		const logoButton = container.querySelector('[aria-label="Cline home"]');
+		const logoButton = container.querySelector(
+			'[aria-label="OPEN VERSE home"], [aria-label="Cline home"]',
+		);
 		expect(logoButton).not.toBeNull();
 		await hover(logoButton as Element);
 
 		await vi.waitFor(() => {
-			expect(document.body.textContent).toContain("Cline Hub @25463");
+			expect(document.body.textContent).toMatch(
+				/(OPEN VERSE|Cline) Hub @25463/,
+			);
 			expect(document.body.textContent).toContain(
 				"Hub connection closed (code=1006)",
 			);
@@ -1222,7 +1230,9 @@ describe("AgentSidebar session organization", () => {
 			);
 		});
 
-		const logo = container.querySelector('[aria-label="Cline home"]');
+		const logo = container.querySelector(
+			'[aria-label="OPEN VERSE home"], [aria-label="Cline home"]',
+		);
 		const actionsNav = container.querySelector(
 			'[aria-label="Sidebar actions"]',
 		);
@@ -1335,8 +1345,8 @@ describe("AgentSidebar session organization", () => {
 		expect(closedNav.querySelector('[aria-label="BYOK"]')).toBeNull();
 		// The Provider row opens the sub-page for the provider the chat uses.
 		for (const [lastProvider, expected] of [
-			["", "Account"],
-			["cline-pass", "Account"],
+			["", "Cline"],
+			["cline-pass", "Cline"],
 			["ollama", "Local Models"],
 			["anthropic", "Providers"],
 		] as const) {
@@ -1453,7 +1463,11 @@ describe("AgentSidebar session organization", () => {
 			);
 		});
 
-		expect(container.querySelector('[aria-label="Cline home"]')).not.toBeNull();
+		expect(
+			container.querySelector(
+				'[aria-label="OPEN VERSE home"], [aria-label="Cline home"]',
+			),
+		).not.toBeNull();
 		expect(
 			container.querySelector('[aria-label="Sidebar actions"]'),
 		).toBeNull();
@@ -1491,8 +1505,11 @@ describe("AgentSidebar session organization", () => {
 		expect(
 			container.querySelector('[aria-label="Settings sections"]'),
 		).not.toBeNull();
+		const homeButton = container.querySelector(
+			'[aria-label="OPEN VERSE home"], [aria-label="Cline home"]',
+		);
+		expect(homeButton?.className).not.toContain("mx-auto");
 		const leftAlignedButtons = [
-			"Cline home",
 			"General",
 			"Account",
 			"Expand sidebar",

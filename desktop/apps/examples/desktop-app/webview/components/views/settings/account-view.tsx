@@ -634,11 +634,11 @@ export function AccountView() {
 			<PageHeader
 				description={
 					user
-						? undefined
-						: "The latest models from Anthropic, OpenAI, Google, and more with one account. Pay as you go, or subscribe with ClinePass."
+						? "Cline AI model provider and credit management. This is separate from your OPEN-VERSE identity."
+						: "The latest models from Anthropic, OpenAI, Google, and more via Cline provider. Pay as you go, or subscribe with ClinePass."
 				}
-				meta={<InUseBadge section="Account" />}
-				title="Cline Account"
+				meta={<InUseBadge section="Cline" />}
+				title="Cline Provider"
 				actions={
 					user ? (
 						<button

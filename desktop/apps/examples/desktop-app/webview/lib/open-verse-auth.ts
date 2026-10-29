@@ -8,12 +8,15 @@
  * - Zero coupling to local Hub tokens (local AI agent remains isolated)
  */
 
+import { openExternalUrl } from "./desktop-client";
+
 export interface OpenVerseUser {
 	id: string;
 	email: string;
 	displayName?: string;
 	avatarUrl?: string;
 	isOfflineMode?: boolean;
+	provider?: "google" | "github" | "local" | "email";
 	createdAt?: string;
 }
 
@@ -186,6 +189,7 @@ export async function openVerseSignIn(params: {
 				email: data.user.email,
 				displayName: data.user.user_metadata?.full_name || email.split("@")[0],
 				avatarUrl: data.user.user_metadata?.avatar_url,
+				provider: "email",
 				createdAt: data.user.created_at,
 			},
 		};
@@ -199,6 +203,7 @@ export async function openVerseSignIn(params: {
 			id: `ov-local-${Buffer.from(email).toString("base64").slice(0, 10)}`,
 			email,
 			displayName: email.split("@")[0],
+			provider: "email",
 			isOfflineMode: false,
 			createdAt: new Date().toISOString(),
 		},
@@ -396,12 +401,45 @@ export async function openVerseVerifyOtp(params: {
 			id: `ov-user-${Date.now()}`,
 			email,
 			displayName: email.split("@")[0],
+			provider: "email",
 			isOfflineMode: false,
 			createdAt: new Date().toISOString(),
 		},
 	};
 	setStoredSession(session);
 	return session;
+}
+
+/**
+ * Get OAuth Authorization URL for Google or GitHub
+ */
+export function getOAuthAuthorizeUrl(provider: "google" | "github"): string {
+	const config = getAuthConfig();
+	if (!config.authUrl) {
+		throw new Error(
+			"Cloud authentication backend is not configured for this build. Please configure OPENVERSE_AUTH_URL, or use Continue in Offline / Local Mode.",
+		);
+	}
+	const baseUrl = config.authUrl.replace(/\/$/, "");
+	const redirectUrl = "openverse://auth/callback";
+	return `${baseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}`;
+}
+
+/**
+ * Initiate real OAuth Sign In for Google or GitHub
+ */
+export async function initiateOAuthSignIn(
+	provider: "google" | "github",
+): Promise<{ url: string; handled: boolean }> {
+	const config = getAuthConfig();
+	if (!config.authUrl || !config.anonKey) {
+		throw new Error(
+			"Cloud authentication backend is not configured for this build. Please configure OPENVERSE_AUTH_URL, or use Continue in Offline / Local Mode.",
+		);
+	}
+	const authUrl = getOAuthAuthorizeUrl(provider);
+	await openExternalUrl(authUrl);
+	return { url: authUrl, handled: true };
 }
 
 /**
@@ -414,6 +452,7 @@ export function continueInOfflineMode(): OpenVerseSession {
 			id: "openverse-local-developer",
 			email: "local@openverse.internal",
 			displayName: "Local Developer",
+			provider: "local",
 			isOfflineMode: true,
 			createdAt: new Date().toISOString(),
 		},

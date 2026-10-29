@@ -221,4 +221,32 @@ describe("OpenVerseAuth UI Component", () => {
 
 		expect(container.textContent).toContain("Password reset instructions have been dispatched");
 	});
+
+	it("renders Google and GitHub OAuth options and handles unconfigured auth without fake storage login", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth initialScreen="sign_in" onAuthenticated={onAuth} />);
+		});
+
+		const githubBtn = Array.from(container.querySelectorAll("button")).find((b) =>
+			b.textContent?.includes("Continue with GitHub"),
+		);
+		const googleBtn = Array.from(container.querySelectorAll("button")).find((b) =>
+			b.textContent?.includes("Continue with Google"),
+		);
+
+		expect(githubBtn).toBeDefined();
+		expect(googleBtn).toBeDefined();
+
+		// Clicking Google button when cloud auth backend is not configured
+		await act(async () => {
+			googleBtn?.click();
+		});
+
+		expect(container.textContent).toContain(
+			"Cloud authentication backend is not configured",
+		);
+		// Never faked a login into storage
+		expect(onAuth).not.toHaveBeenCalled();
+	});
 });

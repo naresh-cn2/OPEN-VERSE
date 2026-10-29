@@ -66,6 +66,7 @@ import {
 import { PageFrame, PageHeader } from "../page-layout";
 import { AboutContent } from "./about-view";
 import { AccountView } from "./account-view";
+import { OpenVerseAccountView } from "./open-verse-account-view";
 import { AddProviderContent, type AddProviderPayload } from "./add-provider";
 import { ChannelsContent } from "./channels-view";
 import { CustomizeView } from "./customize-view";
@@ -661,6 +662,8 @@ export function SettingsView({
 		) : activeNav === "Remote" ? (
 			<RemoteEnvironmentsContent />
 		) : activeNav === "Account" ? (
+			<OpenVerseAccountView onNavigateToProviders={() => onNavigateSection("Cline")} />
+		) : activeNav === "Cline" ? (
 			<AccountView />
 		) : activeNav === "About" ? (
 			<AboutContent onOpenConnectors={() => onNavigateSection("Customize")} />

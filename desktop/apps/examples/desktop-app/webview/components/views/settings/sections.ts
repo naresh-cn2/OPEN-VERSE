@@ -12,6 +12,7 @@ import { normalizeProviderId } from "@/lib/provider-id";
 const ALL_SETTINGS_SECTIONS = [
 	"General",
 	"Account",
+	"Cline",
 	"Local Models",
 	"Providers",
 	"Voice",
@@ -27,14 +28,14 @@ const ALL_SETTINGS_SECTIONS = [
 // Everything that decides where the chat's models come from lives under one
 // "Provider" sidebar group, so users don't hunt across three pages.
 export const PROVIDER_SECTIONS = [
-	"Account",
+	"Cline",
 	"Local Models",
 	"Providers",
 ] as const;
 export type ProviderSection = (typeof PROVIDER_SECTIONS)[number];
 
 export const PROVIDER_SECTION_LABELS: Record<ProviderSection, string> = {
-	Account: "Cline Account",
+	Cline: "Cline",
 	"Local Models": "Local",
 	Providers: "BYOK",
 };
@@ -52,7 +53,7 @@ export function readProviderSectionInUse(): ProviderSection {
 	);
 	// Without a saved choice the chat uses the default Cline provider.
 	if (!provider || provider === "cline" || provider === "cline-pass") {
-		return "Account";
+		return "Cline";
 	}
 	return isLocalRuntime(provider) ? "Local Models" : "Providers";
 }

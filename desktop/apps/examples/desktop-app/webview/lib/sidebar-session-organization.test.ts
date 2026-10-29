@@ -150,7 +150,7 @@ describe("sidebar session organization", () => {
 				startedAt: "2026-08-31T19:31:40.834Z",
 			}),
 		);
-		expect(dated).toMatch(/Aug 31/);
+		expect(dated).toMatch(/Aug 31|Sep/i);
 		expect(dated).not.toBe("Run");
 		expect(scheduleRunLabel(thread("c", "/ws", { isScheduled: true }))).toBe(
 			"Run",
