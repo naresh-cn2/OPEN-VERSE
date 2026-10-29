@@ -1,0 +1,161 @@
+name: desktop-release
+
+# Official OPEN-VERSE Desktop Release and Automatic Update Pipeline
+# Builds the Windows NSIS installer, generates signed updater artifacts (.nsis.zip + .sig),
+# creates the latest.json update manifest, and publishes to GitHub Releases (both version tag and desktop-latest feed).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 0.1.0)"
+        required: true
+        default: "0.1.0"
+      notes:
+        description: "Release notes / changelog summary"
+        required: false
+        default: "OPEN-VERSE production release with automatic in-app updates, independent profile isolation, and standalone authentication."
+      confirm_release:
+        description: 'Type "release" to confirm publishing the production release and update feed.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: desktop
+
+jobs:
+  build-and-publish:
+    name: Build & Publish Signed Windows Desktop Release
+    if: github.event.inputs.confirm_release == 'release'
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Verify Version Consistency
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          $inputVersion = "${{ github.event.inputs.version }}".TrimStart('v')
+          $packageVersion = (Get-Content package.json | ConvertFrom-Json).version
+          $tauriVersion = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          Write-Host "Input version: $inputVersion"
+          Write-Host "package.json version: $packageVersion"
+          Write-Host "tauri.conf.json version: $tauriVersion"
+          if ($packageVersion -ne $inputVersion) {
+            Write-Error "package.json version ($packageVersion) does not match input ($inputVersion)"
+            exit 1
+          }
+          if ($tauriVersion -ne $inputVersion) {
+            Write-Error "tauri.conf.json version ($tauriVersion) does not match input ($inputVersion)"
+            exit 1
+          }
+          Write-Host "Version validation passed."
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+
+      - name: Run Desktop Verification Tests
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          bunx vitest run webview/lib/open-verse-auth.test.ts webview/components/views/onboarding/open-verse-auth.test.tsx webview/components/views/chat/welcome-chat.test.tsx webview/components/views/onboarding/onboarding-view.test.tsx scripts/generate-update-manifest.test.ts --config vitest.config.ts
+
+      - name: Build desktop runtime and static web frontend
+        run: bun run build
+        working-directory: desktop/apps/examples/desktop-app
+
+      - name: Build Signed Windows NSIS Installer & Updater Artifacts
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if (-not $env:TAURI_SIGNING_PRIVATE_KEY) {
+            Write-Error "TAURI_SIGNING_PRIVATE_KEY secret is not set in repository secrets."
+            exit 1
+          }
+          bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.release.conf.json
+
+      - name: Verify Release and Updater Artifacts Exist
+        shell: pwsh
+        id: artifacts
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          $nsisPath = "src-tauri/target/release/bundle/nsis"
+          $setup = Get-ChildItem -Path $nsisPath -Filter "*-setup.exe" | Select-Object -First 1
+          $zip = Get-ChildItem -Path $nsisPath -Filter "*.nsis.zip" | Select-Object -First 1
+          $sig = Get-ChildItem -Path $nsisPath -Filter "*.nsis.zip.sig" | Select-Object -First 1
+
+          if (-not $setup) { Write-Error "Setup installer not found in $nsisPath"; exit 1 }
+          if (-not $zip) { Write-Error "Updater zip archive not found in $nsisPath"; exit 1 }
+          if (-not $sig) { Write-Error "Updater signature (.sig) not found in $nsisPath"; exit 1 }
+
+          Write-Host "Found Setup Installer: $($setup.FullName) ($($setup.Length) bytes)"
+          Write-Host "Found Updater Zip: $($zip.FullName) ($($zip.Length) bytes)"
+          Write-Host "Found Updater Signature: $($sig.FullName) ($($sig.Length) bytes)"
+
+          echo "setup_path=$($setup.FullName)" >> $env:GITHUB_OUTPUT
+          echo "zip_path=$($zip.FullName)" >> $env:GITHUB_OUTPUT
+          echo "sig_path=$($sig.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Generate latest.json Update Manifest
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          $ver = "${{ github.event.inputs.version }}".TrimStart('v')
+          $repo = "${{ github.repository }}"
+          $tag = "v$ver"
+          $notes = "${{ github.event.inputs.notes }}"
+          bun run scripts/generate-update-manifest.ts $ver $repo $tag $notes
+          $manifest = Get-Content "src-tauri/target/release/bundle/nsis/latest.json" -Raw
+          Write-Host "Generated latest.json:"
+          Write-Host $manifest
+
+      - name: Publish Versioned Release (v${{ github.event.inputs.version }})
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: OPEN-VERSE v${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.notes }}
+          draft: false
+          prerelease: false
+          files: |
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip.sig
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
+
+      - name: Update Rolling desktop-latest Release Feed
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-latest
+          name: OPEN-VERSE Latest Desktop Feed
+          body: "Rolling update feed and latest installer for OPEN-VERSE desktop applications."
+          draft: false
+          prerelease: false
+          files: |
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip.sig
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json

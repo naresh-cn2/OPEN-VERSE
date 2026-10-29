@@ -1,179 +1,77 @@
-// Generates the Tauri updater manifest (latest.json) from the updater
-// artifacts produced by the desktop-publish workflow. The manifest is uploaded
-// to the rolling `desktop-latest` GitHub release, which is the static endpoint
-// configured in src-tauri/tauri.conf.json; its platform URLs point back at the
-// immutable per-version release assets.
-//
-// Usage:
-//   bun scripts/generate-update-manifest.ts \
-//     --version 0.1.0 --tag desktop-v0.1.0 --dir dist/desktop \
-//     --out dist/desktop/latest.json [--repo cline/cline] [--notes-file notes.md]
-
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-type UpdaterPlatformEntry = {
+// Generates and validates the Tauri v2 latest.json update manifest.
+const APP_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const NSIS_DIR = path.join(APP_ROOT, "src-tauri", "target", "release", "bundle", "nsis");
+
+interface ManifestPlatform {
 	signature: string;
 	url: string;
-};
+}
 
-export type UpdateManifest = {
+interface UpdateManifest {
 	version: string;
 	notes: string;
 	pub_date: string;
-	platforms: Record<string, UpdaterPlatformEntry>;
-};
+	platforms: Record<string, ManifestPlatform>;
+}
 
-// Maps the arch token embedded in macOS artifact file names (see the "Collect
-// artifacts" workflow step) to the platform keys the Tauri updater requests.
-// A universal (fat) bundle serves both macOS architectures: each slice of the
-// installed app requests its own compile-time arch key at runtime, and both
-// keys point at the same artifact and signature.
-const MACOS_PLATFORM_KEYS_BY_ARCH_SUFFIX: Record<string, string[]> = {
-	aarch64: ["darwin-aarch64"],
-	x86_64: ["darwin-x86_64"],
-	universal: ["darwin-aarch64", "darwin-x86_64"],
-};
-
-// On Windows the updater artifact is the NSIS installer itself
-// (createUpdaterArtifacts signs the setup exe with the updater key), named
-// `<Product>_<version>_<arch>-setup.exe` by the Tauri bundler.
-const WINDOWS_PLATFORM_KEYS_BY_ARCH_SUFFIX: Record<string, string[]> = {
-	x64: ["windows-x86_64"],
-	arm64: ["windows-aarch64"],
-};
-
-// On Linux the updater artifacts are the packages themselves, signed by
-// createUpdaterArtifacts. The updater asks for `linux-<arch>-<installer>`
-// first and falls back to the bare `linux-<arch>` key, so each package format
-// gets only its own suffixed key: a deb must never be served to an rpm
-// install (or to an AppImage, which we do not ship).
-const LINUX_PLATFORM_KEYS_BY_FILE_SUFFIX: Record<string, string[]> = {
-	"_amd64.deb": ["linux-x86_64-deb"],
-	"_arm64.deb": ["linux-aarch64-deb"],
-	"_x86_64.rpm": ["linux-x86_64-rpm"],
-	"_aarch64.rpm": ["linux-aarch64-rpm"],
-};
-
-const getArgValue = (args: string[], name: string): string | undefined => {
-	const index = args.indexOf(name);
-	if (index >= 0 && args[index + 1] && !args[index + 1].startsWith("--")) {
-		return args[index + 1];
-	}
-	const prefix = `${name}=`;
-	const inline = args.find((arg) => arg.startsWith(prefix));
-	return inline?.slice(prefix.length);
-};
-
-const platformKeysOfUpdaterArtifact = (
-	fileName: string,
-): string[] | undefined => {
-	if (fileName.endsWith(".app.tar.gz")) {
-		const arch = Object.keys(MACOS_PLATFORM_KEYS_BY_ARCH_SUFFIX).find(
-			(candidate) => fileName.includes(`_${candidate}`),
-		);
-		return arch ? MACOS_PLATFORM_KEYS_BY_ARCH_SUFFIX[arch] : undefined;
-	}
-	if (fileName.endsWith("-setup.exe")) {
-		const arch = Object.keys(WINDOWS_PLATFORM_KEYS_BY_ARCH_SUFFIX).find(
-			(candidate) => fileName.endsWith(`_${candidate}-setup.exe`),
-		);
-		return arch ? WINDOWS_PLATFORM_KEYS_BY_ARCH_SUFFIX[arch] : undefined;
-	}
-	const linuxSuffix = Object.keys(LINUX_PLATFORM_KEYS_BY_FILE_SUFFIX).find(
-		(candidate) => fileName.endsWith(candidate),
-	);
-	if (linuxSuffix) {
-		return LINUX_PLATFORM_KEYS_BY_FILE_SUFFIX[linuxSuffix];
-	}
-	return undefined;
-};
-
-export const buildUpdateManifest = (options: {
-	version: string;
-	tag: string;
-	dir: string;
-	repo: string;
-	notes: string;
-	pubDate: string;
-}): UpdateManifest => {
-	const platforms: Record<string, UpdaterPlatformEntry> = {};
-
-	for (const fileName of readdirSync(options.dir).sort()) {
-		const platformKeys = platformKeysOfUpdaterArtifact(fileName);
-		if (!platformKeys) {
-			continue;
-		}
-		const signaturePath = path.join(options.dir, `${fileName}.sig`);
-		const signature = readFileSync(signaturePath, "utf8").trim();
-		if (!signature) {
-			throw new Error(`empty updater signature at ${signaturePath}`);
-		}
-		for (const platformKey of platformKeys) {
-			if (platforms[platformKey]) {
-				throw new Error(
-					`multiple updater artifacts claim platform ${platformKey}; found ${fileName} after ${platforms[platformKey].url}`,
-				);
-			}
-			platforms[platformKey] = {
-				signature,
-				url: `https://github.com/${options.repo}/releases/download/${options.tag}/${encodeURIComponent(fileName)}`,
-			};
-		}
+export function generateManifest(
+	version: string,
+	repo: string,
+	releaseTag: string,
+	notes = `OPEN-VERSE v${version} update`,
+): UpdateManifest {
+	if (!existsSync(NSIS_DIR)) {
+		throw new Error(`NSIS directory does not exist: ${NSIS_DIR}`);
 	}
 
-	if (Object.keys(platforms).length === 0) {
-		throw new Error(
-			`no updater artifacts (*.app.tar.gz, *-setup.exe, *.deb or *.rpm with a known arch suffix) found in ${options.dir}`,
-		);
+	const files = readdirSync(NSIS_DIR);
+	const zipFile = files.find((f) => f.endsWith(".nsis.zip") || (f.endsWith(".zip") && !f.endsWith(".sig")));
+	const sigFile = files.find((f) => f.endsWith(".nsis.zip.sig") || f.endsWith(".zip.sig"));
+
+	if (!zipFile) {
+		throw new Error(`No updater zip archive found in ${NSIS_DIR}`);
+	}
+	if (!sigFile) {
+		throw new Error(`No signature file (.sig) found for updater zip in ${NSIS_DIR}`);
 	}
 
-	return {
-		version: options.version,
-		notes: options.notes,
-		pub_date: options.pubDate,
-		platforms,
-	};
-};
+	const signature = readFileSync(path.join(NSIS_DIR, sigFile), "utf8").trim();
+	const downloadUrl = `https://github.com/${repo}/releases/download/${releaseTag}/${zipFile}`;
 
-const main = () => {
-	const args = process.argv.slice(2);
-	const version = getArgValue(args, "--version");
-	const tag = getArgValue(args, "--tag");
-	const dir = getArgValue(args, "--dir");
-	const out = getArgValue(args, "--out");
-	const repo =
-		getArgValue(args, "--repo") ??
-		process.env.GITHUB_REPOSITORY ??
-		"naresh-cn2/OPEN-VERSE";
-	const notesFile = getArgValue(args, "--notes-file");
-
-	if (!version || !tag || !dir || !out) {
-		throw new Error(
-			"usage: generate-update-manifest.ts --version X.Y.Z --tag desktop-vX.Y.Z --dir <artifact dir> --out <latest.json> [--repo owner/repo] [--notes-file <file>]",
-		);
-	}
-
-	const notes = notesFile
-		? readFileSync(notesFile, "utf8").trim()
-		: `OPEN-VERSE v${version}`;
-
-	const manifest = buildUpdateManifest({
-		version,
-		tag,
-		dir,
-		repo,
+	const manifest: UpdateManifest = {
+		version: version.startsWith("v") ? version : `v${version}`,
 		notes,
-		pubDate: new Date().toISOString(),
-	});
+		pub_date: new Date().toISOString(),
+		platforms: {
+			"windows-x86_64": {
+				signature,
+				url: downloadUrl,
+			},
+		},
+	};
 
-	writeFileSync(out, `${JSON.stringify(manifest, null, "\t")}\n`);
-	console.log(`wrote ${out}`);
-	for (const [platform, entry] of Object.entries(manifest.platforms)) {
-		console.log(`- ${platform}: ${entry.url}`);
-	}
-};
+	const manifestPath = path.join(NSIS_DIR, "latest.json");
+	writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+	console.log(`Generated updater manifest at: ${manifestPath}`);
+	console.log(JSON.stringify(manifest, null, 2));
+
+	return manifest;
+}
 
 if (import.meta.main) {
-	main();
+	const version = process.argv[2] || "0.1.0";
+	const repo = process.env.GITHUB_REPOSITORY || "naresh-cn2/OPEN-VERSE";
+	const releaseTag = process.argv[3] || `v${version}`;
+	const notes = process.argv[4] || `OPEN-VERSE v${version} release`;
+
+	try {
+		generateManifest(version, repo, releaseTag, notes);
+	} catch (error) {
+		console.error("Failed to generate update manifest:", error);
+		process.exit(1);
+	}
 }
