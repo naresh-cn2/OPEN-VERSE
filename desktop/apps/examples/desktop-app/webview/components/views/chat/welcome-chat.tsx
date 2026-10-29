@@ -36,6 +36,7 @@ import {
 	CloudOnboardingCard,
 	type CloudOnboardingVariant,
 } from "./cloud-onboarding";
+import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { OpenVerseWordmark } from "./open-verse-wordmark";
 import { WelcomeWorkspaceControls } from "./welcome-workspace-controls";
 
@@ -488,8 +489,11 @@ export function WelcomeScreen({
 				<div className="cline-view-enter">
 					<h1 className="sr-only">What would you like to build?</h1>
 					<div className="flex flex-col items-center justify-center">
-						<div className="-translate-y-8 transition-transform sm:-translate-y-12">
-							<AgentWelcomeHero />
+						<div
+							className="-translate-y-8 transition-transform sm:-translate-y-12"
+							data-welcome-hero
+						>
+							<OpenVerseRobot size={110} />
 						</div>
 						<div className="mt-2 w-full flex justify-center sm:mt-4">
 							<OpenVerseWordmark />

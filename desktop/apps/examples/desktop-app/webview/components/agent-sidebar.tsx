@@ -185,7 +185,7 @@ const SETTINGS_SECTION_ICONS = {
 function settingsSectionLabel(section: SettingsSection): string {
 	return (
 		CUSTOMIZATION_SECTION_LABELS[
-			section as keyof typeof CUSTOMIZATION_SECTION_LABELS
+		section as keyof typeof CUSTOMIZATION_SECTION_LABELS
 		] ?? section
 	);
 }
@@ -213,7 +213,7 @@ function SettingsSectionNavigation({
 				className={cn(
 					"min-w-0 justify-start",
 					activeSection === section &&
-						"bg-surface-hover text-sidebar-foreground",
+					"bg-surface-hover text-sidebar-foreground",
 					collapsed && "size-9 justify-center px-0",
 					disabled && !collapsed && "w-full",
 				)}
@@ -264,25 +264,25 @@ function SettingsSectionNavigation({
 				</Button>
 				{open
 					? PROVIDER_SECTIONS.map((section) => (
-							<Button
-								aria-current={activeSection === section ? "page" : undefined}
-								aria-label={PROVIDER_SECTION_LABELS[section]}
-								className={cn(
-									"min-w-0 justify-start pl-8!",
-									activeSection === section &&
-										"bg-surface-hover text-sidebar-foreground",
-								)}
-								key={section}
-								onClick={() => onSelect(section)}
-								title={PROVIDER_SECTION_LABELS[section]}
-								type="button"
-								variant="sidebarItem"
-							>
-								<span className="truncate">
-									{PROVIDER_SECTION_LABELS[section]}
-								</span>
-							</Button>
-						))
+						<Button
+							aria-current={activeSection === section ? "page" : undefined}
+							aria-label={PROVIDER_SECTION_LABELS[section]}
+							className={cn(
+								"min-w-0 justify-start pl-8!",
+								activeSection === section &&
+								"bg-surface-hover text-sidebar-foreground",
+							)}
+							key={section}
+							onClick={() => onSelect(section)}
+							title={PROVIDER_SECTION_LABELS[section]}
+							type="button"
+							variant="sidebarItem"
+						>
+							<span className="truncate">
+								{PROVIDER_SECTION_LABELS[section]}
+							</span>
+						</Button>
+					))
 					: null}
 			</Fragment>
 		);
@@ -363,7 +363,7 @@ export function AgentSidebar({
 	const { user, activeOrganization } = useAccount();
 	const { displayName, email } = user || {};
 	const username = displayName?.split(" ")?.[0] || email?.split("@")?.[0];
-	const accountName = username?.trim() || "Cline Desktop";
+	const accountName = username?.trim() || "OPEN-VERSE Desktop";
 	const accountScope = user
 		? (activeOrganization?.name ?? "Personal")
 		: undefined;
@@ -1017,8 +1017,8 @@ export function AgentSidebar({
 							aria-label="Schedule"
 							className={cn(
 								view === "settings" &&
-									settingsSection === "Schedules" &&
-									"bg-surface-hover text-sidebar-foreground",
+								settingsSection === "Schedules" &&
+								"bg-surface-hover text-sidebar-foreground",
 							)}
 							onClick={() => openSettingsSection("Schedules")}
 							title="Schedules"
@@ -1032,7 +1032,7 @@ export function AgentSidebar({
 							aria-label="Customize"
 							className={cn(
 								customizeSectionOpen &&
-									"bg-surface-hover-lighter text-sidebar-foreground",
+								"bg-surface-hover-lighter text-sidebar-foreground",
 							)}
 							onClick={() => openSettingsSection("Customize")}
 							title="Customize OPEN VERSE with plugins, rules, and more"
@@ -1044,27 +1044,27 @@ export function AgentSidebar({
 						</Button>
 						{customizeSectionOpen
 							? CUSTOMIZATION_SECTIONS.map((section) => (
-									<Button
-										aria-current={
-											settingsSection === section ? "page" : undefined
-										}
-										aria-label={settingsSectionLabel(section)}
-										className={cn(
-											"pl-8!",
-											settingsSection === section &&
-												"bg-surface-hover text-sidebar-foreground",
-										)}
-										key={section}
-										onClick={() => openSettingsSection(section)}
-										title={settingsSectionLabel(section)}
-										type="button"
-										variant="sidebarItem"
-									>
-										<span className="truncate">
-											{settingsSectionLabel(section)}
-										</span>
-									</Button>
-								))
+								<Button
+									aria-current={
+										settingsSection === section ? "page" : undefined
+									}
+									aria-label={settingsSectionLabel(section)}
+									className={cn(
+										"pl-8!",
+										settingsSection === section &&
+										"bg-surface-hover text-sidebar-foreground",
+									)}
+									key={section}
+									onClick={() => openSettingsSection(section)}
+									title={settingsSectionLabel(section)}
+									type="button"
+									variant="sidebarItem"
+								>
+									<span className="truncate">
+										{settingsSectionLabel(section)}
+									</span>
+								</Button>
+							))
 							: null}
 					</nav>
 				) : null}
@@ -1174,7 +1174,7 @@ export function AgentSidebar({
 																	.slice(0, scheduledVisibleCount)
 																	.map(listRow)}
 																{scheduledRows.length >
-																scheduledVisibleCount ? (
+																	scheduledVisibleCount ? (
 																	<Button
 																		className="px-2!"
 																		onClick={() =>
@@ -1249,10 +1249,10 @@ export function AgentSidebar({
 											{(sortMode === "time"
 												? filteredThreads.length === 0
 												: projectGroups.length === 0) && (
-												<div className="px-2 py-4 text-sm text-muted-foreground">
-													No sessions found in history.
-												</div>
-											)}
+													<div className="px-2 py-4 text-sm text-muted-foreground">
+														No sessions found in history.
+													</div>
+												)}
 										</>
 									)}
 									{sortMode === "time" &&
@@ -1301,8 +1301,8 @@ export function AgentSidebar({
 								className={cn(
 									"flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-2 text-left text-sidebar-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
 									view === "settings" &&
-										settingsSection === "Account" &&
-										"bg-surface-hover text-sidebar-foreground",
+									settingsSection === "Account" &&
+									"bg-surface-hover text-sidebar-foreground",
 								)}
 								onClick={() => openSettingsSection("Account")}
 								title={user.email || undefined}
@@ -1327,8 +1327,8 @@ export function AgentSidebar({
 								className={cn(
 									"size-9 shrink-0 justify-center px-0",
 									view === "settings" &&
-										settingsSection !== "Account" &&
-										"bg-surface-hover text-sidebar-foreground",
+									settingsSection !== "Account" &&
+									"bg-surface-hover text-sidebar-foreground",
 								)}
 								onClick={openSettings}
 								title="Settings"
@@ -1345,7 +1345,7 @@ export function AgentSidebar({
 								"min-w-0 justify-start",
 								isCollapsed && "size-9 justify-center px-0",
 								view === "settings" &&
-									"bg-surface-hover text-sidebar-foreground",
+								"bg-surface-hover text-sidebar-foreground",
 							)}
 							onClick={openSettings}
 							title="Settings"
@@ -1374,7 +1374,7 @@ export function AgentSidebar({
 								? `This deletes "${normalizeTitle(deleteConfirmThread?.title ?? "this session")}" and its cloud workspace.`
 								: `This removes "${normalizeTitle(deleteConfirmThread?.title ?? "this session")}" from local history.`}
 							{deleteConfirmThread?.origin !== "cloud" &&
-							isTaskWorktreePath(deleteConfirmThread?.workspacePath ?? "")
+								isTaskWorktreePath(deleteConfirmThread?.workspacePath ?? "")
 								? ` ${TASK_WORKTREE_DELETE_WARNING}`
 								: null}
 						</AlertDialogDescription>

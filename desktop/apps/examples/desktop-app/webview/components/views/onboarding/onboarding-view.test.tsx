@@ -219,7 +219,7 @@ describe("OnboardingView", () => {
 
 		// Cline is selected by default. The inactive API-key card is inert so its
 		// controls cannot receive pointer or keyboard input through the overlay.
-		expect(container.textContent).toContain("Set up Cline");
+		expect(container.textContent).toContain("Set up OPEN-VERSE");
 		const clineOption = container.querySelector(
 			'[data-onboarding-option="cline"]',
 		);
@@ -229,7 +229,7 @@ describe("OnboardingView", () => {
 			),
 		).toEqual([
 			"Regular free model promotions",
-			"Subscribe to ClinePass for generous usage across the best open weights models like DeepSeek, Kimi, and GLM",
+			"Subscribe to OPEN-VERSE Pass for generous usage across top open models",
 			"No API key needed",
 		]);
 		const apiKeyOption = container.querySelector(
@@ -320,7 +320,7 @@ describe("OnboardingView", () => {
 		).toBeNull();
 
 		const clineCardAction = container.querySelector<HTMLButtonElement>(
-			'button[aria-label="Sign in with Cline"]',
+			'button[aria-label="Sign in with OPEN-VERSE"]',
 		);
 		expect(clineCardAction).not.toBeNull();
 		await act(async () => {
@@ -438,10 +438,10 @@ describe("OnboardingView", () => {
 		expect(clineModels?.textContent).toContain("deepseek-v4-flash");
 		expect(clineModels?.textContent).toContain("Solar Pro 4");
 		await act(async () => {
-			buttonByText("Get ClinePass").click();
+			buttonByText("Get OPEN-VERSE Pass").click();
 		});
 		expect(openExternalUrl).toHaveBeenCalledWith(
-			"https://app.cline.bot/onboarding/individual-plan",
+			"https://open-verse-website.vercel.app",
 		);
 		const doneGrid = container.querySelector<HTMLElement>(
 			'[data-welcome-hero-variant="grid-only"]',
@@ -654,7 +654,7 @@ describe("OnboardingView", () => {
 			buttonByText("Skip for now").click();
 		});
 		expect(container.textContent).toContain("You're all set");
-		expect(container.textContent).toContain("Your Cline account is connected");
+		expect(container.textContent).toContain("Your OPEN-VERSE account is connected");
 		expect(
 			parseModelSelectionStorage(
 				window.localStorage.getItem(MODEL_SELECTION_STORAGE_KEY),
@@ -735,7 +735,7 @@ describe("OnboardingView", () => {
 		await act(async () => {
 			container
 				.querySelector<HTMLButtonElement>(
-					'button[aria-label="Sign in with Cline"]',
+					'button[aria-label="Sign in with OPEN-VERSE"]',
 				)
 				?.click();
 		});

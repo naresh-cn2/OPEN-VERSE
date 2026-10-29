@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClineLogo } from "@/components/cline-logo";
 import { ImportSessionsDialog } from "@/components/import-sessions-dialog";
+import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +25,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { GitHubConnectStep } from "@/components/views/onboarding/onboarding-github-step";
+import { OpenVerseAuth } from "@/components/views/onboarding/open-verse-auth";
 import { useAccount } from "@/contexts/account-context";
 import { OAUTH_MANAGED_PROVIDERS } from "@/hooks/chat-session/constants";
 import { useClineSignIn } from "@/hooks/use-cline-sign-in";
@@ -35,6 +37,7 @@ import {
 	readModelSelectionStorageFromWindow,
 	writeModelSelectionStorageToWindow,
 } from "@/lib/model-selection";
+import type { AuthScreenState } from "@/lib/open-verse-auth";
 import {
 	CLINE_DASHBOARD_URL,
 	getProviderApiKeyUrl,
@@ -52,13 +55,14 @@ import {
 } from "@/lib/session-import";
 import { cn } from "@/lib/utils";
 
-const CREATE_ACCOUNT_URL = "https://app.cline.bot";
-const CLINE_PASS_SUBSCRIBE_URL =
-	"https://app.cline.bot/onboarding/individual-plan";
+const PRIVACY_URL = "https://open-verse-website.vercel.app/privacy";
+const TERMS_URL = "https://open-verse-website.vercel.app/terms";
+const CREATE_ACCOUNT_URL = "https://open-verse-website.vercel.app";
+const CLINE_PASS_SUBSCRIBE_URL = "https://open-verse-website.vercel.app";
 
 const CLINE_SIGN_IN_BENEFITS = [
 	"Regular free model promotions",
-	"Subscribe to ClinePass for generous usage across the best open weights models like DeepSeek, Kimi, and GLM",
+	"Subscribe to OPEN-VERSE Pass for generous usage across top open models",
 	"No API key needed",
 ];
 
@@ -295,30 +299,121 @@ function getErrorMessage(error: unknown): string {
 }
 
 function WelcomeStep({ onContinue }: { onContinue: () => void }) {
+	const [viewMode, setViewMode] = useState<"welcome" | "auth">("welcome");
+	const [authScreen, setAuthScreen] = useState<AuthScreenState>("sign_in");
+
+	if (viewMode === "auth") {
+		return (
+			<div className="flex flex-col items-center py-4 w-full max-w-md">
+				<OpenVerseAuth
+					initialScreen={authScreen}
+					onAuthenticated={() => onContinue()}
+				/>
+				<Button
+					className="mt-4 text-xs text-muted-foreground hover:text-foreground"
+					onClick={() => setViewMode("welcome")}
+					size="sm"
+					tone="neutral"
+					type="button"
+					variant="ghost"
+				>
+					<ArrowLeft className="mr-1.5 size-3.5" />
+					Back to Overview
+				</Button>
+			</div>
+		);
+	}
+
 	return (
 		<OnboardingContent surface="transparent">
 			<div className="flex flex-col items-center py-4 text-center">
-				<div className="w-full">
-					<AgentWelcomeHero variant="bot-only" />
+				<div className="w-full flex justify-center" data-welcome-hero-variant="bot-only">
+					<OpenVerseRobot size={120} />
 				</div>
-				<h1 className="mt-5 text-4xl font-semibold text-foreground">Cline</h1>
-				<p className="mt-2 text-lg text-foreground">Build software your way</p>
-				<p className="mt-6 text-md text-muted-foreground">
-					Cline is an AI coding agent. It reads your code, edits files, runs
-					commands, and works through tasks with you — in any project on your
-					machine.
+				<h1 className="mt-5 text-4xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
+					OPEN-VERSE
+				</h1>
+				<p className="mt-2 text-lg text-primary font-medium">Build software your way</p>
+				<p className="mt-4 text-md text-muted-foreground max-w-md">
+					OPEN-VERSE is your AI-powered development workspace. It reads your code,
+					edits files, runs commands, and works through tasks with you — in any
+					project on your machine.
 				</p>
-				<Button
-					className="mt-8 w-full max-w-64"
-					onClick={onContinue}
-					size="lg"
-					tone="accent"
-					type="button"
-					variant="fill"
-				>
-					Get started
-				</Button>
-				<p className="mt-8 text-xs text-muted-foreground">
+				<div className="mt-8 flex w-full max-w-72 flex-col gap-2.5">
+					<Button
+						className="w-full"
+						onClick={onContinue}
+						size="lg"
+						tone="accent"
+						type="button"
+						variant="fill"
+					>
+						Get started
+					</Button>
+
+					<div className="flex w-full gap-2">
+						<Button
+							className="flex-1"
+							onClick={() => {
+								setAuthScreen("sign_in");
+								setViewMode("auth");
+							}}
+							size="md"
+							tone="neutral"
+							type="button"
+							variant="surface"
+						>
+							Sign in
+						</Button>
+						<Button
+							className="flex-1"
+							onClick={() => {
+								setAuthScreen("sign_up");
+								setViewMode("auth");
+							}}
+							size="md"
+							tone="neutral"
+							type="button"
+							variant="outline"
+						>
+							Sign up
+						</Button>
+					</div>
+
+					<Button
+						className="w-full text-xs text-muted-foreground hover:text-foreground mt-1"
+						onClick={() => {
+							setAuthScreen("offline_mode");
+							setViewMode("auth");
+						}}
+						size="sm"
+						tone="neutral"
+						type="button"
+						variant="ghost"
+					>
+						Offline & Local Mode
+					</Button>
+				</div>
+
+				<div className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+					<button
+						className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+						onClick={() => void openExternalUrl(TERMS_URL)}
+						type="button"
+					>
+						Terms of Service
+					</button>
+					<span>•</span>
+					<button
+						className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+						onClick={() => void openExternalUrl(PRIVACY_URL)}
+						type="button"
+					>
+						Privacy Policy
+					</button>
+				</div>
+
+				<p className="mt-6 text-xs text-muted-foreground">
 					Takes less than a minute. Everything can be changed later in Settings.
 				</p>
 			</div>
@@ -504,10 +599,10 @@ function ConnectStep({
 					<ArrowLeft className="size-4" />
 				</IconButton>
 				<h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
-					Set up Cline
+					Set up OPEN-VERSE
 				</h1>
 				<p className="mt-4 text-sm text-muted-foreground">
-					Choose how Cline connects to models. You can add more providers
+					Choose how OPEN-VERSE connects to models. You can add more providers
 					anytime in Settings.
 				</p>
 			</div>
@@ -516,7 +611,7 @@ function ConnectStep({
 				<SetupOptionCard
 					id="cline"
 					onSelect={() => setSelectedMethod("cline")}
-					selectLabel="Sign in with Cline"
+					selectLabel="Sign in with OPEN-VERSE"
 					selected={selectedMethod === "cline"}
 				>
 					<SetupOptionHeader
@@ -541,8 +636,8 @@ function ConnectStep({
 								))}
 							</ul>
 						}
-						icon={<ClineLogo className="size-5" />}
-						title="Sign in with Cline"
+						icon={<OpenVerseRobot glow={false} size={22} />}
+						title="Sign in with OPEN-VERSE"
 					/>
 					{user ? (
 						<div className="mt-6 flex flex-wrap items-center justify-end gap-6">
@@ -926,8 +1021,8 @@ function ImportHistoryStep({
 				</h1>
 				<p className="mt-3 text-md text-muted-foreground">
 					{imported
-						? "Your sessions are in Cline's history now. You can import more anytime from the Sessions page."
-						: `Cline found ${found.count} session${found.count === 1 ? "" : "s"} from ${toolList} on this machine. Import them to keep your past conversations — and continue them here.`}
+						? "Your sessions are in OPEN-VERSE's history now. You can import more anytime from the Sessions page."
+						: `OPEN-VERSE found ${found.count} session${found.count === 1 ? "" : "s"} from ${toolList} on this machine. Import them to keep your past conversations — and continue them here.`}
 				</p>
 				{imported ? (
 					<Button
@@ -1026,7 +1121,7 @@ function ClineModelsSummary() {
 			) : null}
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<div className="min-w-0 flex-1">
-					<h2 className="text-sm font-semibold text-foreground">ClinePass</h2>
+					<h2 className="text-sm font-semibold text-foreground">OPEN-VERSE Pass</h2>
 					<p className="mt-1 text-xs text-muted-foreground">
 						Generous usage across the best open weights models like DeepSeek,
 						Kimi, and GLM.
@@ -1039,7 +1134,7 @@ function ClineModelsSummary() {
 					type="button"
 					variant="surface"
 				>
-					Get ClinePass
+					Get OPEN-VERSE Pass
 					<ExternalLink className="size-3.5" />
 				</Button>
 			</div>
@@ -1064,7 +1159,7 @@ function DoneStep({
 				<p className="mt-3 text-md text-muted-foreground">
 					{connection?.kind === "provider"
 						? `${connection.providerName} is connected.`
-						: "Your Cline account is connected."}
+						: "Your OPEN-VERSE account is connected."}
 				</p>
 				{connection?.kind === "cline" ? <ClineModelsSummary /> : null}
 				<Button

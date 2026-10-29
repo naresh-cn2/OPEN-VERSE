@@ -11,8 +11,15 @@ import {
 } from "react";
 import { isClineAccountNotAuthenticatedResult } from "@/lib/cline-account-state";
 import { desktopClient } from "@/lib/desktop-client";
+import {
+	type OpenVerseUser,
+	getCurrentSession,
+	getStoredSession,
+	openVerseSignOut,
+	subscribeAuthChange,
+} from "@/lib/open-verse-auth";
 
-export const ACCOUNT_IDENTITY_STORAGE_KEY = "cline.code.account-identity.v1";
+export const ACCOUNT_IDENTITY_STORAGE_KEY = "openverse.account-identity.v1";
 
 const SIGNED_OUT_ERROR_MARKERS = [
 	"No Cline account auth token found",
@@ -21,20 +28,24 @@ const SIGNED_OUT_ERROR_MARKERS = [
 
 type AccountContextValue = {
 	user: ClineAccountUser | null;
+	openVerseUser: OpenVerseUser | null;
 	/** False until the first identity lookup has finished, so a `null` user
 	 * can be told apart from "still loading". */
 	accountReady: boolean;
 	organizations: ClineAccountOrganization[];
 	activeOrganization: ClineAccountOrganization | null;
 	refreshAccount: () => Promise<void>;
+	signOut: () => Promise<void>;
 };
 
 const AccountContext = createContext<AccountContextValue>({
 	user: null,
+	openVerseUser: null,
 	accountReady: false,
 	organizations: [],
 	activeOrganization: null,
 	refreshAccount: async () => undefined,
+	signOut: async () => undefined,
 });
 
 export function parseCachedAccountUser(
@@ -66,9 +77,19 @@ function readCachedAccountUser(): ClineAccountUser | null {
 		return null;
 	}
 	try {
-		return parseCachedAccountUser(
+		const cached = parseCachedAccountUser(
 			window.localStorage.getItem(ACCOUNT_IDENTITY_STORAGE_KEY),
 		);
+		if (cached) return cached;
+		const ovSession = getStoredSession();
+		if (ovSession?.user) {
+			return {
+				id: ovSession.user.id,
+				email: ovSession.user.email,
+				displayName: ovSession.user.displayName,
+			} as ClineAccountUser;
+		}
+		return null;
 	} catch {
 		return null;
 	}
@@ -99,10 +120,22 @@ export function isSignedOutAccountError(error: unknown): boolean {
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<ClineAccountUser | null>(null);
+	const [openVerseUser, setOpenVerseUser] = useState<OpenVerseUser | null>(null);
 	const [accountReady, setAccountReady] = useState(false);
 
 	const refreshAccount = useCallback(async () => {
 		try {
+			const ovSession = getStoredSession();
+			if (ovSession?.user) {
+				setOpenVerseUser(ovSession.user);
+				setUser({
+					id: ovSession.user.id,
+					email: ovSession.user.email,
+					displayName: ovSession.user.displayName,
+				} as ClineAccountUser);
+				return;
+			}
+
 			const me = await desktopClient.invoke<ClineAccountUser>("cline_account", {
 				action: "clineAccount",
 				operation: "fetchMe",
@@ -111,6 +144,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 			// state that clears the cached identity without any error handling.
 			if (isClineAccountNotAuthenticatedResult(me)) {
 				setUser(null);
+				setOpenVerseUser(null);
 				writeCachedAccountUser(null);
 				return;
 			}
@@ -119,6 +153,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 		} catch (error) {
 			if (isSignedOutAccountError(error)) {
 				setUser(null);
+				setOpenVerseUser(null);
 				writeCachedAccountUser(null);
 			}
 			// Transient failures (offline, sidecar restarting) keep the cached
@@ -128,27 +163,61 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 		}
 	}, []);
 
+	const signOut = useCallback(async () => {
+		await openVerseSignOut();
+		setOpenVerseUser(null);
+		setUser(null);
+		writeCachedAccountUser(null);
+	}, []);
+
 	useEffect(() => {
 		// Seed from the cached identity after mount so the signed-in name renders
 		// without waiting on the network fetch, which revalidates it right after.
-		// localStorage must not be read during the initial render: the server
-		// renders the signed-out state, and a differing first client render would
-		// be a hydration mismatch.
-		setUser((current) => current ?? readCachedAccountUser());
+		const ovSession = getStoredSession();
+		if (ovSession?.user) {
+			setOpenVerseUser(ovSession.user);
+			setUser({
+				id: ovSession.user.id,
+				email: ovSession.user.email,
+				displayName: ovSession.user.displayName,
+			} as ClineAccountUser);
+		} else {
+			setUser((current) => current ?? readCachedAccountUser());
+		}
 		void refreshAccount();
+
+		const unsubscribe = subscribeAuthChange((session) => {
+			if (session?.user) {
+				setOpenVerseUser(session.user);
+				setUser({
+					id: session.user.id,
+					email: session.user.email,
+					displayName: session.user.displayName,
+				} as ClineAccountUser);
+			} else {
+				setOpenVerseUser(null);
+				setUser(null);
+			}
+		});
+
+		return () => {
+			unsubscribe();
+		};
 	}, [refreshAccount]);
 
 	const value = useMemo<AccountContextValue>(() => {
 		const organizations = user?.organizations ?? [];
 		return {
 			user,
+			openVerseUser,
 			accountReady,
 			organizations,
 			activeOrganization:
 				organizations.find((organization) => organization.active) ?? null,
 			refreshAccount,
+			signOut,
 		};
-	}, [accountReady, refreshAccount, user]);
+	}, [accountReady, openVerseUser, refreshAccount, signOut, user]);
 
 	return (
 		<AccountContext.Provider value={value}>{children}</AccountContext.Provider>

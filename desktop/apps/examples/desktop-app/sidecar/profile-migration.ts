@@ -39,9 +39,11 @@ function getDatabaseConstructor(): DatabaseConstructor | null {
 
 /**
  * Safely imports existing local sessions from an original ~/.cline installation
- * into the isolated OPEN VERSE data directory (~/.openverse) on startup.
+ * into the isolated OPEN VERSE data directory (~/.openverse) ONLY when explicitly
+ * requested by the user.
  *
  * Requirements:
+ * - Disabled by default to preserve strict profile isolation between Cline and OPEN-VERSE
  * - Read-only access to ~/.cline (never modifies or locks original data)
  * - Idempotent (INSERT OR IGNORE; skips already-imported sessions and files)
  * - Preserves all session IDs, timestamps, prompts, and metadata
@@ -50,6 +52,12 @@ export function migrateOriginalClineProfileIfNeeded(): {
 	migratedSessions: number;
 } {
 	try {
+		// Silent background copying is disabled by default to guarantee data isolation.
+		// Only run if explicitly opted in via environment variable.
+		if (process.env.OPENVERSE_IMPORT_CLINE_PROFILE !== "1") {
+			return { migratedSessions: 0 };
+		}
+
 		const clineDir = join(homedir(), ".cline");
 		const currentDir = resolveClineDir();
 
