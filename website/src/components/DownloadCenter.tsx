@@ -1,8 +1,20 @@
-import React, { useState } from "react";
-import { Monitor, Smartphone, Terminal, Check, Copy, Download, Clock, GitBranch, ShieldCheck, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+	Monitor,
+	Smartphone,
+	Terminal,
+	Check,
+	Copy,
+	Download,
+	Clock,
+	ShieldCheck,
+	AlertCircle,
+	Info,
+} from "lucide-react";
 
 export const DownloadCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"windows" | "mac" | "linux" | "mobile">("windows");
+  const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | "mobile" | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, key: string) => {
@@ -11,17 +23,64 @@ export const DownloadCenter: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const DESKTOP_VERSION = "0.0.49";
-  const RELEASE_TAG = `desktop-v${DESKTOP_VERSION}`;
-  const GITHUB_REPO_URL = "https://github.com/naresh-cn2/OPEN-VERSE";
-  const GITHUB_RELEASES_URL = `https://github.com/naresh-cn2/OPEN-VERSE/releases/tag/${RELEASE_TAG}`;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes("win")) setDetectedOS("windows");
+    else if (ua.includes("mac")) setDetectedOS("mac");
+    else if (ua.includes("linux") && !ua.includes("android")) setDetectedOS("linux");
+    else if (ua.includes("android") || ua.includes("iphone") || ua.includes("ipad")) setDetectedOS("mobile");
+  }, []);
 
-  // Direct published installer assets
+  // Release versions — updated via release automation
+  const DESKTOP_VERSION = "0.1.0";
+  const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
+
+  // Direct download assets hosted on GitHub Releases (backend binary host only)
   const ASSETS = {
-    windows: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-    mac: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
-    linuxDeb: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
-    linuxRpm: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/${RELEASE_TAG}/OPEN-VERSE_${DESKTOP_VERSION}_x86_64.rpm`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
+    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
+    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
+  };
+
+  // File metadata (size + checksum) — updated via release automation
+  const FILE_META = {
+    windows: {
+      name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+      size: "~180 MB",
+      sha256: "pending-production-release",
+    },
+    mac: {
+      name: `OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
+      size: "~220 MB",
+      sha256: "pending-production-release",
+    },
+    linuxDeb: {
+      name: `OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
+      size: "229 MB",
+      sha256: "e76d587f66eee955ccb6c8a0e442eb1e501f7abda5458097c87852df2536f6cf",
+    },
+    linuxRpm: {
+      name: `OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
+      size: "229 MB",
+      sha256: "bd07fbab78ab922c865fc6ba0b29367a9a0d0af18abc76c31ae68ed55427abdc",
+    },
+  };
+
+  const isDefaultTab = detectedOS ? detectedOS : "windows";
+  const [initialTabSet, setInitialTabSet] = useState(false);
+
+  useEffect(() => {
+    if (!initialTabSet && isDefaultTab) {
+      setActiveTab(isDefaultTab);
+      setInitialTabSet(true);
+    }
+  }, [isDefaultTab, initialTabSet]);
+
+  const copySourceCommand = () => {
+    const cmd = `git clone https://github.com/${GITHUB_RELEASES_ORG}.git && cd OPEN-VERSE && bun install`;
+    copyToClipboard(cmd, "source");
   };
 
   return (
@@ -31,9 +90,13 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Get the official desktop application for Windows, macOS, or Linux. Cryptographically verified with automated background updates.
+            Get the official desktop application for Windows, macOS, or Linux. All downloads are
+            cryptographically verified with Minisign signatures and receive automatic in-app updates.
           </p>
         </div>
+
+        {/* Platform Detection Notice */}
+        {detectedOS && detectedOS !== activeTab && !initialTabSet ? null : null}
 
         {/* Platform Selection Tabs */}
         <div
@@ -104,7 +167,7 @@ export const DownloadCenter: React.FC = () => {
                   href={ASSETS.windows}
                   className="btn-primary"
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
-                  download={`OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`}
+                  download={FILE_META.windows.name}
                 >
                   <Download size={18} />
                   <span>Download for Windows (.exe)</span>
@@ -115,32 +178,26 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                 <Clock size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Asset: <code>OPEN-VERSE_{DESKTOP_VERSION}_x64-setup.exe</code> (x86_64)</span>
+                <span>Asset: <code>{FILE_META.windows.name}</code> (x86_64) • {FILE_META.windows.size}</span>
               </div>
-              <a
-                href={GITHUB_RELEASES_URL}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: "0.82rem", color: "var(--accent-light)", textDecoration: "none" }}
-              >
-                Inspect GitHub Release & Signatures →
-              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
+                <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.windows.sha256}</code>
+              </div>
             </div>
 
-            {/* Run from Source Fallback */}
+            {/* Installation Instructions */}
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <Terminal size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Developer option — Run locally on Windows from source:</span>
+                <Info size={15} style={{ color: "var(--sky)" }} />
+                <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>git clone {GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless</span>
-                <button
-                  onClick={() => copyToClipboard(`git clone ${GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless`, "win-source")}
-                  className="copy-btn"
-                  title="Copy command"
-                >
-                  {copiedKey === "win-source" ? <Check size={16} style={{ color: "var(--emerald)" }} /> : <Copy size={16} />}
+                <span>1. Download OPEN-VERSE_0.1.0_x64-setup.exe</span>
+                <span>2. Run the installer and follow the prompts</span>
+                <span>3. Launch OPEN-VERSE from your Start menu</span>
+                <button onClick={copySourceCommand} className="copy-btn" title="Copy install steps">
+                  <Copy size={16} />
                 </button>
               </div>
             </div>
@@ -149,6 +206,7 @@ export const DownloadCenter: React.FC = () => {
               <div>• Operating System: Windows 10 (1903+) or Windows 11</div>
               <div>• Architecture: 64-bit Intel / AMD (x86_64)</div>
               <div>• Updater: Verified Minisign public key cryptography</div>
+              <div>• Auto-updates: In-app, automatic</div>
             </div>
           </div>
         )}
@@ -166,7 +224,7 @@ export const DownloadCenter: React.FC = () => {
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Universal binary package natively compiled for Apple Silicon (M1/M2/M3/M4) and Intel Macs with built-in auto-updater.
+                  Universal application package for Apple Silicon (M1/M2/M3/M4) and Intel Macs with built-in auto-updater.
                 </p>
               </div>
 
@@ -175,7 +233,7 @@ export const DownloadCenter: React.FC = () => {
                   href={ASSETS.mac}
                   className="btn-primary"
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
-                  download={`OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`}
+                  download={FILE_META.mac.name}
                 >
                   <Download size={18} />
                   <span>Download for macOS (Universal)</span>
@@ -186,40 +244,26 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                 <Clock size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Asset: <code>OPEN-VERSE_{DESKTOP_VERSION}_universal.app.tar.gz</code></span>
+                <span>Asset: <code>{FILE_META.mac.name}</code> • {FILE_META.mac.size}</span>
               </div>
-              <a
-                href={GITHUB_RELEASES_URL}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: "0.82rem", color: "var(--accent-light)", textDecoration: "none" }}
-              >
-                Inspect GitHub Release & Signatures →
-              </a>
             </div>
 
-            {/* Run from Source Fallback */}
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <Terminal size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Developer option — Run locally on macOS from source:</span>
+                <Info size={15} style={{ color: "var(--sky)" }} />
+                <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>git clone {GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless</span>
-                <button
-                  onClick={() => copyToClipboard(`git clone ${GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless`, "mac-source")}
-                  className="copy-btn"
-                  title="Copy command"
-                >
-                  {copiedKey === "mac-source" ? <Check size={16} style={{ color: "var(--emerald)" }} /> : <Copy size={16} />}
-                </button>
+                <span>1. Download OPEN-VERSE_0.1.0_universal.app.tar.gz</span>
+                <span>2. Extract and drag OPEN-VERSE.app to /Applications</span>
+                <span>3. Launch from Applications or Spotlight</span>
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Minimum OS: macOS 12.0 (Monterey) or later</div>
               <div>• Architecture: Universal Binary (Apple Silicon + Intel x86_64)</div>
-              <div>• Package: Application archive with automated updater</div>
+              <div>• Auto-updates: In-app, automatic</div>
             </div>
           </div>
         )}
@@ -241,13 +285,12 @@ export const DownloadCenter: React.FC = () => {
                 </p>
               </div>
 
-              {/* Separate DEB and RPM Buttons */}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.linuxDeb}
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                  download={`open-verse_${DESKTOP_VERSION}_amd64.deb`}
+                  download={FILE_META.linuxDeb.name}
                 >
                   <Download size={17} />
                   <span>Download .deb (Ubuntu / Debian)</span>
@@ -256,7 +299,7 @@ export const DownloadCenter: React.FC = () => {
                   href={ASSETS.linuxRpm}
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8, borderColor: "var(--border-active)" }}
-                  download={`open-verse-${DESKTOP_VERSION}-1.x86_64.rpm`}
+                  download={FILE_META.linuxRpm.name}
                 >
                   <Download size={17} />
                   <span>Download .rpm (Fedora / RHEL)</span>
@@ -269,38 +312,25 @@ export const DownloadCenter: React.FC = () => {
                 <Clock size={15} style={{ color: "var(--accent-light)" }} />
                 <span>Assets: <code>.deb</code> (x86_64) and <code>.rpm</code> (x86_64)</span>
               </div>
-              <a
-                href={GITHUB_RELEASES_URL}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: "0.82rem", color: "var(--accent-light)", textDecoration: "none" }}
-              >
-                Inspect GitHub Release & Signatures →
-              </a>
             </div>
 
-            {/* Run from Source Fallback */}
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <Terminal size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Developer option — Run locally on Linux from source:</span>
+                <Info size={15} style={{ color: "var(--sky)" }} />
+                <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>git clone {GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless</span>
-                <button
-                  onClick={() => copyToClipboard(`git clone ${GITHUB_REPO_URL}.git && cd cline && bun install && bun run dev:headless`, "linux-source")}
-                  className="copy-btn"
-                  title="Copy command"
-                >
-                  {copiedKey === "linux-source" ? <Check size={16} style={{ color: "var(--emerald)" }} /> : <Copy size={16} />}
-                </button>
+                <span>Debian/Ubuntu: sudo dpkg -i OPEN-VERSE_0.1.0_amd64.deb</span>
+                <span>Fedora/RHEL: sudo rpm -i OPEN-VERSE-0.1.0-1.x86_64.rpm</span>
+                <span>Launch from your application menu</span>
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• glibc 2.31+ supported</div>
               <div>• Package formats: .deb (dpkg/apt) and .rpm (rpm/dnf)</div>
-              <div>• Daemon: Headless background agent mode supported</div>
+              <div>• Architecture: x86_64</div>
+              <div>• Auto-updates: In-app, automatic</div>
             </div>
           </div>
         )}
@@ -314,37 +344,31 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <Smartphone size={22} style={{ color: "var(--emerald)" }} />
                   <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android Companion</h4>
-                  <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>In Development</span>
+                  <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>Not Available</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 20 }}>
-                  Controls your desktop agent securely over TLS relay. The native Android companion application is currently in development.
+                  The native Android companion application is not yet available. Mobile build pipeline is not implemented.
                 </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                  <div
-                    style={{
-                      padding: "12px 18px",
-                      borderRadius: 8,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid var(--border-subtle)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      fontSize: "0.85rem",
-                      color: "var(--text-muted)",
-                      justifyContent: "center"
-                    }}
-                  >
-                    <AlertCircle size={16} style={{ color: "var(--accent-light)" }} />
-                    <span>Coming Soon — APK Not Yet Released</span>
-                  </div>
-                  <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    No fake or mock packages are distributed. Genuine APK will be published once mobile build completes.
-                  </div>
+                <div
+                  style={{
+                    padding: "12px 18px",
+                    borderRadius: 8,
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid var(--border-subtle)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: "0.85rem",
+                    color: "var(--text-muted)",
+                    justifyContent: "center"
+                  }}
+                >
+                  <AlertCircle size={16} style={{ color: "var(--accent-light)" }} />
+                  <span>No APK Available</span>
                 </div>
-
-                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 16, fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  ✓ Native speech dictation • ✓ Background task push alerts • ✓ Secure QR pairing
+                <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                  No fake or mock packages are distributed. Genuine APK will be published once the mobile build completes.
                 </div>
               </div>
 
@@ -353,37 +377,31 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <Smartphone size={22} style={{ color: "var(--sky)" }} />
                   <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone Companion</h4>
-                  <span className="badge badge-blue" style={{ fontSize: "0.7rem" }}>In Development</span>
+                  <span className="badge badge-blue" style={{ fontSize: "0.7rem" }}>Not Available</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 20 }}>
-                  Controls your running desktop agent from iPhone and iPad. Apple TestFlight beta access is currently in preparation.
+                  The native iOS companion application is not yet available. TestFlight build is not yet prepared.
                 </p>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                  <div
-                    style={{
-                      padding: "12px 18px",
-                      borderRadius: 8,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid var(--border-subtle)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      fontSize: "0.85rem",
-                      color: "var(--text-muted)",
-                      justifyContent: "center"
-                    }}
-                  >
-                    <AlertCircle size={16} style={{ color: "var(--sky)" }} />
-                    <span>Coming Soon — TestFlight In Preparation</span>
-                  </div>
-                  <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    Requires iOS 16.0 or later on iPhone / iPad.
-                  </div>
+                <div
+                  style={{
+                    padding: "12px 18px",
+                    borderRadius: 8,
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid var(--border-subtle)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: "0.85rem",
+                    color: "var(--text-muted)",
+                    justifyContent: "center"
+                  }}
+                >
+                  <AlertCircle size={16} style={{ color: "var(--sky)" }} />
+                  <span>No TestFlight Build</span>
                 </div>
-
-                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: 16, fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                  ✓ Siri Shortcuts integration • ✓ Live activity streaming • ✓ FaceID protection
+                <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                  Requires iOS 16.0 or later on iPhone / iPad when available.
                 </div>
               </div>
             </div>
