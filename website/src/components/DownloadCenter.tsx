@@ -33,7 +33,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   // Release versions — updated via release automation
-  const DESKTOP_VERSION = "0.1.0";
+  const DESKTOP_VERSION = "0.2.0";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
   // Direct download assets hosted on GitHub Releases (backend binary host only)

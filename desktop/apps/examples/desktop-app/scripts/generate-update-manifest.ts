@@ -29,14 +29,23 @@ export function generateManifest(
 	}
 
 	const files = readdirSync(NSIS_DIR);
-	const zipFile = files.find((f) => f.endsWith(".nsis.zip") || (f.endsWith(".zip") && !f.endsWith(".sig")));
-	const sigFile = files.find((f) => f.endsWith(".nsis.zip.sig") || f.endsWith(".zip.sig"));
+	// Tauri on Windows NSIS produces either:
+	//   *-setup.nsis.zip + *-setup.nsis.zip.sig (updater archive + signature)
+	//   *-setup.exe + *-setup.exe.sig (installer + signature, when no zip is generated)
+	const zipFile =
+		files.find((f) => f.endsWith(".nsis.zip")) ??
+		files.find((f) => f.endsWith(".zip") && !f.endsWith(".sig")) ??
+		files.find((f) => f.endsWith("-setup.exe"));
+	const sigFile =
+		files.find((f) => f.endsWith(".nsis.zip.sig")) ??
+		files.find((f) => f.endsWith(".zip.sig")) ??
+		files.find((f) => f.endsWith("-setup.exe.sig"));
 
 	if (!zipFile) {
-		throw new Error(`No updater zip archive found in ${NSIS_DIR}`);
+		throw new Error(`No updater archive found in ${NSIS_DIR}`);
 	}
 	if (!sigFile) {
-		throw new Error(`No signature file (.sig) found for updater zip in ${NSIS_DIR}`);
+		throw new Error(`No signature file (.sig) found for updater archive in ${NSIS_DIR}`);
 	}
 
 	const signature = readFileSync(path.join(NSIS_DIR, sigFile), "utf8").trim();
