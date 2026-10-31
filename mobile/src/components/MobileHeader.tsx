@@ -78,13 +78,12 @@ export function MobileHeader({
         {/* Hub status badge & Mode toggle */}
         <button
           onClick={isHubConnected && onToggleExecutionMode ? onToggleExecutionMode : onOpenHub}
-          className={`flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium border transition-all ${
-            isHubConnected
+          className={`flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium border transition-all ${isHubConnected
               ? executionMode === "hub"
                 ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
                 : "border-violet-500/40 bg-violet-500/15 text-violet-300"
               : "border-zinc-800 bg-surface-card text-zinc-400 hover:text-zinc-300"
-          }`}
+            }`}
           title={
             isHubConnected
               ? `Mode: ${executionMode === "hub" ? "Desktop Agent" : "Direct AI"}. Tap to switch.`

@@ -54,12 +54,16 @@ export function App() {
 
   // 1. Check for Mobile Updates on launch
   useEffect(() => {
-    checkMobileUpdate().then((info) => {
-      setUpdateInfo(info);
-      if (info.available) {
-        setIsUpdateModalOpen(true);
-      }
-    });
+    checkMobileUpdate()
+      .then((info) => {
+        setUpdateInfo(info);
+        if (info.available) {
+          setIsUpdateModalOpen(true);
+        }
+      })
+      .catch((err) => {
+        console.warn("Mobile update check error (safe to ignore offline):", err);
+      });
   }, []);
 
   // 2. Listen for deep link events (from Android/iOS native wrappers)
