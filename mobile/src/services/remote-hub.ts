@@ -12,11 +12,14 @@ export interface HubWorkspace {
 }
 
 export interface HubStatusMessage {
-  type: "status" | "workspaces" | "task_update" | "error";
+  type: "status" | "workspaces" | "task_update" | "task_chunk" | "tool_call" | "task_complete" | "error";
   connected: boolean;
   version?: string;
   workspaces?: HubWorkspace[];
   activeTask?: string;
+  chunk?: string;
+  tool?: string;
+  args?: any;
   error?: string;
 }
 
@@ -27,6 +30,9 @@ class RemoteHubClient {
   private listeners: Set<HubEventListener> = new Set();
   private isConnecting: boolean = false;
   private currentConfig: HubConnectionConfig | null = null;
+  private activeWorkspaceId: string | null = null;
+  private reconnectTimer: any = null;
+  private heartbeatTimer: any = null;
 
   public subscribe(listener: HubEventListener): () => void {
     this.listeners.add(listener);
@@ -35,6 +41,17 @@ class RemoteHubClient {
 
   private notify(msg: HubStatusMessage) {
     this.listeners.forEach((l) => l(msg));
+  }
+
+  public setActiveWorkspace(id: string | null) {
+    this.activeWorkspaceId = id;
+    if (id && this.isConnected()) {
+      this.send({ type: "select_workspace", workspaceId: id });
+    }
+  }
+
+  public getActiveWorkspace(): string | null {
+    return this.activeWorkspaceId;
   }
 
   public connect(config: HubConnectionConfig): Promise<boolean> {
@@ -67,9 +84,13 @@ class RemoteHubClient {
         this.ws.onopen = () => {
           clearTimeout(timeout);
           this.isConnecting = false;
+          this.startHeartbeat();
           this.notify({ type: "status", connected: true });
           // Request available workspaces from desktop
           this.send({ type: "list_workspaces" });
+          if (this.activeWorkspaceId) {
+            this.send({ type: "select_workspace", workspaceId: this.activeWorkspaceId });
+          }
           resolve(true);
         };
 
@@ -95,6 +116,7 @@ class RemoteHubClient {
 
         this.ws.onclose = () => {
           this.isConnecting = false;
+          this.stopHeartbeat();
           this.notify({ type: "status", connected: false });
         };
       } catch (err) {
@@ -104,7 +126,28 @@ class RemoteHubClient {
     });
   }
 
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.isConnected()) {
+        this.send({ type: "ping", timestamp: Date.now() });
+      }
+    }, 15000);
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
   public disconnect() {
+    this.stopHeartbeat();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -121,6 +164,22 @@ class RemoteHubClient {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Execute task remotely on the desktop agent engine
+   */
+  public executeDesktopTask(prompt: string, workspaceId?: string): boolean {
+    return this.send({
+      type: "execute_task",
+      prompt,
+      workspaceId: workspaceId || this.activeWorkspaceId,
+      timestamp: Date.now(),
+    });
+  }
+
+  public cancelDesktopTask(): boolean {
+    return this.send({ type: "cancel_task" });
   }
 }
 

@@ -66,3 +66,4 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
         return .lightContent
     }
 }
+

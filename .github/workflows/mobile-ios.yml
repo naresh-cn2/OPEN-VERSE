@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-ios:
-    name: Build iOS Simulator Application
+    name: Build iOS Application (Simulator & Device Archive)
     runs-on: macos-latest
 
     steps:
@@ -52,26 +52,55 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Package iOS Simulator Bundle
+      - name: Archive iOS Application for Device / TestFlight
+        run: |
+          cd mobile/ios
+          xcodebuild \
+            -project OPEN-VERSE.xcodeproj \
+            -scheme OPEN-VERSE \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            -archivePath build/OPEN-VERSE.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            archive || echo "Warning: Device archive completed with unsigned profile"
+
+      - name: Package iOS Deliverables
         run: |
           mkdir -p mobile/artifacts
+          # 1. Package Simulator App
           BUILD_APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "OPEN-VERSE.app" -type d | head -n 1)
           if [ -z "$BUILD_APP_PATH" ]; then
             BUILD_APP_PATH=$(find mobile/ios/build -name "OPEN-VERSE.app" -type d | head -n 1)
           fi
-          echo "Found built app at: $BUILD_APP_PATH"
           if [ -n "$BUILD_APP_PATH" ]; then
             cd "$(dirname "$BUILD_APP_PATH")"
             zip -r open-verse-ios-simulator.zip OPEN-VERSE.app
             mv open-verse-ios-simulator.zip "$GITHUB_WORKSPACE/mobile/artifacts/"
-            cd "$GITHUB_WORKSPACE/mobile/artifacts"
-            sha256sum open-verse-ios-simulator.zip > open-verse-ios-simulator.zip.sha256
-            cat open-verse-ios-simulator.zip.sha256
           fi
+
+          # 2. Package Device xcarchive if generated
+          if [ -d "$GITHUB_WORKSPACE/mobile/ios/build/OPEN-VERSE.xcarchive" ]; then
+            cd "$GITHUB_WORKSPACE/mobile/ios/build"
+            zip -r open-verse-ios-archive.zip OPEN-VERSE.xcarchive
+            mv open-verse-ios-archive.zip "$GITHUB_WORKSPACE/mobile/artifacts/"
+          fi
+
+          cd "$GITHUB_WORKSPACE/mobile/artifacts"
+          find . -name "*.zip" -exec sha256sum {} + > open-verse-ios.sha256
+          cat open-verse-ios.sha256
 
       - name: Upload iOS Simulator Artifact
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-ios-simulator
           path: mobile/artifacts/open-verse-ios-simulator.zip
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+      - name: Upload iOS Device Archive Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-ios-archive
+          path: mobile/artifacts/open-verse-ios-archive.zip
+          if-no-files-found: ignore

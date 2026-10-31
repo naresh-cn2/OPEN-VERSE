@@ -112,3 +112,4 @@ export function saveSessions(sessions: ChatSession[]): void {
     console.error("Failed to save sessions:", err);
   }
 }
+
