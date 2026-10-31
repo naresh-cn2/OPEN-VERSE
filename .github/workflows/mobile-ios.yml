@@ -1,0 +1,77 @@
+name: Mobile iOS Build & Simulator Verification
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-ios:
+    name: Build iOS Simulator Application
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Build Mobile Webview Assets
+        run: |
+          cd mobile
+          bun install --frozen-lockfile || bun install
+          bun run build
+          mkdir -p ios/OPEN-VERSE/www
+          cp -r dist/* ios/OPEN-VERSE/www/
+
+      - name: Select Xcode Version
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Build iOS Application for Simulator
+        run: |
+          cd mobile/ios
+          xcodebuild \
+            -project OPEN-VERSE.xcodeproj \
+            -scheme OPEN-VERSE \
+            -sdk iphonesimulator \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package iOS Simulator Bundle
+        run: |
+          mkdir -p mobile/artifacts
+          BUILD_APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "OPEN-VERSE.app" -type d | head -n 1)
+          if [ -z "$BUILD_APP_PATH" ]; then
+            BUILD_APP_PATH=$(find mobile/ios/build -name "OPEN-VERSE.app" -type d | head -n 1)
+          fi
+          echo "Found built app at: $BUILD_APP_PATH"
+          if [ -n "$BUILD_APP_PATH" ]; then
+            cd "$(dirname "$BUILD_APP_PATH")"
+            zip -r open-verse-ios-simulator.zip OPEN-VERSE.app
+            mv open-verse-ios-simulator.zip "$GITHUB_WORKSPACE/mobile/artifacts/"
+            cd "$GITHUB_WORKSPACE/mobile/artifacts"
+            sha256sum open-verse-ios-simulator.zip > open-verse-ios-simulator.zip.sha256
+            cat open-verse-ios-simulator.zip.sha256
+          fi
+
+      - name: Upload iOS Simulator Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-ios-simulator
+          path: mobile/artifacts/open-verse-ios-simulator.zip
+          if-no-files-found: error

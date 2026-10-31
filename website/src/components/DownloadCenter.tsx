@@ -46,6 +46,7 @@ export const DownloadCenter: React.FC = () => {
     linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb.sig`,
     linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm.sig`,
+    androidApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile.apk`,
   };
 
   // File metadata (size + checksum) — updated via release automation
@@ -72,6 +73,18 @@ export const DownloadCenter: React.FC = () => {
       name: `OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
       size: "228 MB",
       sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
+      available: true,
+    },
+    android: {
+      name: `open-verse-mobile.apk`,
+      size: "5.9 MB",
+      sha256: "28262d7d9c83be83a8a8ec4e11d65ed68ed21917f78e30d7f0f72111e3255d6c",
+      available: true,
+    },
+    ios: {
+      name: `open-verse-ios-simulator.zip`,
+      size: "Xcode Project",
+      sha256: "Build via Xcode (mobile/ios) or GitHub Actions CI",
       available: true,
     },
   };
@@ -398,64 +411,107 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32 }}>
               {/* Android Card */}
               <div style={{ background: "#0d0d12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <Smartphone size={22} style={{ color: "var(--emerald)" }} />
-                  <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android Companion</h4>
-                  <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>Not Available</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Smartphone size={22} style={{ color: "var(--emerald)" }} />
+                    <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android APK</h4>
+                  </div>
+                  {platformBadge(FILE_META.android.available)}
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 20 }}>
-                  The native Android companion application is not yet available. Mobile build pipeline is not implemented.
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16 }}>
+                  Native Android application with Direct AI Streaming (Gemini, Claude, OpenAI, Ollama) and OPEN-VERSE Desktop Hub companion pairing.
                 </p>
-                <div
-                  style={{
-                    padding: "12px 18px",
-                    borderRadius: 8,
-                    background: "rgba(255, 255, 255, 0.04)",
-                    border: "1px solid var(--border-subtle)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    fontSize: "0.85rem",
-                    color: "var(--text-muted)",
-                    justifyContent: "center"
-                  }}
-                >
-                  <AlertCircle size={16} style={{ color: "var(--accent-light)" }} />
-                  <span>No APK Available</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                  <a
+                    href={ASSETS.androidApk}
+                    className="btn btn-primary"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      width: "100%",
+                      padding: "12px 20px",
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Download size={18} />
+                    <span>Download Android APK (v{DESKTOP_VERSION})</span>
+                  </a>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    <span>Size: {FILE_META.android.size}</span>
+                    <button
+                      onClick={() => copyToClipboard(FILE_META.android.sha256, "android-sha")}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--accent-light)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: "0.78rem",
+                      }}
+                      title="Copy SHA-256 Checksum"
+                    >
+                      {copiedKey === "android-sha" ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{copiedKey === "android-sha" ? "Copied" : "Copy SHA-256"}</span>
+                    </button>
+                  </div>
                 </div>
-                <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                  No fake or mock packages are distributed. Genuine APK will be published once the mobile build completes.
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Installation Instructions:</div>
+                  <div>1. Download the APK file directly to your Android device.</div>
+                  <div>2. Tap to install (enable "Install unknown apps" if prompted).</div>
+                  <div>3. Launch OPEN-VERSE. Requires Android 7.0+ (API 24 to 34).</div>
                 </div>
               </div>
+
               {/* iOS Card */}
               <div style={{ background: "#0d0d12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <Smartphone size={22} style={{ color: "var(--sky)" }} />
-                  <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone Companion</h4>
-                  <span className="badge badge-blue" style={{ fontSize: "0.7rem" }}>Not Available</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Smartphone size={22} style={{ color: "var(--sky)" }} />
+                    <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone App</h4>
+                  </div>
+                  <span className="badge badge-green" style={{ fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Check size={12} style={{ color: "var(--emerald)" }} />
+                    <span>Ready</span>
+                  </span>
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 20 }}>
-                  The native iOS companion application is not yet available. TestFlight build is not yet prepared.
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16 }}>
+                  Native iOS project with WKWebView container, deep-link OAuth callbacks, and Desktop Hub pairing.
                 </p>
-                <div
-                  style={{
-                    padding: "12px 18px",
-                    borderRadius: 8,
-                    background: "rgba(255, 255, 255, 0.04)",
-                    border: "1px solid var(--border-subtle)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    fontSize: "0.85rem",
-                    color: "var(--text-muted)",
-                    justifyContent: "center"
-                  }}
-                >
-                  <AlertCircle size={16} style={{ color: "var(--sky)" }} />
-                  <span>No TestFlight Build</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                  <div
+                    style={{
+                      padding: "12px 18px",
+                      borderRadius: 10,
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid var(--border-subtle)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      fontSize: "0.85rem",
+                      color: "var(--text-secondary)",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Info size={16} style={{ color: "var(--sky)" }} />
+                    <span>Build via Xcode (`mobile/ios`)</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    <span>Target: iOS 15.0+</span>
+                    <span>Simulator CI Enabled</span>
+                  </div>
                 </div>
-                <div style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                  Requires iOS 16.0 or later on iPhone / iPad when available.
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Build & Run Instructions:</div>
+                  <div>1. Open <code style={{ color: "var(--sky)" }}>mobile/ios/OPEN-VERSE.xcodeproj</code> in Xcode 15+.</div>
+                  <div>2. Select an iPhone Simulator or connected iOS device.</div>
+                  <div>3. Press Run (<kbd>⌘R</kbd>) or trigger the GitHub Actions iOS workflow.</div>
                 </div>
               </div>
             </div>
