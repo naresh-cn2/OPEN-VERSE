@@ -132,10 +132,10 @@ jobs:
         working-directory: desktop/apps/examples/desktop-app
         run: |
           $ver = "${{ github.event.inputs.version }}".TrimStart('v')
-          $repo = "${{ github.repository }}"
           $tag = "v$ver"
           $notes = "${{ github.event.inputs.notes }}"
-          bun run scripts/generate-update-manifest.ts $ver $repo $tag $notes
+          # repo is read from GITHUB_REPOSITORY env var inside the script
+          bun run scripts/generate-update-manifest.ts $ver $tag $notes
           $manifest = Get-Content "src-tauri/target/release/bundle/nsis/latest.json" -Raw
           Write-Host "Generated latest.json:"
           Write-Host $manifest
