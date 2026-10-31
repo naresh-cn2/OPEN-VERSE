@@ -7,23 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D30AB122C00000100000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30AB022C00000100000001 /* AppDelegate.swift */; };
-		1D30AB132C00000100000001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30AB032C00000100000001 /* SceneDelegate.swift */; };
-		1D30AB142C00000100000001 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30AB042C00000100000001 /* ViewController.swift */; };
-		1D30AB162C00000100000001 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 1D30AB062C00000100000001 /* www */; };
+		1D30B0012C00000100000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30F0022C00000100000001 /* AppDelegate.swift */; };
+		1D30B0022C00000100000001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30F0032C00000100000001 /* SceneDelegate.swift */; };
+		1D30B0032C00000100000001 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D30F0042C00000100000001 /* ViewController.swift */; };
+		1D30B0042C00000100000001 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 1D30F0062C00000100000001 /* www */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1D30AB002C00000100000001 /* OPEN-VERSE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "OPEN-VERSE.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D30AB022C00000100000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		1D30AB032C00000100000001 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		1D30AB042C00000100000001 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		1D30AB052C00000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1D30AB062C00000100000001 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		1D30F0012C00000100000001 /* OPEN-VERSE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "OPEN-VERSE.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D30F0022C00000100000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1D30F0032C00000100000001 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		1D30F0042C00000100000001 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		1D30F0052C00000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D30F0062C00000100000001 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		1D30AAFD2C00000100000001 /* Frameworks */ = {
+		1D30P0012C00000100000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,30 +33,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1D30AAF72C00000100000001 = {
+		1D30G0012C00000100000001 = {
 			isa = PBXGroup;
 			children = (
-				1D30AB012C00000100000001 /* OPEN-VERSE */,
-				1D30AAFE2C00000100000001 /* Products */,
+				1D30G0032C00000100000001 /* OPEN-VERSE */,
+				1D30G0022C00000100000001 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		1D30AAFE2C00000100000001 /* Products */ = {
+		1D30G0022C00000100000001 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D30AB002C00000100000001 /* OPEN-VERSE.app */,
+				1D30F0012C00000100000001 /* OPEN-VERSE.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		1D30AB012C00000100000001 /* OPEN-VERSE */ = {
+		1D30G0032C00000100000001 /* OPEN-VERSE */ = {
 			isa = PBXGroup;
 			children = (
-				1D30AB022C00000100000001 /* AppDelegate.swift */,
-				1D30AB032C00000100000001 /* SceneDelegate.swift */,
-				1D30AB042C00000100000001 /* ViewController.swift */,
-				1D30AB052C00000100000001 /* Info.plist */,
-				1D30AB062C00000100000001 /* www */,
+				1D30F0022C00000100000001 /* AppDelegate.swift */,
+				1D30F0032C00000100000001 /* SceneDelegate.swift */,
+				1D30F0042C00000100000001 /* ViewController.swift */,
+				1D30F0052C00000100000001 /* Info.plist */,
+				1D30F0062C00000100000001 /* www */,
 			);
 			path = "OPEN-VERSE";
 			sourceTree = "<group>";
@@ -64,13 +64,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1D30AAFF2C00000100000001 /* OPEN-VERSE */ = {
+		1D30T0012C00000100000001 /* OPEN-VERSE */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1D30AB0A2C00000100000001 /* Build configuration list for PBXNativeTarget "OPEN-VERSE" */;
+			buildConfigurationList = 1D30L0022C00000100000001 /* Build configuration list for PBXNativeTarget "OPEN-VERSE" */;
 			buildPhases = (
-				1D30AAFC2C00000100000001 /* Sources */,
-				1D30AAFD2C00000100000001 /* Frameworks */,
-				1D30AAFE2C00000100000001 /* Resources */,
+				1D30P0032C00000100000001 /* Sources */,
+				1D30P0012C00000100000001 /* Frameworks */,
+				1D30P0022C00000100000001 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -78,25 +78,25 @@
 			);
 			name = "OPEN-VERSE";
 			productName = "OPEN-VERSE";
-			productReference = 1D30AB002C00000100000001 /* OPEN-VERSE.app */;
+			productReference = 1D30F0012C00000100000001 /* OPEN-VERSE.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		1D30AAF82C00000100000001 /* Project object */ = {
+		1D30R0012C00000100000001 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
-					1D30AAFF2C00000100000001 = {
+					1D30T0012C00000100000001 = {
 						CreatedOnToolsVersion = 15.2;
 					};
 				};
 			};
-			buildConfigurationList = 1D30AAFB2C00000100000001 /* Build configuration list for PBXProject "OPEN-VERSE" */;
+			buildConfigurationList = 1D30L0012C00000100000001 /* Build configuration list for PBXProject "OPEN-VERSE" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -104,42 +104,42 @@
 				en,
 				Base,
 			);
-			mainGroup = 1D30AAF72C00000100000001;
-			productRefGroup = 1D30AAFE2C00000100000001 /* Products */;
+			mainGroup = 1D30G0012C00000100000001;
+			productRefGroup = 1D30G0022C00000100000001 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1D30AAFF2C00000100000001 /* OPEN-VERSE */,
+				1D30T0012C00000100000001 /* OPEN-VERSE */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1D30AAFE2C00000100000001 /* Resources */ = {
+		1D30P0022C00000100000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D30AB162C00000100000001 /* www in Resources */,
+				1D30B0042C00000100000001 /* www in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1D30AAFC2C00000100000001 /* Sources */ = {
+		1D30P0032C00000100000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D30AB122C00000100000001 /* AppDelegate.swift in Sources */,
-				1D30AB132C00000100000001 /* SceneDelegate.swift in Sources */,
-				1D30AB142C00000100000001 /* ViewController.swift in Sources */,
+				1D30B0012C00000100000001 /* AppDelegate.swift in Sources */,
+				1D30B0022C00000100000001 /* SceneDelegate.swift in Sources */,
+				1D30B0032C00000100000001 /* ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		1D30AB082C00000100000001 /* Debug */ = {
+		1D30C0012C00000100000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -166,7 +166,7 @@
 			};
 			name = Debug;
 		};
-		1D30AB092C00000100000001 /* Release */ = {
+		1D30C0022C00000100000001 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -188,7 +188,7 @@
 			};
 			name = Release;
 		};
-		1D30AB0B2C00000100000001 /* Debug */ = {
+		1D30C0032C00000100000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -209,7 +209,7 @@
 			};
 			name = Debug;
 		};
-		1D30AB0C2C00000100000001 /* Release */ = {
+		1D30C0042C00000100000001 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -233,20 +233,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1D30AAFB2C00000100000001 /* Build configuration list for PBXProject "OPEN-VERSE" */ = {
+		1D30L0012C00000100000001 /* Build configuration list for PBXProject "OPEN-VERSE" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1D30AB082C00000100000001 /* Debug */,
-				1D30AB092C00000100000001 /* Release */,
+				1D30C0012C00000100000001 /* Debug */,
+				1D30C0022C00000100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1D30AB0A2C00000100000001 /* Build configuration list for PBXNativeTarget "OPEN-VERSE" */ = {
+		1D30L0022C00000100000001 /* Build configuration list for PBXNativeTarget "OPEN-VERSE" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1D30AB0B2C00000100000001 /* Debug */,
-				1D30AB0C2C00000100000001 /* Release */,
+				1D30C0032C00000100000001 /* Debug */,
+				1D30C0042C00000100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -254,5 +254,5 @@
 /* End XCConfigurationList section */
 
 	};
-	rootObject = 1D30AAF82C00000100000001 /* Project object */;
+	rootObject = 1D30R0012C00000100000001 /* Project object */;
 }
