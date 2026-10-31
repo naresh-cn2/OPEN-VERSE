@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "OPEN-VERSE-Native"
         private const val ASSET_DOMAIN = "appassets.androidplatform.net"
-        private const val ASSET_URL = "https://$ASSET_DOMAIN/assets/index.html"
+        private const val ASSET_URL = "https://$ASSET_DOMAIN/index.html"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
         assetLoader = WebViewAssetLoader.Builder()
             .setDomain(ASSET_DOMAIN)
             .addPathHandler("/assets/", AssetsPathHandler(this))
+            .addPathHandler("/_next/", AssetsPathHandler(this))
+            .addPathHandler("/", AssetsPathHandler(this))
             .build()
 
         webView = WebView(this).apply {
@@ -118,6 +120,26 @@ class MainActivity : AppCompatActivity() {
                     val response = assetLoader.shouldInterceptRequest(url)
                     if (response != null) {
                         return response
+                    }
+
+                    // Direct asset open fallback if path handler leaves any gaps
+                    val path = url.path?.removePrefix("/") ?: ""
+                    try {
+                        val assetPath = if (path.isEmpty()) "index.html" else path
+                        val inputStream = assets.open(assetPath)
+                        val mimeType = when {
+                            assetPath.endsWith(".html") -> "text/html"
+                            assetPath.endsWith(".js") -> "application/javascript"
+                            assetPath.endsWith(".css") -> "text/css"
+                            assetPath.endsWith(".json") -> "application/json"
+                            assetPath.endsWith(".png") -> "image/png"
+                            assetPath.endsWith(".svg") -> "image/svg+xml"
+                            assetPath.endsWith(".txt") -> "text/plain"
+                            else -> "application/octet-stream"
+                        }
+                        return WebResourceResponse(mimeType, "UTF-8", inputStream)
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Asset not found via direct open: $path")
                     }
                 }
 

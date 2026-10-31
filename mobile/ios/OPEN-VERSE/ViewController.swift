@@ -1,6 +1,56 @@
 import UIKit
 import WebKit
 
+class AssetSchemeHandler: NSObject, WKURLSchemeHandler {
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        guard let url = urlSchemeTask.request.url else {
+            urlSchemeTask.didFailWithError(NSError(domain: "OpenVerse", code: 400, userInfo: nil))
+            return
+        }
+
+        var path = url.path
+        if path.isEmpty || path == "/" {
+            path = "/index.html"
+        }
+
+        guard let resourcePath = Bundle.main.resourcePath else {
+            urlSchemeTask.didFailWithError(NSError(domain: "OpenVerse", code: 500, userInfo: nil))
+            return
+        }
+
+        let filePath = resourcePath + "/www" + path
+        if FileManager.default.fileExists(atPath: filePath), let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) {
+            let mimeType: String
+            if path.hasSuffix(".html") { mimeType = "text/html" }
+            else if path.hasSuffix(".js") { mimeType = "application/javascript" }
+            else if path.hasSuffix(".css") { mimeType = "text/css" }
+            else if path.hasSuffix(".json") { mimeType = "application/json" }
+            else if path.hasSuffix(".svg") { mimeType = "image/svg+xml" }
+            else if path.hasSuffix(".png") { mimeType = "image/png" }
+            else if path.hasSuffix(".txt") { mimeType = "text/plain" }
+            else { mimeType = "application/octet-stream" }
+
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: [
+                    "Content-Type": mimeType,
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Length": String(data.count)
+                ]
+            )!
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didReceive(data)
+            urlSchemeTask.didFinish()
+        } else {
+            urlSchemeTask.didFailWithError(NSError(domain: "OpenVerse", code: 404, userInfo: nil))
+        }
+    }
+
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
+}
+
 class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
 
     private var webView: WKWebView!
@@ -27,6 +77,7 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
         contentController.add(self, name: "openExternalUrl")
         contentController.add(self, name: "performHapticFeedback")
         configuration.userContentController = contentController
+        configuration.setURLSchemeHandler(AssetSchemeHandler(), forURLScheme: "appassets")
 
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -40,9 +91,8 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
     }
 
     private func loadLocalApp() {
-        if let htmlPath = Bundle.main.path(forResource: "index", ofType: "html", inDirectory: "www") {
-            let fileUrl = URL(fileURLWithPath: htmlPath)
-            webView.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
+        if let url = URL(string: "appassets://localhost/index.html") {
+            webView.load(URLRequest(url: url))
         }
     }
 

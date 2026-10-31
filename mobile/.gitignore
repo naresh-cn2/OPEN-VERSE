@@ -8,13 +8,14 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
-android/app/src/main/assets/assets/
-android/app/src/main/assets/index.html
+android/app/src/main/assets/*
+!android/app/src/main/assets/.gitkeep
 
 # iOS
 ios/build/
 ios/DerivedData/
 ios/OPEN-VERSE/www/*
+ios/OPEN-VERSE/www/**
 !ios/OPEN-VERSE/www/.gitkeep
 *.xcuserstate
 

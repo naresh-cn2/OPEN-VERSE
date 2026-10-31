@@ -16,6 +16,16 @@ import type {
 	DesktopTransportResponse,
 	DesktopTransportState,
 } from "@/lib/desktop-transport";
+import {
+	appendStandaloneMessage,
+	getStandaloneMessages,
+	getStandaloneThreads,
+	getStoredHubEndpoint,
+	getStoredProviderConfig,
+	saveStandaloneThreads,
+	saveStoredProviderConfig,
+	streamStandaloneCompletion,
+} from "@/lib/standalone-runner";
 
 // Lazily import the Tauri invoke API only when available. When running in
 // sidecar/web mode (without Tauri), this module may not exist or the bridge
@@ -61,7 +71,16 @@ export async function resolveDesktopBackendWsEndpoint(): Promise<string> {
 		return resolvedEndpointCache;
 	}
 
-	// 2. Tauri command (full desktop app).
+	// 2. Configured Desktop Hub endpoint from device storage (e.g. mobile paired to PC)
+	if (typeof window !== "undefined") {
+		const storedHub = getStoredHubEndpoint();
+		if (storedHub && storedHub.trim()) {
+			resolvedEndpointCache = storedHub.trim();
+			return resolvedEndpointCache;
+		}
+	}
+
+	// 3. Tauri command (full desktop app).
 	if (isTauriAvailable()) {
 		const endpoint = await tryTauriInvoke<string>(
 			"get_desktop_backend_endpoint",
@@ -299,6 +318,40 @@ class DesktopClient {
 	private recentErrorReports = new Map<string, number>();
 	private reportedErrorObjects = new WeakSet<object>();
 	private errorObjectDeliveries = new WeakMap<object, Promise<boolean>>();
+	private isStandalone = false;
+
+	enableStandaloneMode(): void {
+		this.isStandalone = true;
+		this.hasConnectedOnce = true;
+		this.transportError = null;
+		this.setTransportState("connected");
+		this.emitEvent("hub_status", { state: "ready" });
+	}
+
+	isStandaloneMode(): boolean {
+		return this.isStandalone;
+	}
+
+	isHubConfigured(): boolean {
+		if (typeof window === "undefined") return false;
+		return Boolean(
+			getStoredHubEndpoint() ||
+			(window as unknown as Record<string, unknown>).__SIDECAR_WS_ENDPOINT__
+		);
+	}
+
+	emitEvent(name: string, payload: unknown): void {
+		const handlers = this.handlers.get(name);
+		if (handlers) {
+			for (const handler of handlers) {
+				try {
+					handler(payload);
+				} catch (err) {
+					console.error(`Error in event listener for ${name}:`, err);
+				}
+			}
+		}
+	}
 
 	reportError(report: DesktopErrorReport): void {
 		const error = report.error;
@@ -647,6 +700,11 @@ class DesktopClient {
 			}
 		}
 
+		// Standalone / Mobile In-Client fallback when not connected to a remote desktop backend
+		if (this.isStandalone || (!isTauriAvailable() && this.transportState !== "connected")) {
+			return await this.handleStandaloneInvoke<T>(command, args);
+		}
+
 		options?.signal?.throwIfAborted();
 		await this.connectForCommand(
 			command,
@@ -715,6 +773,188 @@ class DesktopClient {
 				throw error;
 			}
 		});
+	}
+
+	private async handleStandaloneInvoke<T>(
+		command: string,
+		args?: Record<string, unknown>,
+	): Promise<T> {
+		const reqObj = (args?.request as Record<string, unknown>) || args || {};
+		const sid =
+			(args?.sessionId as string) ||
+			(reqObj.sessionId as string) ||
+			"standalone-session";
+		const envId =
+			(args?.environmentId as string) ||
+			((reqObj.config as Record<string, unknown>)?.environmentId as string) ||
+			"local";
+
+		switch (command) {
+			case "get_process_context":
+				return {
+					appVersion: "0.2.0",
+					hub: { status: "ready" },
+					environmentId: envId,
+				} as unknown as T;
+
+			case "list_chat_sessions":
+			case "get_session_history": {
+				const threads = getStandaloneThreads();
+				return threads.map((t) => ({
+					sessionId: t.id,
+					threadId: t.id,
+					title: t.title,
+					createdAt: t.createdAt,
+					updatedAt: t.updatedAt,
+					environmentId: envId,
+					pinned: t.pinned ?? false,
+					provider: t.provider || "gemini",
+					model: t.model || "gemini-2.5-flash",
+				})) as unknown as T;
+			}
+
+			case "read_session_messages": {
+				const msgs = getStandaloneMessages(sid);
+				return msgs.map((m) => ({
+					id: m.id,
+					sessionId: m.sessionId,
+					role: m.role,
+					content: m.content,
+					createdAt: m.createdAt,
+				})) as unknown as T;
+			}
+
+			case "update_chat_session_title": {
+				const nextTitle = (args?.title as string) || "Session";
+				const threads = getStandaloneThreads();
+				const found = threads.find((t) => t.id === sid);
+				if (found) {
+					found.title = nextTitle;
+					saveStandaloneThreads(threads);
+				}
+				return true as unknown as T;
+			}
+
+			case "delete_chat_session": {
+				const threads = getStandaloneThreads().filter((t) => t.id !== sid);
+				saveStandaloneThreads(threads);
+				return true as unknown as T;
+			}
+
+			case "set_session_pinned": {
+				const threads = getStandaloneThreads();
+				const found = threads.find((t) => t.id === sid);
+				if (found) {
+					found.pinned = Boolean(args?.pinned);
+					saveStandaloneThreads(threads);
+				}
+				return true as unknown as T;
+			}
+
+			case "get_provider_settings": {
+				return getStoredProviderConfig() as unknown as T;
+			}
+
+			case "save_provider_settings": {
+				saveStoredProviderConfig((args as any) || {});
+				return true as unknown as T;
+			}
+
+			case "validate_workspace_directory":
+				return { environmentId: envId, valid: true } as unknown as T;
+
+			case "read_session_hooks":
+			case "poll_tool_approvals":
+			case "poll_ask_questions":
+				return [] as unknown as T;
+
+			case "open_external_url": {
+				const url = args?.url as string;
+				if (url) void openExternalUrl(url);
+				return true as unknown as T;
+			}
+
+			case "chat_session_command": {
+				const action = reqObj.action;
+
+				if (action === "attach" || action === "start") {
+					return {
+						sessionId: (reqObj.sessionId as string) || `session_${Date.now()}`,
+						environmentId: envId,
+						status: "idle",
+					} as unknown as T;
+				}
+
+				if (action === "send") {
+					const prompt = (reqObj.prompt as string) || "";
+					const activeSid = (reqObj.sessionId as string) || sid;
+
+					// 1. Record user message
+					appendStandaloneMessage(activeSid, {
+						id: `msg_${Date.now()}_u`,
+						sessionId: activeSid,
+						role: "user",
+						content: prompt,
+						createdAt: Date.now(),
+					});
+
+					// 2. Stream assistant completion asynchronously
+					void (async () => {
+						let assistantText = "";
+						try {
+							await streamStandaloneCompletion(
+								prompt,
+								activeSid,
+								(chunk) => {
+									assistantText += chunk;
+									this.emitEvent("chat_event", {
+										sessionId: activeSid,
+										environmentId: envId,
+										stream: "chat_text",
+										chunk,
+									});
+								},
+							);
+						} catch (err: unknown) {
+							const errMsg = err instanceof Error ? err.message : String(err);
+							this.emitEvent("chat_event", {
+								sessionId: activeSid,
+								environmentId: envId,
+								stream: "chat_text",
+								chunk: `\n\n**Error:** ${errMsg}`,
+							});
+						} finally {
+							this.emitEvent("chat_event", {
+								sessionId: activeSid,
+								environmentId: envId,
+								stream: "chat_done",
+							});
+							this.emitEvent("chat_session_status", {
+								sessionId: activeSid,
+								environmentId: envId,
+								status: "completed",
+							});
+							if (assistantText.trim()) {
+								appendStandaloneMessage(activeSid, {
+									id: `msg_${Date.now()}_a`,
+									sessionId: activeSid,
+									role: "assistant",
+									content: assistantText,
+									createdAt: Date.now(),
+								});
+							}
+						}
+					})();
+
+					return { status: "running" } as unknown as T;
+				}
+
+				return {} as unknown as T;
+			}
+
+			default:
+				return null as unknown as T;
+		}
 	}
 
 	subscribe(eventName: string, handler: EventHandler): () => void {
