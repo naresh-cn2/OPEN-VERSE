@@ -1309,7 +1309,39 @@ export function AgentSidebar({
 						isCollapsed ? "px-1.5" : "px-2",
 					)}
 				>
-					{(user || ovUser) && !isCollapsed ? (
+					{isCollapsed ? (
+						<div className="flex flex-col items-center gap-2">
+							<button
+								aria-label="Account settings"
+								className={cn(
+									"flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+									view === "settings" &&
+									settingsSection === "Account" &&
+									"ring-2 ring-primary ring-offset-2 ring-offset-background",
+								)}
+								onClick={() => openSettingsSection("Account")}
+								title={accountName}
+								type="button"
+							>
+								{accountInitial}
+							</button>
+							<Button
+								aria-label="Settings"
+								className={cn(
+									"size-9 justify-center px-0",
+									view === "settings" &&
+									settingsSection !== "Account" &&
+									"bg-surface-hover text-sidebar-foreground",
+								)}
+								onClick={openSettings}
+								title="Settings"
+								type="button"
+								variant="sidebarItem"
+							>
+								<Settings className="size-4" />
+							</Button>
+						</div>
+					) : (user || ovUser) ? (
 						<div className="flex min-w-0 items-center gap-2">
 							<button
 								aria-label="Account settings"

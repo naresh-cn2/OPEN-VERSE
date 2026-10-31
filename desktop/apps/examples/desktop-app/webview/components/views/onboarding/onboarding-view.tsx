@@ -62,7 +62,7 @@ const CLINE_PASS_SUBSCRIBE_URL = "https://open-verse-website.vercel.app";
 
 const CLINE_SIGN_IN_BENEFITS = [
 	"Regular free model promotions",
-	"Subscribe to OPEN-VERSE Pass for generous usage across top open models",
+	"Subscribe to ClinePass for generous usage across top open models",
 	"No API key needed",
 ];
 
@@ -342,7 +342,10 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 				<div className="mt-8 flex w-full max-w-72 flex-col gap-2.5">
 					<Button
 						className="w-full"
-						onClick={onContinue}
+						onClick={() => {
+							setAuthScreen("auth_options");
+							setViewMode("auth");
+						}}
 						size="lg"
 						tone="accent"
 						type="button"
@@ -355,7 +358,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 						<Button
 							className="flex-1"
 							onClick={() => {
-								setAuthScreen("sign_in");
+								setAuthScreen("auth_options");
 								setViewMode("auth");
 							}}
 							size="md"
@@ -368,7 +371,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 						<Button
 							className="flex-1"
 							onClick={() => {
-								setAuthScreen("sign_up");
+								setAuthScreen("auth_options");
 								setViewMode("auth");
 							}}
 							size="md"
@@ -383,7 +386,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 					<Button
 						className="w-full text-xs text-muted-foreground hover:text-foreground mt-1"
 						onClick={() => {
-							setAuthScreen("offline_mode");
+							setAuthScreen("auth_options");
 							setViewMode("auth");
 						}}
 						size="sm"
@@ -1121,10 +1124,9 @@ function ClineModelsSummary() {
 			) : null}
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<div className="min-w-0 flex-1">
-					<h2 className="text-sm font-semibold text-foreground">OPEN-VERSE Pass</h2>
+					<h2 className="text-sm font-semibold text-foreground">ClinePass</h2>
 					<p className="mt-1 text-xs text-muted-foreground">
-						Generous usage across the best open weights models like DeepSeek,
-						Kimi, and GLM.
+						Optional subscription for the Cline provider, providing generous usage across models like DeepSeek, Kimi, and GLM.
 					</p>
 				</div>
 				<Button
@@ -1134,7 +1136,7 @@ function ClineModelsSummary() {
 					type="button"
 					variant="surface"
 				>
-					Get OPEN-VERSE Pass
+					Get ClinePass
 					<ExternalLink className="size-3.5" />
 				</Button>
 			</div>

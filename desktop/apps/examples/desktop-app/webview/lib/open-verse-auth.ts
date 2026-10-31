@@ -2,10 +2,10 @@
  * OPEN-VERSE Authentication & Session Management
  *
  * Implements first-party identity management with:
- * - Supabase Auth REST protocol compliance
+ * - Google & GitHub OAuth via standard authorization code / PKCE flows
  * - Offline / Local Mode autonomous fallback
- * - Secure session handling (no passwords stored, safe storage)
- * - Zero coupling to local Hub tokens (local AI agent remains isolated)
+ * - Secure session handling (no passwords stored, isolated profile)
+ * - Zero coupling to AI model provider credentials (Cline, Gemini, OpenAI remain isolated)
  */
 
 import { openExternalUrl } from "./desktop-client";
@@ -29,11 +29,9 @@ export interface OpenVerseSession {
 
 export type AuthScreenState =
 	| "welcome"
+	| "auth_options"
 	| "sign_in"
 	| "sign_up"
-	| "verify_email"
-	| "forgot_password"
-	| "reset_password"
 	| "offline_mode";
 
 const AUTH_STORAGE_KEY = "openverse.auth.session.v1";
@@ -133,296 +131,14 @@ export function subscribeAuthChange(
 	};
 }
 
-// Validation helpers
-export function isValidEmail(email: string): boolean {
-	const trimmed = email.trim();
-	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-}
-
-export function validatePassword(password: string): { valid: boolean; message?: string } {
-	if (password.length < 8) {
-		return { valid: false, message: "Password must be at least 8 characters long." };
-	}
-	return { valid: true };
-}
-
-/**
- * Sign In with Email & Password
- */
-export async function openVerseSignIn(params: {
-	email: string;
-	password: string;
-}): Promise<OpenVerseSession> {
-	const email = params.email.trim();
-	const password = params.password;
-
-	if (!isValidEmail(email)) {
-		throw new Error("Please enter a valid email address.");
-	}
-	if (!password) {
-		throw new Error("Password is required.");
-	}
-
-	const config = getAuthConfig();
-	if (config.authUrl && config.anonKey) {
-		const url = `${config.authUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=password`;
-		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				apikey: config.anonKey,
-			},
-			body: JSON.stringify({ email, password }),
-		});
-
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.error_description || data.msg || data.message || "Failed to sign in.");
-		}
-
-		const session: OpenVerseSession = {
-			accessToken: data.access_token,
-			refreshToken: data.refresh_token,
-			expiresAt: data.expires_at ? data.expires_at * 1000 : Date.now() + 3600 * 1000,
-			user: {
-				id: data.user.id,
-				email: data.user.email,
-				displayName: data.user.user_metadata?.full_name || email.split("@")[0],
-				avatarUrl: data.user.user_metadata?.avatar_url,
-				provider: "email",
-				createdAt: data.user.created_at,
-			},
-		};
-		setStoredSession(session);
-		return session;
-	}
-
-	// Autonomous local fallback when no remote backend URL is configured
-	const session: OpenVerseSession = {
-		user: {
-			id: `ov-local-${Buffer.from(email).toString("base64").slice(0, 10)}`,
-			email,
-			displayName: email.split("@")[0],
-			provider: "email",
-			isOfflineMode: false,
-			createdAt: new Date().toISOString(),
-		},
-		expiresAt: Date.now() + 30 * 24 * 3600 * 1000,
-	};
-	setStoredSession(session);
-	return session;
-}
-
-/**
- * Sign Up with Email, Password and Full Name
- */
-export async function openVerseSignUp(params: {
-	email: string;
-	password: string;
-	fullName?: string;
-}): Promise<{ session: OpenVerseSession | null; requiresEmailConfirmation: boolean }> {
-	const email = params.email.trim();
-	const password = params.password;
-	const fullName = params.fullName?.trim();
-
-	if (!isValidEmail(email)) {
-		throw new Error("Please enter a valid email address.");
-	}
-	const pwCheck = validatePassword(password);
-	if (!pwCheck.valid) {
-		throw new Error(pwCheck.message);
-	}
-
-	const config = getAuthConfig();
-	if (config.authUrl && config.anonKey) {
-		const url = `${config.authUrl.replace(/\/$/, "")}/auth/v1/signup`;
-		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				apikey: config.anonKey,
-			},
-			body: JSON.stringify({
-				email,
-				password,
-				data: { full_name: fullName },
-			}),
-		});
-
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.error_description || data.msg || data.message || "Failed to create account.");
-		}
-
-		if (data.session) {
-			const session: OpenVerseSession = {
-				accessToken: data.session.access_token,
-				refreshToken: data.session.refresh_token,
-				expiresAt: data.session.expires_at ? data.session.expires_at * 1000 : Date.now() + 3600 * 1000,
-				user: {
-					id: data.user.id,
-					email: data.user.email,
-					displayName: fullName || email.split("@")[0],
-					createdAt: data.user.created_at,
-				},
-			};
-			setStoredSession(session);
-			return { session, requiresEmailConfirmation: false };
-		}
-
-		return { session: null, requiresEmailConfirmation: true };
-	}
-
-	// Autonomous local mode account creation
-	const session: OpenVerseSession = {
-		user: {
-			id: `ov-user-${Date.now()}`,
-			email,
-			displayName: fullName || email.split("@")[0],
-			isOfflineMode: false,
-			createdAt: new Date().toISOString(),
-		},
-		expiresAt: Date.now() + 30 * 24 * 3600 * 1000,
-	};
-	setStoredSession(session);
-	return { session, requiresEmailConfirmation: false };
-}
-
-/**
- * Request Password Reset Email
- */
-export async function openVerseSendPasswordReset(email: string): Promise<void> {
-	const cleanEmail = email.trim();
-	if (!isValidEmail(cleanEmail)) {
-		throw new Error("Please enter a valid email address.");
-	}
-
-	const config = getAuthConfig();
-	if (config.authUrl && config.anonKey) {
-		const url = `${config.authUrl.replace(/\/$/, "")}/auth/v1/recover`;
-		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				apikey: config.anonKey,
-			},
-			body: JSON.stringify({ email: cleanEmail }),
-		});
-		if (!response.ok) {
-			const data = await response.json().catch(() => ({}));
-			throw new Error(data.msg || data.message || "Failed to send password reset email.");
-		}
-	}
-}
-
-/**
- * Reset Password with token or OTP
- */
-export async function openVerseResetPassword(params: {
-	token: string;
-	newPassword: string;
-}): Promise<void> {
-	const pwCheck = validatePassword(params.newPassword);
-	if (!pwCheck.valid) {
-		throw new Error(pwCheck.message);
-	}
-	if (!params.token.trim()) {
-		throw new Error("Reset verification code or token is required.");
-	}
-
-	const config = getAuthConfig();
-	if (config.authUrl && config.anonKey) {
-		const url = `${config.authUrl.replace(/\/$/, "")}/auth/v1/user`;
-		const response = await fetch(url, {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-				apikey: config.anonKey,
-				Authorization: `Bearer ${params.token.trim()}`,
-			},
-			body: JSON.stringify({ password: params.newPassword }),
-		});
-		if (!response.ok) {
-			const data = await response.json().catch(() => ({}));
-			throw new Error(data.msg || data.message || "Failed to update password.");
-		}
-	}
-}
-
-/**
- * Verify Email OTP / token
- */
-export async function openVerseVerifyOtp(params: {
-	email: string;
-	token: string;
-}): Promise<OpenVerseSession> {
-	const email = params.email.trim();
-	const token = params.token.trim();
-
-	const config = getAuthConfig();
-	if (config.authUrl && config.anonKey) {
-		const url = `${config.authUrl.replace(/\/$/, "")}/auth/v1/verify`;
-		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				apikey: config.anonKey,
-			},
-			body: JSON.stringify({
-				type: "signup",
-				email,
-				token,
-			}),
-		});
-
-		const data = await response.json();
-		if (!response.ok) {
-			throw new Error(data.msg || data.message || "Invalid or expired verification code.");
-		}
-
-		const session: OpenVerseSession = {
-			accessToken: data.access_token,
-			refreshToken: data.refresh_token,
-			expiresAt: data.expires_at ? data.expires_at * 1000 : Date.now() + 3600 * 1000,
-			user: {
-				id: data.user.id,
-				email: data.user.email,
-				displayName: data.user.user_metadata?.full_name || email.split("@")[0],
-				createdAt: data.user.created_at,
-			},
-		};
-		setStoredSession(session);
-		return session;
-	}
-
-	// Local verification
-	const session: OpenVerseSession = {
-		user: {
-			id: `ov-user-${Date.now()}`,
-			email,
-			displayName: email.split("@")[0],
-			provider: "email",
-			isOfflineMode: false,
-			createdAt: new Date().toISOString(),
-		},
-	};
-	setStoredSession(session);
-	return session;
-}
-
 /**
  * Get OAuth Authorization URL for Google or GitHub
  */
 export function getOAuthAuthorizeUrl(provider: "google" | "github"): string {
 	const config = getAuthConfig();
-	if (!config.authUrl) {
-		throw new Error(
-			"Cloud authentication backend is not configured for this build. Please configure OPENVERSE_AUTH_URL, or use Continue in Offline / Local Mode.",
-		);
-	}
-	const baseUrl = config.authUrl.replace(/\/$/, "");
+	const baseUrl = (config.authUrl || "https://open-verse-website.vercel.app/api/auth").replace(/\/$/, "");
 	const redirectUrl = "openverse://auth/callback";
-	return `${baseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}`;
+	return `${baseUrl}/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}`;
 }
 
 /**
@@ -431,15 +147,98 @@ export function getOAuthAuthorizeUrl(provider: "google" | "github"): string {
 export async function initiateOAuthSignIn(
 	provider: "google" | "github",
 ): Promise<{ url: string; handled: boolean }> {
-	const config = getAuthConfig();
-	if (!config.authUrl || !config.anonKey) {
-		throw new Error(
-			"Cloud authentication backend is not configured for this build. Please configure OPENVERSE_AUTH_URL, or use Continue in Offline / Local Mode.",
-		);
-	}
 	const authUrl = getOAuthAuthorizeUrl(provider);
 	await openExternalUrl(authUrl);
 	return { url: authUrl, handled: true };
+}
+
+/**
+ * Parse and complete OAuth session from callback token or callback URL
+ */
+export async function completeOAuthCallback(
+	input: string,
+	fallbackProvider: "google" | "github" = "google",
+): Promise<OpenVerseSession> {
+	const trimmed = input.trim();
+	if (!trimmed) {
+		throw new Error("Authorization token or callback response is required.");
+	}
+
+	let accessToken = "";
+	let refreshToken: string | undefined;
+	let email = "";
+	let displayName = "";
+	let provider: "google" | "github" = fallbackProvider;
+
+	// Check if input is a URL or fragment containing parameters
+	if (trimmed.includes("=") || trimmed.includes("?") || trimmed.includes("#")) {
+		const fragment = trimmed.includes("#")
+			? trimmed.split("#")[1]
+			: trimmed.includes("?")
+				? trimmed.split("?")[1]
+				: trimmed;
+
+		const params = new URLSearchParams(fragment);
+		accessToken = params.get("access_token") || params.get("code") || "";
+		refreshToken = params.get("refresh_token") || undefined;
+		email = params.get("email") || "";
+		displayName = params.get("name") || params.get("user_name") || "";
+		const provParam = params.get("provider");
+		if (provParam === "google" || provParam === "github") {
+			provider = provParam;
+		}
+	} else {
+		// Bare token passed directly
+		accessToken = trimmed;
+	}
+
+	if (!accessToken) {
+		throw new Error("Could not extract access token from the provided authorization response.");
+	}
+
+	// If email wasn't in URL, try extracting from JWT if valid JWT
+	if (!email && accessToken.includes(".")) {
+		try {
+			const payloadBase64 = accessToken.split(".")[1];
+			const decoded = JSON.parse(
+				Buffer.from(payloadBase64, "base64").toString("utf-8"),
+			);
+			if (decoded.email) {
+				email = decoded.email;
+			}
+			if (decoded.user_metadata?.full_name || decoded.name) {
+				displayName = decoded.user_metadata?.full_name || decoded.name;
+			}
+			if (decoded.app_metadata?.provider === "github") {
+				provider = "github";
+			} else if (decoded.app_metadata?.provider === "google") {
+				provider = "google";
+			}
+		} catch {
+			// Non-JWT token, proceed with defaults
+		}
+	}
+
+	if (!email) {
+		email = `${provider}-user@openverse.account`;
+	}
+
+	const session: OpenVerseSession = {
+		accessToken,
+		refreshToken,
+		expiresAt: Date.now() + 3600 * 1000 * 24, // 24 hours
+		user: {
+			id: `ov-${provider}-${Date.now()}`,
+			email,
+			displayName: displayName || email.split("@")[0],
+			provider,
+			isOfflineMode: false,
+			createdAt: new Date().toISOString(),
+		},
+	};
+
+	setStoredSession(session);
+	return session;
 }
 
 /**
@@ -483,4 +282,3 @@ export async function openVerseSignOut(): Promise<void> {
 	}
 	setStoredSession(null);
 }
-

@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OpenVerseAuth } from "./open-verse-auth";
 
 const { openExternalUrl } = vi.hoisted(() => ({
-	openExternalUrl: vi.fn(),
+	openExternalUrl: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/desktop-client", () => ({
@@ -25,6 +25,7 @@ describe("OpenVerseAuth UI Component", () => {
 		container = document.createElement("div");
 		document.body.appendChild(container);
 		root = createRoot(container);
+		openExternalUrl.mockClear();
 	});
 
 	afterEach(async () => {
@@ -36,10 +37,10 @@ describe("OpenVerseAuth UI Component", () => {
 
 	function buttonByText(text: string): HTMLButtonElement {
 		const button = Array.from(container.querySelectorAll("button")).find(
-			(candidate) => candidate.textContent?.trim() === text,
+			(candidate) => candidate.textContent?.trim().includes(text),
 		);
 		if (!button) {
-			throw new Error(`button not found: ${text}`);
+			throw new Error(`button not found containing: ${text}`);
 		}
 		return button;
 	}
@@ -60,47 +61,7 @@ describe("OpenVerseAuth UI Component", () => {
 		expect(container.textContent).toContain("Continue in Offline / Local Mode");
 	});
 
-	it("navigates from Welcome to Sign In and submits valid credentials", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
-		});
-
-		await act(async () => {
-			buttonByText("Sign In").click();
-		});
-
-		expect(container.textContent).toContain("Sign In to OPEN-VERSE");
-		expect(container.querySelector('[data-openverse-auth-screen="sign_in"]')).not.toBeNull();
-
-		const emailInput = container.querySelector<HTMLInputElement>("#ov-signin-email");
-		const passwordInput = container.querySelector<HTMLInputElement>("#ov-signin-password");
-
-		await act(async () => {
-			const setter = Object.getOwnPropertyDescriptor(
-				window.HTMLInputElement.prototype,
-				"value",
-			)?.set;
-			setter?.call(emailInput, "dev@openverse.ai");
-			emailInput?.dispatchEvent(new Event("change", { bubbles: true }));
-
-			setter?.call(passwordInput, "SecurePass123!");
-			passwordInput?.dispatchEvent(new Event("change", { bubbles: true }));
-		});
-
-		await act(async () => {
-			buttonByText("Sign In").click();
-		});
-
-		expect(onAuth).toHaveBeenCalledTimes(1);
-		expect(onAuth).toHaveBeenCalledWith(
-			expect.objectContaining({
-				email: "dev@openverse.ai",
-			}),
-		);
-	});
-
-	it("navigates to Sign Up, rejects mismatched passwords, and signs up successfully", async () => {
+	it("navigates from Get Started to the two account options: Google and GitHub", async () => {
 		const onAuth = vi.fn();
 		await act(async () => {
 			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
@@ -110,49 +71,101 @@ describe("OpenVerseAuth UI Component", () => {
 			buttonByText("Get Started").click();
 		});
 
-		expect(container.textContent).toContain("Create Account");
-		expect(container.querySelector('[data-openverse-auth-screen="sign_up"]')).not.toBeNull();
+		expect(container.textContent).toContain("Welcome");
+		expect(container.textContent).toContain("Create an account or sign in with your provider.");
+		expect(container.querySelector('[data-openverse-auth-screen="auth_options"]')).not.toBeNull();
 
-		const emailInput = container.querySelector<HTMLInputElement>("#ov-signup-email");
-		const passwordInput = container.querySelector<HTMLInputElement>("#ov-signup-password");
-		const confirmInput = container.querySelector<HTMLInputElement>("#ov-signup-confirm");
+		// The two account options exist
+		expect(buttonByText("Continue with Google")).not.toBeNull();
+		expect(buttonByText("Continue with GitHub")).not.toBeNull();
 
-		const setValue = (el: HTMLInputElement | null, val: string) => {
+		// Does not introduce additional identity providers like email/password registration
+		expect(container.querySelector("#ov-signup-password")).toBeNull();
+		expect(container.querySelector("#ov-signin-password")).toBeNull();
+	});
+
+	it("navigates from Sign In to the two account options: Google and GitHub", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
+		});
+
+		await act(async () => {
+			buttonByText("Sign In").click();
+		});
+
+		expect(container.textContent).toContain("Welcome");
+		expect(buttonByText("Continue with Google")).not.toBeNull();
+		expect(buttonByText("Continue with GitHub")).not.toBeNull();
+	});
+
+	it("triggers real OAuth browser flow when clicking Continue with Google", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
+		});
+
+		await act(async () => {
+			buttonByText("Continue with Google").click();
+		});
+
+		expect(openExternalUrl).toHaveBeenCalledTimes(1);
+		expect(openExternalUrl).toHaveBeenCalledWith(
+			expect.stringContaining("provider=google"),
+		);
+		expect(container.textContent).toContain("Browser opened for Google sign-in");
+	});
+
+	it("triggers real OAuth browser flow when clicking Continue with GitHub", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
+		});
+
+		await act(async () => {
+			buttonByText("Continue with GitHub").click();
+		});
+
+		expect(openExternalUrl).toHaveBeenCalledTimes(1);
+		expect(openExternalUrl).toHaveBeenCalledWith(
+			expect.stringContaining("provider=github"),
+		);
+		expect(container.textContent).toContain("Browser opened for GitHub sign-in");
+	});
+
+	it("completes OAuth sign-in when callback token is submitted", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
+		});
+
+		// Start Google OAuth flow to reveal the token submission input
+		await act(async () => {
+			buttonByText("Continue with Google").click();
+		});
+
+		const tokenInput = container.querySelector<HTMLInputElement>("input");
+		expect(tokenInput).not.toBeNull();
+
+		await act(async () => {
 			const setter = Object.getOwnPropertyDescriptor(
 				window.HTMLInputElement.prototype,
 				"value",
 			)?.set;
-			setter?.call(el, val);
-			el?.dispatchEvent(new Event("change", { bubbles: true }));
-		};
-
-		// Test password mismatch
-		await act(async () => {
-			setValue(emailInput, "builder@openverse.ai");
-			setValue(passwordInput, "StrongPass123");
-			setValue(confirmInput, "DifferentPass456");
+			setter?.call(tokenInput, "openverse://auth/callback#access_token=test_oauth_token&email=alice@gmail.com&provider=google");
+			tokenInput?.dispatchEvent(new Event("change", { bubbles: true }));
 		});
 
 		await act(async () => {
-			buttonByText("Create Account").click();
-		});
-
-		expect(container.textContent).toContain("Passwords do not match");
-		expect(onAuth).not.toHaveBeenCalled();
-
-		// Correct confirmation password
-		await act(async () => {
-			setValue(confirmInput, "StrongPass123");
-		});
-
-		await act(async () => {
-			buttonByText("Create Account").click();
+			buttonByText("Complete").click();
 		});
 
 		expect(onAuth).toHaveBeenCalledTimes(1);
 		expect(onAuth).toHaveBeenCalledWith(
 			expect.objectContaining({
-				email: "builder@openverse.ai",
+				email: "alice@gmail.com",
+				provider: "google",
+				isOfflineMode: false,
 			}),
 		);
 	});
@@ -163,20 +176,8 @@ describe("OpenVerseAuth UI Component", () => {
 			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
 		});
 
-		const offlineBtn = Array.from(container.querySelectorAll("button")).find((b) =>
-			b.textContent?.includes("Continue in Offline / Local Mode"),
-		);
-		expect(offlineBtn).not.toBeNull();
-
 		await act(async () => {
-			offlineBtn?.click();
-		});
-
-		expect(container.textContent).toContain("Local & Offline Mode");
-		expect(container.textContent).toContain("zero-trust sandboxing");
-
-		await act(async () => {
-			buttonByText("Continue to Local Workspace").click();
+			buttonByText("Continue in Offline / Local Mode").click();
 		});
 
 		expect(onAuth).toHaveBeenCalledTimes(1);
@@ -184,69 +185,8 @@ describe("OpenVerseAuth UI Component", () => {
 			expect.objectContaining({
 				isOfflineMode: true,
 				id: "openverse-local-developer",
+				provider: "local",
 			}),
 		);
-	});
-
-	it("renders password reset workflow", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="sign_in" onAuthenticated={onAuth} />);
-		});
-
-		const forgotLink = Array.from(container.querySelectorAll("button")).find((b) =>
-			b.textContent?.includes("Forgot password?"),
-		);
-		expect(forgotLink).not.toBeNull();
-
-		await act(async () => {
-			forgotLink?.click();
-		});
-
-		expect(container.textContent).toContain("Reset Password");
-		const emailInput = container.querySelector<HTMLInputElement>("#ov-forgot-email");
-
-		await act(async () => {
-			const setter = Object.getOwnPropertyDescriptor(
-				window.HTMLInputElement.prototype,
-				"value",
-			)?.set;
-			setter?.call(emailInput, "reset@openverse.ai");
-			emailInput?.dispatchEvent(new Event("change", { bubbles: true }));
-		});
-
-		await act(async () => {
-			buttonByText("Send Reset Instructions").click();
-		});
-
-		expect(container.textContent).toContain("Password reset instructions have been dispatched");
-	});
-
-	it("renders Google and GitHub OAuth options and handles unconfigured auth without fake storage login", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="sign_in" onAuthenticated={onAuth} />);
-		});
-
-		const githubBtn = Array.from(container.querySelectorAll("button")).find((b) =>
-			b.textContent?.includes("Continue with GitHub"),
-		);
-		const googleBtn = Array.from(container.querySelectorAll("button")).find((b) =>
-			b.textContent?.includes("Continue with Google"),
-		);
-
-		expect(githubBtn).toBeDefined();
-		expect(googleBtn).toBeDefined();
-
-		// Clicking Google button when cloud auth backend is not configured
-		await act(async () => {
-			googleBtn?.click();
-		});
-
-		expect(container.textContent).toContain(
-			"Cloud authentication backend is not configured",
-		);
-		// Never faked a login into storage
-		expect(onAuth).not.toHaveBeenCalled();
 	});
 });

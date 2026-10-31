@@ -2,25 +2,31 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	completeOAuthCallback,
 	continueInOfflineMode,
 	getCurrentSession,
 	getCurrentUser,
-	isValidEmail,
-	openVerseResetPassword,
-	openVerseSendPasswordReset,
-	openVerseSignIn,
+	getOAuthAuthorizeUrl,
+	initiateOAuthSignIn,
 	openVerseSignOut,
-	openVerseSignUp,
-	openVerseVerifyOtp,
 	setStoredSession,
 	subscribeAuthChange,
-	validatePassword,
 } from "./open-verse-auth";
+
+const { openExternalUrl } = vi.hoisted(() => ({
+	openExternalUrl: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("./desktop-client", () => ({
+	openExternalUrl,
+	desktopClient: { invoke: vi.fn(), subscribe: vi.fn(() => () => {}) },
+}));
 
 describe("open-verse-auth library", () => {
 	beforeEach(() => {
 		window.localStorage.clear();
 		setStoredSession(null);
+		openExternalUrl.mockClear();
 	});
 
 	afterEach(() => {
@@ -28,132 +34,80 @@ describe("open-verse-auth library", () => {
 		setStoredSession(null);
 	});
 
-	describe("validation helpers", () => {
-		it("validates valid email formats correctly", () => {
-			expect(isValidEmail("user@example.com")).toBe(true);
-			expect(isValidEmail("developer.openverse@domain.co.uk")).toBe(true);
-			expect(isValidEmail("invalid-email")).toBe(false);
-			expect(isValidEmail("missing@domain")).toBe(false);
-			expect(isValidEmail("@domain.com")).toBe(false);
-			expect(isValidEmail("")).toBe(false);
+	describe("OAuth authorization URLs", () => {
+		it("generates correct OAuth authorize URLs for Google and GitHub", () => {
+			const googleUrl = getOAuthAuthorizeUrl("google");
+			expect(googleUrl).toContain("provider=google");
+			expect(googleUrl).toContain("redirect_to=openverse%3A%2F%2Fauth%2Fcallback");
+
+			const githubUrl = getOAuthAuthorizeUrl("github");
+			expect(githubUrl).toContain("provider=github");
+			expect(githubUrl).toContain("redirect_to=openverse%3A%2F%2Fauth%2Fcallback");
 		});
 
-		it("validates password length requirements", () => {
-			expect(validatePassword("short").valid).toBe(false);
-			expect(validatePassword("short").message).toContain("at least 8 characters");
-			expect(validatePassword("12345678").valid).toBe(true);
-			expect(validatePassword("StrongP@ssw0rd!").valid).toBe(true);
+		it("initiates OAuth flow by launching browser", async () => {
+			const result = await initiateOAuthSignIn("google");
+			expect(result.handled).toBe(true);
+			expect(openExternalUrl).toHaveBeenCalledWith(result.url);
 		});
 	});
 
-	describe("authentication flows", () => {
-		it("signs up a new user and creates an active session", async () => {
-			const result = await openVerseSignUp({
-				email: "engineer@openverse.ai",
-				password: "SecurePassword123!",
-				fullName: "Ada Lovelace",
-			});
+	describe("OAuth callback parsing", () => {
+		it("completes OAuth session from URL hash with access_token and user info", async () => {
+			const callbackUrl =
+				"openverse://auth/callback#access_token=token123&email=user@domain.com&name=TestUser&provider=google";
+			const session = await completeOAuthCallback(callbackUrl);
 
-			expect(result.session).not.toBeNull();
-			expect(result.session?.user.email).toBe("engineer@openverse.ai");
-			expect(result.session?.user.displayName).toBe("Ada Lovelace");
-			expect(result.session?.user.isOfflineMode).toBe(false);
+			expect(session.accessToken).toBe("token123");
+			expect(session.user.email).toBe("user@domain.com");
+			expect(session.user.displayName).toBe("TestUser");
+			expect(session.user.provider).toBe("google");
+			expect(session.user.isOfflineMode).toBe(false);
 
-			const current = getCurrentUser();
-			expect(current?.email).toBe("engineer@openverse.ai");
+			expect(getCurrentUser()?.email).toBe("user@domain.com");
 		});
 
-		it("rejects sign-up with invalid email or weak password", async () => {
-			await expect(
-				openVerseSignUp({
-					email: "not-an-email",
-					password: "ValidPassword123!",
-				}),
-			).rejects.toThrow("Please enter a valid email address.");
-
-			await expect(
-				openVerseSignUp({
-					email: "user@domain.com",
-					password: "123",
-				}),
-			).rejects.toThrow("Password must be at least 8 characters long.");
+		it("rejects empty callback input", async () => {
+			await expect(completeOAuthCallback("   ")).rejects.toThrow(
+				"Authorization token or callback response is required.",
+			);
 		});
+	});
 
-		it("signs in with valid email and password", async () => {
-			const session = await openVerseSignIn({
-				email: "developer@openverse.ai",
-				password: "SuperSecret123!",
-			});
-
-			expect(session.user.email).toBe("developer@openverse.ai");
-			expect(getCurrentSession()?.user.email).toBe("developer@openverse.ai");
-		});
-
-		it("rejects sign-in with empty password or invalid email", async () => {
-			await expect(
-				openVerseSignIn({
-					email: "invalid-email",
-					password: "password123",
-				}),
-			).rejects.toThrow("Please enter a valid email address.");
-
-			await expect(
-				openVerseSignIn({
-					email: "user@domain.com",
-					password: "",
-				}),
-			).rejects.toThrow("Password is required.");
-		});
-
-		it("initiates offline / local mode with local developer profile", () => {
+	describe("Offline / Local mode & Session management", () => {
+		it("activates offline mode with local developer profile", () => {
 			const session = continueInOfflineMode();
-
 			expect(session.user.isOfflineMode).toBe(true);
-			expect(session.user.id).toBe("openverse-local-developer");
+			expect(session.user.email).toBe("local@openverse.internal");
 			expect(session.user.displayName).toBe("Local Developer");
-			expect(getCurrentUser()?.isOfflineMode).toBe(true);
+			expect(session.user.provider).toBe("local");
+
+			const current = getCurrentSession();
+			expect(current?.user.id).toBe("openverse-local-developer");
 		});
 
-		it("verifies OTP and activates user session", async () => {
-			const session = await openVerseVerifyOtp({
-				email: "verify@openverse.ai",
-				token: "998877",
-			});
-
-			expect(session.user.email).toBe("verify@openverse.ai");
-			expect(getCurrentSession()?.user.email).toBe("verify@openverse.ai");
-		});
-
-		it("signs out and clears active session and user", async () => {
-			await openVerseSignIn({
-				email: "logout-test@openverse.ai",
-				password: "Password123!",
-			});
-			expect(getCurrentUser()).not.toBeNull();
-
-			await openVerseSignOut();
-			expect(getCurrentUser()).toBeNull();
-			expect(getCurrentSession()).toBeNull();
-		});
-
-		it("triggers subscriber events on authentication state change", async () => {
+		it("dispatches events on session change", () => {
 			const listener = vi.fn();
 			const unsubscribe = subscribeAuthChange(listener);
 
-			await openVerseSignIn({
-				email: "subscriber@openverse.ai",
-				password: "Password123!",
-			});
-			expect(listener).toHaveBeenCalled();
-			expect(listener.mock.calls[listener.mock.calls.length - 1][0]?.user.email).toBe(
-				"subscriber@openverse.ai",
+			continueInOfflineMode();
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					user: expect.objectContaining({ id: "openverse-local-developer" }),
+				}),
 			);
-
-			await openVerseSignOut();
-			expect(listener.mock.calls[listener.mock.calls.length - 1][0]).toBeNull();
 
 			unsubscribe();
 		});
+
+		it("clears session on sign-out", async () => {
+			continueInOfflineMode();
+			expect(getCurrentSession()).not.toBeNull();
+
+			await openVerseSignOut();
+			expect(getCurrentSession()).toBeNull();
+			expect(getCurrentUser()).toBeNull();
+		});
 	});
 });
-

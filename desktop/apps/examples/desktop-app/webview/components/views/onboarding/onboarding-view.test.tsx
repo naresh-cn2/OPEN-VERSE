@@ -177,19 +177,24 @@ describe("OnboardingView", () => {
 		return button;
 	}
 
-	async function render(onComplete = vi.fn()) {
+
+
+	async function render(
+		onComplete = vi.fn(),
+		initialStep: "welcome" | "connect" | "github" | "import" | "done" = "connect",
+	) {
 		await act(async () => {
 			root.render(
 				<AccountProvider>
-					<OnboardingView onComplete={onComplete} />
+					<OnboardingView initialStep={initialStep} onComplete={onComplete} />
 				</AccountProvider>,
 			);
 		});
 		return onComplete;
 	}
 
-	it("walks from welcome to the connect step", async () => {
-		await render();
+	it("walks from welcome to account options and through connect step", async () => {
+		await render(vi.fn(), "welcome");
 
 		// The welcome step layers the standalone bot over a separate interactive
 		// full-bleed grid. These data attributes protect that visual composition
@@ -217,6 +222,18 @@ describe("OnboardingView", () => {
 			buttonByText("Get started").click();
 		});
 
+		// Shows the account options: Continue with Google & Continue with GitHub
+		expect(container.textContent).toContain("Continue with Google");
+		expect(container.textContent).toContain("Continue with GitHub");
+
+		// Continuing offline advances to the connect step
+		const offlineBtn = Array.from(container.querySelectorAll("button")).find((b) =>
+			b.textContent?.includes("Continue in Offline / Local Mode"),
+		);
+		await act(async () => {
+			offlineBtn?.click();
+		});
+
 		// Cline is selected by default. The inactive API-key card is inert so its
 		// controls cannot receive pointer or keyboard input through the overlay.
 		expect(container.textContent).toContain("Set up OPEN-VERSE");
@@ -229,7 +246,7 @@ describe("OnboardingView", () => {
 			),
 		).toEqual([
 			"Regular free model promotions",
-			"Subscribe to OPEN-VERSE Pass for generous usage across top open models",
+			"Subscribe to ClinePass for generous usage across top open models",
 			"No API key needed",
 		]);
 		const apiKeyOption = container.querySelector(
@@ -277,9 +294,6 @@ describe("OnboardingView", () => {
 
 	it("moves the accent selected state to the chosen setup option", async () => {
 		await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 
 		const clineOption = container.querySelector(
 			'[data-onboarding-option="cline"]',
@@ -339,9 +353,6 @@ describe("OnboardingView", () => {
 
 	it("keeps the Cline API key form chevron static while toggling the panel", async () => {
 		await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 
 		// The design uses the chevron as a disclosure affordance without rotating
 		// it; aria-expanded and panel visibility carry the actual state.
@@ -377,9 +388,6 @@ describe("OnboardingView", () => {
 	it("completes without connecting when skipped", async () => {
 		const onComplete = await render();
 		await act(async () => {
-			buttonByText("Get started").click();
-		});
-		await act(async () => {
 			buttonByText("Skip").click();
 		});
 		expect(onComplete).toHaveBeenCalledTimes(1);
@@ -414,9 +422,6 @@ describe("OnboardingView", () => {
 			return {};
 		});
 		await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 		expect(container.textContent).toContain("Signed in as");
 
 		await act(async () => {
@@ -438,7 +443,7 @@ describe("OnboardingView", () => {
 		expect(clineModels?.textContent).toContain("deepseek-v4-flash");
 		expect(clineModels?.textContent).toContain("Solar Pro 4");
 		await act(async () => {
-			buttonByText("Get OPEN-VERSE Pass").click();
+			buttonByText("Get ClinePass").click();
 		});
 		expect(openExternalUrl).toHaveBeenCalledWith(
 			"https://open-verse-website.vercel.app",
@@ -476,9 +481,6 @@ describe("OnboardingView", () => {
 		});
 		await render();
 		await act(async () => {
-			buttonByText("Get started").click();
-		});
-		await act(async () => {
 			buttonByText("Continue").click();
 		});
 		expect(container.textContent).not.toContain("Connect GitHub");
@@ -499,9 +501,6 @@ describe("OnboardingView", () => {
 		});
 		await render();
 		await act(async () => {
-			buttonByText("Get started").click();
-		});
-		await act(async () => {
 			buttonByText("Continue").click();
 		});
 		expect(invoke).toHaveBeenCalledWith("get_feature_flags");
@@ -511,9 +510,6 @@ describe("OnboardingView", () => {
 
 	it("lets the user cancel a pending browser sign-in", async () => {
 		await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 
 		let rejectLogin!: (error: Error) => void;
 		invoke.mockImplementation(async (command: string) => {
@@ -553,7 +549,6 @@ describe("OnboardingView", () => {
 
 	it("stays on Welcome when sign-in completes after Back", async () => {
 		await render();
-		await act(async () => buttonByText("Get started").click());
 		let finishLogin!: () => void;
 		invoke.mockImplementation(async (command: string) => {
 			if (command === "run_provider_oauth_login") {
@@ -579,13 +574,20 @@ describe("OnboardingView", () => {
 		expect(invoke).not.toHaveBeenCalledWith("cancel_provider_oauth_login", {
 			provider: "cline",
 		});
-		await act(async () => buttonByText("Get started").click());
+		await act(async () => {
+			buttonByText("Get started").click();
+		});
+		await act(async () => {
+			const offlineBtn = Array.from(container.querySelectorAll("button")).find((b) =>
+				b.textContent?.includes("Continue in Offline / Local Mode"),
+			);
+			offlineBtn?.click();
+		});
 		expect(container.textContent).toContain("Signed in as");
 	});
 
 	it("keeps sign-in busy during account refresh and does not advance after Cancel", async () => {
 		await render();
-		await act(async () => buttonByText("Get started").click());
 		let finishRefresh!: (user: { email: string; displayName: string }) => void;
 		invoke.mockImplementation(async (command: string) => {
 			if (command === "cline_account") {
@@ -609,9 +611,6 @@ describe("OnboardingView", () => {
 
 	it("connects with a Cline API key when OAuth sign-in is not used", async () => {
 		const onComplete = await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 
 		await act(async () => {
 			buttonByText("Use a Cline API key").click();
@@ -670,9 +669,6 @@ describe("OnboardingView", () => {
 	it("rejects an invalid Cline API key and rolls back the saved key", async () => {
 		await render();
 		await act(async () => {
-			buttonByText("Get started").click();
-		});
-		await act(async () => {
 			buttonByText("Use a Cline API key").click();
 		});
 		const keyInput = container.querySelector<HTMLInputElement>(
@@ -716,9 +712,6 @@ describe("OnboardingView", () => {
 
 	it("keeps Cline sign-in available while API-key setup is expanded", async () => {
 		const onComplete = await render();
-		await act(async () => {
-			buttonByText("Get started").click();
-		});
 		// Expand the bring-your-own-key form; drive state through the select's
 		// props via the API key path (jsdom cannot open the radix listbox).
 		const expandButton = container.querySelector<HTMLButtonElement>(
