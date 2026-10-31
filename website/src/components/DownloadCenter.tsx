@@ -41,7 +41,7 @@ export const DownloadCenter: React.FC = () => {
   const ASSETS = {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    mac: null,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_aarch64.dmg`,
     linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
     linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb.sig`,
     linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
@@ -57,10 +57,10 @@ export const DownloadCenter: React.FC = () => {
       available: true,
     },
     mac: {
-      name: `OPEN-VERSE_${DESKTOP_VERSION}_universal.app.tar.gz`,
-      size: "Not available",
-      sha256: "Not available",
-      available: false,
+      name: `OPEN-VERSE_${DESKTOP_VERSION}_aarch64.dmg`,
+      size: "165 MB",
+      sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
+      available: true,
     },
     linuxDeb: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
@@ -245,31 +245,53 @@ export const DownloadCenter: React.FC = () => {
                   {platformBadge(FILE_META.mac.available)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  macOS builds require Apple Developer ID signing and notarization, which are not
-                  yet configured in this environment. Check back soon.
+                  Native Apple Silicon disk image (.dmg) built on GitHub-hosted macOS runners with ad-hoc signing. Includes embedded runtime and standalone AI assistant.
                 </p>
               </div>
-              {!FILE_META.mac.available && (
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <button
-                    className="btn-secondary"
-                    style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
-                    disabled
-                  >
-                    <Download size={18} />
-                    <span>Coming Soon</span>
-                  </button>
-                </div>
-              )}
-            </div>
-            {!FILE_META.mac.available && (
-              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                  <AlertCircle size={15} style={{ color: "var(--accent-light)" }} />
-                  <span>Not yet available — Apple Developer ID / notarization pending</span>
-                </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <a
+                  href={ASSETS.mac}
+                  className="btn-primary"
+                  style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
+                  download={FILE_META.mac.name}
+                >
+                  <Download size={18} />
+                  <span>Download for macOS (.dmg)</span>
+                </a>
               </div>
-            )}
+            </div>
+
+            <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                <Clock size={15} style={{ color: "var(--accent-light)" }} />
+                <span>Asset: <code>{FILE_META.mac.name}</code> (Apple Silicon / ARM64) • {FILE_META.mac.size}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
+                <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.mac.sha256}</code>
+              </div>
+            </div>
+
+            <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <Info size={15} style={{ color: "var(--sky)" }} />
+                <span>Installation Instructions</span>
+              </div>
+              <div className="code-box">
+                <span>1. Download OPEN-VERSE_0.2.0_aarch64.dmg</span>
+                <span>2. Open the disk image and drag OPEN-VERSE to your Applications folder</span>
+                <span>3. Ad-hoc build: If prompted by macOS Gatekeeper, run:</span>
+                <span>   sudo xattr -cr /Applications/OPEN-VERSE.app</span>
+                <span>4. Launch OPEN-VERSE</span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+              <div>• Architecture: Apple Silicon (M1/M2/M3/M4, ARM64)</div>
+              <div>• macOS version: macOS 11.0 Big Sur or later</div>
+              <div>• Signing: Ad-hoc signed (Apple Developer ID notarization requires team credentials)</div>
+              <div>• In-app updates: Enabled</div>
+            </div>
           </div>
         )}
 

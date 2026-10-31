@@ -76,3 +76,4 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           files: |
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg
+
