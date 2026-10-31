@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 // Generates and validates the Tauri v2 latest.json update manifest.
 const APP_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const NSIS_DIR = path.join(APP_ROOT, "src-tauri", "target", "release", "bundle", "nsis");
+const DEB_DIR = path.join(APP_ROOT, "src-tauri", "target", "release", "bundle", "deb");
 
 interface ManifestPlatform {
 	signature: string;
@@ -24,46 +25,57 @@ export function generateManifest(
 	releaseTag: string,
 	notes = `OPEN-VERSE v${version} update`,
 ): UpdateManifest {
-	if (!existsSync(NSIS_DIR)) {
-		throw new Error(`NSIS directory does not exist: ${NSIS_DIR}`);
+	const platforms: Record<string, ManifestPlatform> = {};
+
+	// Windows NSIS
+	if (existsSync(NSIS_DIR)) {
+		const files = readdirSync(NSIS_DIR);
+		const zipFile =
+			files.find((f) => f.endsWith(".nsis.zip")) ??
+			files.find((f) => f.endsWith(".zip") && !f.endsWith(".sig")) ??
+			files.find((f) => f.endsWith("-setup.exe"));
+		const sigFile =
+			files.find((f) => f.endsWith(".nsis.zip.sig")) ??
+			files.find((f) => f.endsWith(".zip.sig")) ??
+			files.find((f) => f.endsWith("-setup.exe.sig"));
+
+		if (zipFile && sigFile) {
+			const signature = readFileSync(path.join(NSIS_DIR, sigFile), "utf8").trim();
+			platforms["windows-x86_64"] = {
+				signature,
+				url: `https://github.com/${repo}/releases/download/${releaseTag}/${zipFile}`,
+			};
+		}
 	}
 
-	const files = readdirSync(NSIS_DIR);
-	// Tauri on Windows NSIS produces either:
-	//   *-setup.nsis.zip + *-setup.nsis.zip.sig (updater archive + signature)
-	//   *-setup.exe + *-setup.exe.sig (installer + signature, when no zip is generated)
-	const zipFile =
-		files.find((f) => f.endsWith(".nsis.zip")) ??
-		files.find((f) => f.endsWith(".zip") && !f.endsWith(".sig")) ??
-		files.find((f) => f.endsWith("-setup.exe"));
-	const sigFile =
-		files.find((f) => f.endsWith(".nsis.zip.sig")) ??
-		files.find((f) => f.endsWith(".zip.sig")) ??
-		files.find((f) => f.endsWith("-setup.exe.sig"));
+	// Linux DEB
+	if (existsSync(DEB_DIR)) {
+		const files = readdirSync(DEB_DIR);
+		const debFile = files.find((f) => f.endsWith(".deb") && !f.endsWith(".sig"));
+		const sigFile = files.find((f) => f.endsWith(".deb.sig"));
 
-	if (!zipFile) {
-		throw new Error(`No updater archive found in ${NSIS_DIR}`);
-	}
-	if (!sigFile) {
-		throw new Error(`No signature file (.sig) found for updater archive in ${NSIS_DIR}`);
+		if (debFile && sigFile) {
+			const signature = readFileSync(path.join(DEB_DIR, sigFile), "utf8").trim();
+			platforms["linux-x86_64"] = {
+				signature,
+				url: `https://github.com/${repo}/releases/download/${releaseTag}/${debFile}`,
+			};
+		}
 	}
 
-	const signature = readFileSync(path.join(NSIS_DIR, sigFile), "utf8").trim();
-	const downloadUrl = `https://github.com/${repo}/releases/download/${releaseTag}/${zipFile}`;
+	if (Object.keys(platforms).length === 0) {
+		throw new Error(`No updater artifacts found in ${NSIS_DIR} or ${DEB_DIR}`);
+	}
 
 	const manifest: UpdateManifest = {
 		version: version.startsWith("v") ? version : `v${version}`,
 		notes,
 		pub_date: new Date().toISOString(),
-		platforms: {
-			"windows-x86_64": {
-				signature,
-				url: downloadUrl,
-			},
-		},
+		platforms,
 	};
 
-	const manifestPath = path.join(NSIS_DIR, "latest.json");
+	const outDir = existsSync(NSIS_DIR) ? NSIS_DIR : APP_ROOT;
+	const manifestPath = path.join(outDir, "latest.json");
 	writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
 	console.log(`Generated updater manifest at: ${manifestPath}`);
 	console.log(JSON.stringify(manifest, null, 2));

@@ -42,8 +42,10 @@ export const DownloadCenter: React.FC = () => {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
     mac: null,
-    linuxDeb: null,
-    linuxRpm: null,
+    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
+    linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb.sig`,
+    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
+    linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm.sig`,
   };
 
   // File metadata (size + checksum) — updated via release automation
@@ -62,15 +64,15 @@ export const DownloadCenter: React.FC = () => {
     },
     linuxDeb: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
-      size: "229 MB",
-      sha256: "e76d587f66eee955ccb6c8a0e442eb1e501f7abda5458097c87852df2536f6cf",
-      available: false, // Built locally but not yet published to GitHub Releases
+      size: "228 MB",
+      sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
+      available: true,
     },
     linuxRpm: {
       name: `OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
-      size: "229 MB",
-      sha256: "bd07fbab78ab922c865fc6ba0b29367a9a0d0af18abc76c31ae68ed55427abdc",
-      available: false, // Built locally but not yet published to GitHub Releases
+      size: "228 MB",
+      sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
+      available: true,
     },
   };
 
@@ -278,50 +280,85 @@ export const DownloadCenter: React.FC = () => {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for Linux</h3>
-                  <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <AlertCircle size={14} style={{ color: "var(--accent-light)" }} />
-                    <span>Built Locally — Not Yet Published</span>
-                  </span>
+                  {platformBadge(FILE_META.linuxDeb.available)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Native .deb and .rpm packages have been built locally and verified, but are not
-                  yet published to GitHub Releases. Check back for official download links.
+                  Native packages for 64-bit Linux distributions (Ubuntu, Debian, Fedora, RHEL).
+                  Includes Minisign signature verification and automated in-app update service.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <button
-                  className="btn-secondary"
+                <a
+                  href={ASSETS.linuxDeb}
+                  className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                  disabled
+                  download={FILE_META.linuxDeb.name}
                 >
                   <Download size={17} />
-                  <span>Coming Soon</span>
-                </button>
-                <button
-                  className="btn-secondary"
+                  <span>Download .deb (Ubuntu / Debian)</span>
+                </a>
+                <a
+                  href={ASSETS.linuxRpm}
+                  className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                  disabled
+                  download={FILE_META.linuxRpm.name}
                 >
                   <Download size={17} />
-                  <span>Coming Soon</span>
-                </button>
+                  <span>Download .rpm (Fedora / RHEL)</span>
+                </a>
               </div>
             </div>
-            <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                <AlertCircle size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Packages built locally but not yet uploaded to public release</span>
+
+            {/* Asset Details */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Clock size={15} style={{ color: "var(--accent-light)" }} />
+                  <span>Debian / Ubuntu Package (.deb)</span>
+                </div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 4 }}>
+                  Size: <code>{FILE_META.linuxDeb.size}</code>
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all" }}>
+                  SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxDeb.sha256}</code>
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <a href={ASSETS.linuxDebSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
+                    <Download size={13} />
+                    <span>Download .deb.sig</span>
+                  </a>
+                </div>
+              </div>
+
+              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Clock size={15} style={{ color: "var(--accent-light)" }} />
+                  <span>Fedora / RHEL Package (.rpm)</span>
+                </div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 4 }}>
+                  Size: <code>{FILE_META.linuxRpm.size}</code>
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all" }}>
+                  SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxRpm.sha256}</code>
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <a href={ASSETS.linuxRpmSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
+                    <Download size={13} />
+                    <span>Download .rpm.sig</span>
+                  </a>
+                </div>
               </div>
             </div>
+
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                 <Info size={15} style={{ color: "var(--sky)" }} />
-                <span>Installation Instructions (when published)</span>
+                <span>Installation Instructions</span>
               </div>
               <div className="code-box">
                 <span>Debian/Ubuntu: sudo dpkg -i OPEN-VERSE_0.2.0_amd64.deb</span>
                 <span>Fedora/RHEL: sudo rpm -i OPEN-VERSE-0.2.0-1.x86_64.rpm</span>
-                <span>Launch from your application menu</span>
+                <span>Launch: cline-app (or select OPEN-VERSE in application launcher)</span>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>

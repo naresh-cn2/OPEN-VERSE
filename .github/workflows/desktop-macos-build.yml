@@ -1,0 +1,78 @@
+name: desktop-macos-build
+
+# Build workflow for OPEN-VERSE macOS desktop installer.
+# Runs on macos-latest GitHub-hosted runner.
+# Produces macOS DMG package and uploads to GitHub Releases.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 0.2.0)"
+        required: true
+        default: "0.2.0"
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: desktop
+
+jobs:
+  build-macos:
+    name: Build macOS DMG
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+
+      - name: Build desktop runtime and static web frontend
+        run: bun run build
+        working-directory: desktop/apps/examples/desktop-app
+
+      - name: Build macOS DMG (Ad-hoc signing)
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          APPLE_SIGNING_IDENTITY: "-"
+        run: |
+          bunx tauri build --bundles dmg
+
+      - name: Verify DMG Artifacts Exist
+        id: artifacts
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          ls -la src-tauri/target/release/bundle/dmg/
+          DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -n 1)
+          if [ -z "$DMG" ]; then
+            echo "Error: No DMG found"
+            exit 1
+          fi
+          echo "Found DMG: $DMG"
+          shasum -a 256 "$DMG"
+
+      - name: Upload macOS DMG to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          files: |
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg
