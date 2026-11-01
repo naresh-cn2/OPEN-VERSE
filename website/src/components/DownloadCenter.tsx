@@ -47,6 +47,7 @@ export const DownloadCenter: React.FC = () => {
     linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm.sig`,
     androidApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile.apk`,
+    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v0.2.0.zip`,
   };
 
   // File metadata (size + checksum) — updated via release automation
@@ -459,7 +460,28 @@ export const DownloadCenter: React.FC = () => {
                       textDecoration: "none",
                     }}
                   >
-                    <span>Alternative Direct Mirror (Local)</span>
+                    <span>Alternative Direct APK Mirror (Local)</span>
+                  </a>
+                  <a
+                    href={ASSETS.androidZip}
+                    download="open-verse-mobile-v0.2.0.zip"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      width: "100%",
+                      padding: "9px 16px",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                      borderRadius: 8,
+                      border: "1px solid var(--border-subtle)",
+                      background: "rgba(255, 255, 255, 0.04)",
+                      color: "var(--text-secondary)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>Download ZIP Package (Bypasses Chrome APK Scan Hang)</span>
                   </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
                     <span>Size: {FILE_META.android.size}</span>
