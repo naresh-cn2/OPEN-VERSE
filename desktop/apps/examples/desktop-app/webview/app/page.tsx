@@ -374,6 +374,15 @@ export default function Home() {
 			desktopClient.enableStandaloneMode();
 			setIsStandalone(true);
 		}
+		// Clean up any orphaned static SSR startup screen overlays that were pre-rendered into index.html
+		if (typeof document !== "undefined") {
+			const orphanedOverlays = document.querySelectorAll("main.fixed.inset-0.z-40");
+			orphanedOverlays.forEach((el) => {
+				if (!Object.keys(el).some((k) => k.startsWith("__reactFiber"))) {
+					el.remove();
+				}
+			});
+		}
 		setLoaded(true);
 	}, []);
 

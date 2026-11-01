@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         setupWebViewSettings()
         setupWebViewClients()
 
+        WebView.setWebContentsDebuggingEnabled(true)
+
         // Handle initial launch intent if containing deep link
         handleIntent(intent)
 
@@ -184,10 +186,28 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished loading: $url")
-                view?.evaluateJavascript(
-                    "window.__OPENVERSE_MOBILE__ = true; window.__OPENVERSE_PLATFORM__ = 'android';",
-                    null
-                )
+                val cleanupJs = """
+                    (function() {
+                        window.__OPENVERSE_MOBILE__ = true;
+                        window.__OPENVERSE_PLATFORM__ = 'android';
+                        function removeOrphanOverlays() {
+                            var overlays = document.querySelectorAll('main.fixed.inset-0.z-40');
+                            for (var i = 0; i < overlays.length; i++) {
+                                var el = overlays[i];
+                                if (!Object.keys(el).some(function(k) { return k.startsWith('__reactFiber'); })) {
+                                    el.remove();
+                                }
+                            }
+                        }
+                        removeOrphanOverlays();
+                        var observer = new MutationObserver(function() {
+                            removeOrphanOverlays();
+                        });
+                        observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+                        setTimeout(function() { observer.disconnect(); }, 15000);
+                    })();
+                """.trimIndent()
+                view?.evaluateJavascript(cleanupJs, null)
                 // Check if pending deep link needs to be delivered
                 pendingDeepLinkUrl?.let {
                     dispatchDeepLinkToWeb(it)
