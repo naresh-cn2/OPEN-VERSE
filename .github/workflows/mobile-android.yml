@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'mobile/**'
+      - 'desktop/apps/examples/desktop-app/webview/**'
       - '.github/workflows/mobile-android.yml'
   workflow_dispatch:
 
@@ -32,13 +33,13 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Mobile Webview Assets
+      - name: Sync Canonical Webview Assets
         run: |
-          cd mobile
-          bun install --frozen-lockfile || bun install
-          bun run build
-          mkdir -p android/app/src/main/assets
-          cp -r dist/* android/app/src/main/assets/
+          mkdir -p mobile/android/app/src/main/assets
+          if [ -d "desktop/apps/examples/desktop-app/webview/out" ] && [ -f "desktop/apps/examples/desktop-app/webview/out/index.html" ]; then
+            echo "Syncing canonical Next.js webview assets to Android..."
+            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
+          fi
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x mobile/android/gradlew

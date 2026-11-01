@@ -23,7 +23,6 @@ import {
 	Info,
 	Keyboard,
 	Loader2,
-	LogOut,
 	Mic,
 	Network,
 	PanelLeftOpen,
@@ -71,7 +70,6 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
@@ -130,7 +128,7 @@ import {
 	workspaceDisplayName,
 	writeSidebarSortModeToWindow,
 } from "@/lib/sidebar-session-organization";
-import { getStoredSession, openVerseSignOut } from "@/lib/open-verse-auth";
+import { getStoredSession } from "@/lib/open-verse-auth";
 import { cn } from "@/lib/utils";
 import { TASK_WORKTREE_DELETE_WARNING } from "@/lib/work-in-selection";
 import { isTaskWorktreePath } from "@/lib/workspace-paths";
@@ -365,7 +363,7 @@ export function AgentSidebar({
 	const searchHint = searchKey ? formatAccelerator(searchKey) : null;
 	const { isMobile, setOpen, setOpenMobile, state } = useSidebar();
 	const isCollapsed = !isMobile && state === "collapsed";
-	const { user, openVerseUser, activeOrganization, signOut } = useAccount();
+	const { user, openVerseUser, activeOrganization } = useAccount();
 	const ovUser =
 		openVerseUser ??
 		(typeof window !== "undefined" ? getStoredSession()?.user : null);
@@ -385,18 +383,6 @@ export function AgentSidebar({
 					? (activeOrganization?.name ?? "Personal")
 					: undefined;
 	const accountInitial = accountName.charAt(0).toUpperCase();
-
-	const handleAccountSignOut = useCallback(async () => {
-		try {
-			await signOut();
-		} catch {
-			await openVerseSignOut();
-		} finally {
-			if (typeof window !== "undefined") {
-				window.location.reload();
-			}
-		}
-	}, [signOut]);
 	const {
 		deleteThread: deleteHistoryThread,
 		forkThread: forkHistoryThread,
@@ -1325,94 +1311,20 @@ export function AgentSidebar({
 				>
 					{isCollapsed ? (
 						<div className="flex flex-col items-center gap-2">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<button
-										aria-label="Account settings"
-										className={cn(
-											"flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-											view === "settings" &&
-											settingsSection === "Account" &&
-											"ring-2 ring-primary ring-offset-2 ring-offset-background",
-										)}
-										onClick={() => openSettingsSection("Account")}
-										title={accountName}
-										type="button"
-									>
-										{accountInitial}
-									</button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="end"
-									className="w-64 border border-zinc-800 bg-[#0e0e13]/95 backdrop-blur-xl p-1.5 shadow-2xl rounded-xl z-50 text-sidebar-foreground"
-									side="right"
-									sideOffset={8}
-								>
-									<div className="flex items-center gap-3 p-2.5">
-										<div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
-											{accountInitial}
-										</div>
-										<div className="flex min-w-0 flex-col">
-											<span className="truncate text-sm font-semibold text-foreground">
-												{accountName}
-											</span>
-											<span className="truncate text-xs text-muted-foreground">
-												{email || "local@openverse.internal"}
-											</span>
-											{accountScope && (
-												<span className="mt-1 inline-flex items-center self-start rounded border border-violet-500/30 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-medium text-violet-300">
-													{accountScope}
-												</span>
-											)}
-										</div>
-									</div>
-
-									<DropdownMenuSeparator className="my-1 bg-border/50" />
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Account")}
-									>
-										<CircleUserRound className="size-4 text-violet-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">Account Settings</span>
-											<span className="text-[10px] text-muted-foreground">Profile & local storage</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Providers")}
-									>
-										<Sparkles className="size-4 text-indigo-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">AI Model Providers</span>
-											<span className="text-[10px] text-muted-foreground">Gemini, OpenAI, Ollama, BYOK</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Cline")}
-									>
-										<Cpu className="size-4 text-amber-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">Cline Settings</span>
-											<span className="text-[10px] text-muted-foreground">Cline provider & parameters</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuSeparator className="my-1 bg-border/50" />
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs text-red-400 hover:text-red-300 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors"
-										onSelect={handleAccountSignOut}
-									>
-										<LogOut className="size-4 shrink-0" />
-										<span className="font-medium">Sign Out</span>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+							<button
+								aria-label="Account settings"
+								className={cn(
+									"flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+									view === "settings" &&
+									settingsSection === "Account" &&
+									"ring-2 ring-primary ring-offset-2 ring-offset-background",
+								)}
+								onClick={() => openSettingsSection("Account")}
+								title={accountName}
+								type="button"
+							>
+								{accountInitial}
+							</button>
 							<Button
 								aria-label="Settings"
 								className={cn(
@@ -1431,106 +1343,32 @@ export function AgentSidebar({
 						</div>
 					) : (user || ovUser) ? (
 						<div className="flex min-w-0 items-center gap-2">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<button
-										aria-label="Account settings"
-										className={cn(
-											"flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-2 text-left text-sidebar-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-											view === "settings" &&
-											settingsSection === "Account" &&
-											"bg-surface-hover text-sidebar-foreground",
-										)}
-										onClick={() => openSettingsSection("Account")}
-										title={email || undefined}
-										type="button"
-									>
-										<span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-											{accountInitial}
+							<button
+								aria-label="Account settings"
+								className={cn(
+									"flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-2 text-left text-sidebar-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+									view === "settings" &&
+									settingsSection === "Account" &&
+									"bg-surface-hover text-sidebar-foreground",
+								)}
+								onClick={() => openSettingsSection("Account")}
+								title={email || undefined}
+								type="button"
+							>
+								<span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+									{accountInitial}
+								</span>
+								<span className="flex min-w-0 flex-col leading-tight">
+									<span className="truncate text-sm font-medium">
+										{accountName}
+									</span>
+									{accountScope ? (
+										<span className="truncate text-[11px] text-muted-foreground">
+											{accountScope}
 										</span>
-										<span className="flex min-w-0 flex-col leading-tight">
-											<span className="truncate text-sm font-medium">
-												{accountName}
-											</span>
-											{accountScope ? (
-												<span className="truncate text-[11px] text-muted-foreground">
-													{accountScope}
-												</span>
-											) : null}
-										</span>
-									</button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="start"
-									className="w-64 border border-zinc-800 bg-[#0e0e13]/95 backdrop-blur-xl p-1.5 shadow-2xl rounded-xl z-50 text-sidebar-foreground"
-									side="top"
-									sideOffset={8}
-								>
-									<div className="flex items-center gap-3 p-2.5">
-										<div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
-											{accountInitial}
-										</div>
-										<div className="flex min-w-0 flex-col">
-											<span className="truncate text-sm font-semibold text-foreground">
-												{accountName}
-											</span>
-											<span className="truncate text-xs text-muted-foreground">
-												{email || "local@openverse.internal"}
-											</span>
-											{accountScope && (
-												<span className="mt-1 inline-flex items-center self-start rounded border border-violet-500/30 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-medium text-violet-300">
-													{accountScope}
-												</span>
-											)}
-										</div>
-									</div>
-
-									<DropdownMenuSeparator className="my-1 bg-border/50" />
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Account")}
-									>
-										<CircleUserRound className="size-4 text-violet-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">Account Settings</span>
-											<span className="text-[10px] text-muted-foreground">Profile & local storage</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Providers")}
-									>
-										<Sparkles className="size-4 text-indigo-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">AI Model Providers</span>
-											<span className="text-[10px] text-muted-foreground">Gemini, OpenAI, Ollama, BYOK</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs focus:bg-surface-hover rounded-lg transition-colors"
-										onSelect={() => openSettingsSection("Cline")}
-									>
-										<Cpu className="size-4 text-amber-400 shrink-0" />
-										<div className="flex flex-col text-left">
-											<span className="font-medium text-foreground">Cline Settings</span>
-											<span className="text-[10px] text-muted-foreground">Cline provider & parameters</span>
-										</div>
-									</DropdownMenuItem>
-
-									<DropdownMenuSeparator className="my-1 bg-border/50" />
-
-									<DropdownMenuItem
-										className="cursor-pointer gap-2.5 py-2 px-2.5 text-xs text-red-400 hover:text-red-300 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors"
-										onSelect={handleAccountSignOut}
-									>
-										<LogOut className="size-4 shrink-0" />
-										<span className="font-medium">Sign Out</span>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+									) : null}
+								</span>
+							</button>
 							<Button
 								aria-label="Settings"
 								className={cn(

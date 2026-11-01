@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "OPEN-VERSE-Native"
         private const val ASSET_DOMAIN = "appassets.androidplatform.net"
-        private const val ASSET_URL = "https://$ASSET_DOMAIN/index.html"
+        private const val ASSET_URL = "https://$ASSET_DOMAIN/assets/index.html"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -38,8 +38,6 @@ class MainActivity : AppCompatActivity() {
         assetLoader = WebViewAssetLoader.Builder()
             .setDomain(ASSET_DOMAIN)
             .addPathHandler("/assets/", AssetsPathHandler(this))
-            .addPathHandler("/_next/", AssetsPathHandler(this))
-            .addPathHandler("/", AssetsPathHandler(this))
             .build()
 
         webView = WebView(this).apply {
@@ -117,29 +115,44 @@ class MainActivity : AppCompatActivity() {
 
                 // 1. Intercept virtual HTTPS domain for assets
                 if (scheme == "https" && host == ASSET_DOMAIN) {
-                    val response = assetLoader.shouldInterceptRequest(url)
+                    val path = url.path ?: ""
+
+                    // Direct check with WebViewAssetLoader
+                    var response = assetLoader.shouldInterceptRequest(url)
                     if (response != null) {
                         return response
                     }
 
-                    // Direct asset open fallback if path handler leaves any gaps
-                    val path = url.path?.removePrefix("/") ?: ""
+                    // Normalize root-relative URLs (e.g. /_next/... -> /assets/_next/...)
+                    if (!path.startsWith("/assets/")) {
+                        val cleanPath = if (path.startsWith("/")) path else "/$path"
+                        val mappedUri = Uri.parse("https://$ASSET_DOMAIN/assets$cleanPath")
+                        response = assetLoader.shouldInterceptRequest(mappedUri)
+                        if (response != null) {
+                            return response
+                        }
+                    }
+
+                    // Direct asset stream fallback with complete MIME mappings
                     try {
-                        val assetPath = if (path.isEmpty()) "index.html" else path
+                        val assetPath = (if (path.startsWith("/assets/")) path.removePrefix("/assets/") else path.removePrefix("/")).trimStart('/')
                         val inputStream = assets.open(assetPath)
                         val mimeType = when {
                             assetPath.endsWith(".html") -> "text/html"
-                            assetPath.endsWith(".js") -> "application/javascript"
+                            assetPath.endsWith(".js") || assetPath.endsWith(".mjs") -> "application/javascript"
                             assetPath.endsWith(".css") -> "text/css"
-                            assetPath.endsWith(".json") -> "application/json"
-                            assetPath.endsWith(".png") -> "image/png"
                             assetPath.endsWith(".svg") -> "image/svg+xml"
-                            assetPath.endsWith(".txt") -> "text/plain"
+                            assetPath.endsWith(".png") -> "image/png"
+                            assetPath.endsWith(".jpg") || assetPath.endsWith(".jpeg") -> "image/jpeg"
+                            assetPath.endsWith(".json") || assetPath.endsWith(".txt") -> "application/json"
+                            assetPath.endsWith(".woff2") -> "font/woff2"
+                            assetPath.endsWith(".woff") -> "font/woff"
+                            assetPath.endsWith(".ttf") -> "font/ttf"
                             else -> "application/octet-stream"
                         }
                         return WebResourceResponse(mimeType, "UTF-8", inputStream)
                     } catch (e: Exception) {
-                        Log.d(TAG, "Asset not found via direct open: $path")
+                        // Let WebView handle normal resolution
                     }
                 }
 
@@ -175,6 +188,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished loading: $url")
+                view?.evaluateJavascript("window.__OPENVERSE_MOBILE__ = true; window.__OPENVERSE_PLATFORM__ = 'android';", null)
                 // Check if pending deep link needs to be delivered
                 pendingDeepLinkUrl?.let {
                     dispatchDeepLinkToWeb(it)
@@ -193,10 +207,6 @@ class MainActivity : AppCompatActivity() {
                 when (level) {
                     ConsoleMessage.MessageLevel.ERROR -> {
                         Log.e("OPEN-VERSE-JS", "[$src:$line] $msg")
-                        val escaped = msg.replace("'", "\\'").replace("\n", "\\n")
-                        webView.post {
-                            webView.evaluateJavascript("if (window.__showDiagnosticError) { window.__showDiagnosticError('$escaped', '$src:$line'); }", null)
-                        }
                     }
                     ConsoleMessage.MessageLevel.WARNING -> Log.w("OPEN-VERSE-JS", "[$src:$line] $msg")
                     else -> Log.d("OPEN-VERSE-JS", "[$src:$line] $msg")

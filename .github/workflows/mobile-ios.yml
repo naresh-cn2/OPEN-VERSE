@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'mobile/**'
+      - 'desktop/apps/examples/desktop-app/webview/**'
       - '.github/workflows/mobile-ios.yml'
   workflow_dispatch:
 
@@ -26,13 +27,13 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Mobile Webview Assets
+      - name: Sync Canonical Webview Assets
         run: |
-          cd mobile
-          bun install --frozen-lockfile || bun install
-          bun run build
-          mkdir -p ios/OPEN-VERSE/www
-          cp -r dist/* ios/OPEN-VERSE/www/
+          mkdir -p mobile/ios/OPEN-VERSE/www
+          if [ -d "desktop/apps/examples/desktop-app/webview/out" ] && [ -f "desktop/apps/examples/desktop-app/webview/out/index.html" ]; then
+            echo "Syncing canonical Next.js webview assets to iOS..."
+            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/ios/OPEN-VERSE/www/
+          fi
 
       - name: Select Xcode Version
         run: |

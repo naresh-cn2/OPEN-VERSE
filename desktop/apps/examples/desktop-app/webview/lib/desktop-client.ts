@@ -16,16 +16,6 @@ import type {
 	DesktopTransportResponse,
 	DesktopTransportState,
 } from "@/lib/desktop-transport";
-import {
-	appendStandaloneMessage,
-	getStandaloneMessages,
-	getStandaloneThreads,
-	getStoredHubEndpoint,
-	getStoredProviderConfig,
-	saveStandaloneThreads,
-	saveStoredProviderConfig,
-	streamStandaloneCompletion,
-} from "@/lib/standalone-runner";
 
 // Lazily import the Tauri invoke API only when available. When running in
 // sidecar/web mode (without Tauri), this module may not exist or the bridge
@@ -71,16 +61,7 @@ export async function resolveDesktopBackendWsEndpoint(): Promise<string> {
 		return resolvedEndpointCache;
 	}
 
-	// 2. Configured Desktop Hub endpoint from device storage (e.g. mobile paired to PC)
-	if (typeof window !== "undefined") {
-		const storedHub = getStoredHubEndpoint();
-		if (storedHub && storedHub.trim()) {
-			resolvedEndpointCache = storedHub.trim();
-			return resolvedEndpointCache;
-		}
-	}
-
-	// 3. Tauri command (full desktop app).
+	// 2. Tauri command (full desktop app).
 	if (isTauriAvailable()) {
 		const endpoint = await tryTauriInvoke<string>(
 			"get_desktop_backend_endpoint",
@@ -227,6 +208,19 @@ export function isTauriAvailable(): boolean {
 	return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
+export function isMobileEnvironment(): boolean {
+	if (typeof window === "undefined") return false;
+	if ("AndroidInterface" in window) return true;
+	if (
+		"webkit" in window &&
+		typeof (window as unknown as { webkit?: { messageHandlers?: Record<string, unknown> } }).webkit?.messageHandlers?.openverse === "object"
+	) {
+		return true;
+	}
+	const ua = navigator.userAgent || "";
+	return /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -320,37 +314,38 @@ class DesktopClient {
 	private errorObjectDeliveries = new WeakMap<object, Promise<boolean>>();
 	private isStandalone = false;
 
-	enableStandaloneMode(): void {
+	constructor() {
+		if (typeof window !== "undefined") {
+			const hasCustomEndpoint = Boolean(
+				(window as unknown as Record<string, unknown>).__SIDECAR_WS_ENDPOINT__ ||
+				window.localStorage.getItem("openverse_hub_endpoint"),
+			);
+			if (isMobileEnvironment() && !hasCustomEndpoint) {
+				this.isStandalone = true;
+				this.transportState = "connected";
+				setTimeout(() => {
+					this.enableStandaloneMode();
+				}, 10);
+			}
+		}
+	}
+
+	public isStandaloneMode(): boolean {
+		return this.isStandalone;
+	}
+
+	public enableStandaloneMode(): void {
 		this.isStandalone = true;
 		this.hasConnectedOnce = true;
 		this.transportError = null;
 		this.setTransportState("connected");
-		this.emitEvent("hub_status", { state: "ready" });
-	}
-
-	isStandaloneMode(): boolean {
-		return this.isStandalone;
-	}
-
-	isHubConfigured(): boolean {
-		if (typeof window === "undefined") return false;
-		return Boolean(
-			getStoredHubEndpoint() ||
-			(window as unknown as Record<string, unknown>).__SIDECAR_WS_ENDPOINT__
-		);
-	}
-
-	emitEvent(name: string, payload: unknown): void {
-		const handlers = this.handlers.get(name);
-		if (handlers) {
-			for (const handler of handlers) {
-				try {
-					handler(payload);
-				} catch (err) {
-					console.error(`Error in event listener for ${name}:`, err);
-				}
-			}
-		}
+		this.dispatchEvent({
+			type: "event",
+			event: {
+				name: "hub_status",
+				payload: { state: "ready" },
+			},
+		});
 	}
 
 	reportError(report: DesktopErrorReport): void {
@@ -531,6 +526,10 @@ class DesktopClient {
 	}
 
 	private async ensureConnected(isReconnect = false): Promise<void> {
+		if (this.isStandalone) {
+			this.setTransportState("connected");
+			return;
+		}
 		if (
 			this.socket &&
 			(this.socket.readyState === WebSocket.OPEN ||
@@ -684,6 +683,10 @@ class DesktopClient {
 		args?: Record<string, unknown>,
 		options?: DesktopInvokeOptions,
 	): Promise<T> {
+		if (this.isStandalone) {
+			return this.handleStandaloneCommand<T>(command, args);
+		}
+
 		// Route native OS commands (directory picker, file opener) through Tauri
 		// only when running inside the full Tauri app shell. In sidecar/web mode
 		// these are handled by the sidecar over WebSocket.
@@ -698,11 +701,6 @@ class DesktopClient {
 				});
 				throw error;
 			}
-		}
-
-		// Standalone / Mobile In-Client fallback when not connected to a remote desktop backend
-		if (this.isStandalone || (!isTauriAvailable() && this.transportState !== "connected")) {
-			return await this.handleStandaloneInvoke<T>(command, args);
 		}
 
 		options?.signal?.throwIfAborted();
@@ -773,188 +771,6 @@ class DesktopClient {
 				throw error;
 			}
 		});
-	}
-
-	private async handleStandaloneInvoke<T>(
-		command: string,
-		args?: Record<string, unknown>,
-	): Promise<T> {
-		const reqObj = (args?.request as Record<string, unknown>) || args || {};
-		const sid =
-			(args?.sessionId as string) ||
-			(reqObj.sessionId as string) ||
-			"standalone-session";
-		const envId =
-			(args?.environmentId as string) ||
-			((reqObj.config as Record<string, unknown>)?.environmentId as string) ||
-			"local";
-
-		switch (command) {
-			case "get_process_context":
-				return {
-					appVersion: "0.2.0",
-					hub: { status: "ready" },
-					environmentId: envId,
-				} as unknown as T;
-
-			case "list_chat_sessions":
-			case "get_session_history": {
-				const threads = getStandaloneThreads();
-				return threads.map((t) => ({
-					sessionId: t.id,
-					threadId: t.id,
-					title: t.title,
-					createdAt: t.createdAt,
-					updatedAt: t.updatedAt,
-					environmentId: envId,
-					pinned: t.pinned ?? false,
-					provider: t.provider || "gemini",
-					model: t.model || "gemini-2.5-flash",
-				})) as unknown as T;
-			}
-
-			case "read_session_messages": {
-				const msgs = getStandaloneMessages(sid);
-				return msgs.map((m) => ({
-					id: m.id,
-					sessionId: m.sessionId,
-					role: m.role,
-					content: m.content,
-					createdAt: m.createdAt,
-				})) as unknown as T;
-			}
-
-			case "update_chat_session_title": {
-				const nextTitle = (args?.title as string) || "Session";
-				const threads = getStandaloneThreads();
-				const found = threads.find((t) => t.id === sid);
-				if (found) {
-					found.title = nextTitle;
-					saveStandaloneThreads(threads);
-				}
-				return true as unknown as T;
-			}
-
-			case "delete_chat_session": {
-				const threads = getStandaloneThreads().filter((t) => t.id !== sid);
-				saveStandaloneThreads(threads);
-				return true as unknown as T;
-			}
-
-			case "set_session_pinned": {
-				const threads = getStandaloneThreads();
-				const found = threads.find((t) => t.id === sid);
-				if (found) {
-					found.pinned = Boolean(args?.pinned);
-					saveStandaloneThreads(threads);
-				}
-				return true as unknown as T;
-			}
-
-			case "get_provider_settings": {
-				return getStoredProviderConfig() as unknown as T;
-			}
-
-			case "save_provider_settings": {
-				saveStoredProviderConfig((args as any) || {});
-				return true as unknown as T;
-			}
-
-			case "validate_workspace_directory":
-				return { environmentId: envId, valid: true } as unknown as T;
-
-			case "read_session_hooks":
-			case "poll_tool_approvals":
-			case "poll_ask_questions":
-				return [] as unknown as T;
-
-			case "open_external_url": {
-				const url = args?.url as string;
-				if (url) void openExternalUrl(url);
-				return true as unknown as T;
-			}
-
-			case "chat_session_command": {
-				const action = reqObj.action;
-
-				if (action === "attach" || action === "start") {
-					return {
-						sessionId: (reqObj.sessionId as string) || `session_${Date.now()}`,
-						environmentId: envId,
-						status: "idle",
-					} as unknown as T;
-				}
-
-				if (action === "send") {
-					const prompt = (reqObj.prompt as string) || "";
-					const activeSid = (reqObj.sessionId as string) || sid;
-
-					// 1. Record user message
-					appendStandaloneMessage(activeSid, {
-						id: `msg_${Date.now()}_u`,
-						sessionId: activeSid,
-						role: "user",
-						content: prompt,
-						createdAt: Date.now(),
-					});
-
-					// 2. Stream assistant completion asynchronously
-					void (async () => {
-						let assistantText = "";
-						try {
-							await streamStandaloneCompletion(
-								prompt,
-								activeSid,
-								(chunk) => {
-									assistantText += chunk;
-									this.emitEvent("chat_event", {
-										sessionId: activeSid,
-										environmentId: envId,
-										stream: "chat_text",
-										chunk,
-									});
-								},
-							);
-						} catch (err: unknown) {
-							const errMsg = err instanceof Error ? err.message : String(err);
-							this.emitEvent("chat_event", {
-								sessionId: activeSid,
-								environmentId: envId,
-								stream: "chat_text",
-								chunk: `\n\n**Error:** ${errMsg}`,
-							});
-						} finally {
-							this.emitEvent("chat_event", {
-								sessionId: activeSid,
-								environmentId: envId,
-								stream: "chat_done",
-							});
-							this.emitEvent("chat_session_status", {
-								sessionId: activeSid,
-								environmentId: envId,
-								status: "completed",
-							});
-							if (assistantText.trim()) {
-								appendStandaloneMessage(activeSid, {
-									id: `msg_${Date.now()}_a`,
-									sessionId: activeSid,
-									role: "assistant",
-									content: assistantText,
-									createdAt: Date.now(),
-								});
-							}
-						}
-					})();
-
-					return { status: "running" } as unknown as T;
-				}
-
-				return {} as unknown as T;
-			}
-
-			default:
-				return null as unknown as T;
-		}
 	}
 
 	subscribe(eventName: string, handler: EventHandler): () => void {
@@ -1077,6 +893,177 @@ class DesktopClient {
 		);
 		return response.policy;
 	}
+
+	private async handleStandaloneCommand<T>(
+		command: string,
+		args?: Record<string, unknown>,
+	): Promise<T> {
+		switch (command) {
+			case "get_process_context":
+				return {
+					appVersion: "0.2.0",
+					isMobile: isMobileEnvironment(),
+					hub: { state: "ready", status: "ready" },
+				} as T;
+			case "get_discovered_session":
+				return null as T;
+			case "read_session_history": {
+				try {
+					const raw = typeof window !== "undefined" ? window.localStorage.getItem("openverse_sessions_v1") : null;
+					return (raw ? JSON.parse(raw) : []) as T;
+				} catch {
+					return [] as T;
+				}
+			}
+			case "read_session_messages": {
+				const sid = (args?.sessionId as string) || "";
+				try {
+					const raw = typeof window !== "undefined" ? window.localStorage.getItem(`openverse_msg_${sid}`) : null;
+					return (raw ? JSON.parse(raw) : []) as T;
+				} catch {
+					return [] as T;
+				}
+			}
+			case "read_session_hooks":
+				return [] as T;
+			case "pick_workspace_directory":
+				return "workspace" as T;
+			case "get_git_branch":
+				return { environmentId: "local", branch: "main", branches: ["main"] } as T;
+			case "update_chat_session_title": {
+				const sid = (args?.sessionId as string) || "";
+				const title = (args?.title as string) || "";
+				try {
+					if (typeof window !== "undefined") {
+						const raw = window.localStorage.getItem("openverse_sessions_v1");
+						const list = raw ? JSON.parse(raw) : [];
+						const updated = list.map((s: Record<string, unknown>) =>
+							s.id === sid ? { ...s, title } : s,
+						);
+						window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(updated));
+					}
+				} catch {}
+				return true as T;
+			}
+			case "delete_chat_session": {
+				const sid = (args?.sessionId as string) || "";
+				try {
+					if (typeof window !== "undefined") {
+						const raw = window.localStorage.getItem("openverse_sessions_v1");
+						const list = raw ? JSON.parse(raw) : [];
+						const updated = list.filter((s: Record<string, unknown>) => s.id !== sid);
+						window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(updated));
+						window.localStorage.removeItem(`openverse_msg_${sid}`);
+					}
+				} catch {}
+				return true as T;
+			}
+			case "get_update_status":
+				return { isChecking: false, isAvailable: false } as T;
+			case "check_for_update_now":
+				return { available: false } as T;
+			case "export_diagnostics":
+				return { path: "memory://diagnostics.json" } as T;
+			case "chat_session_command": {
+				const req = ((args as Record<string, unknown>)?.request as Record<string, unknown>) || args || {};
+				const sid = (req.sessionId as string) || `session_${Date.now()}`;
+				const action = req.action as string;
+				if (action === "send" || action === "start") {
+					const prompt = (req.prompt as string) || "";
+					setTimeout(() => {
+						void this.executeStandaloneTurn(sid, prompt, req.config as Record<string, unknown>);
+					}, 20);
+					return { ok: true, sessionId: sid } as T;
+				}
+				return { ok: true } as T;
+			}
+			default:
+				return {} as T;
+		}
+	}
+
+	private async executeStandaloneTurn(
+		sessionId: string,
+		prompt: string,
+		config?: Record<string, unknown>,
+	): Promise<void> {
+		const environmentId = (config?.environmentId as string) || "local";
+		let streamIndex = 0;
+
+		const emitChunk = (text: string, isFinal = false) => {
+			this.dispatchEvent({
+				type: "event",
+				event: {
+					name: "chat_event",
+					payload: {
+						environmentId,
+						sessionId,
+						chunk: JSON.stringify({ text }),
+						streamIndex: streamIndex++,
+						isFinal,
+					},
+				},
+			});
+		};
+
+		// Check if user has an AI key configured (e.g. Gemini, OpenAI, Claude)
+		let apiKey = "";
+		const provider = (config?.provider as string) || "gemini";
+		try {
+			if (typeof window !== "undefined") {
+				const keysRaw = window.localStorage.getItem("cline.providers.keys");
+				if (keysRaw) {
+					const keys = JSON.parse(keysRaw);
+					apiKey = keys[provider] || keys.gemini || keys.openai || keys.anthropic || "";
+				}
+			}
+		} catch {}
+
+		if (provider === "gemini" && apiKey) {
+			try {
+				const model = (config?.modelId as string) || "gemini-2.5-flash";
+				const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+				const response = await fetch(url, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						contents: [{ role: "user", parts: [{ text: prompt }] }],
+					}),
+				});
+				if (!response.ok) {
+					throw new Error(`Gemini API returned status ${response.status}`);
+				}
+				const reader = response.body?.getReader();
+				const decoder = new TextDecoder();
+				if (reader) {
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						const chunkStr = decoder.decode(value, { stream: true });
+						const lines = chunkStr.split("\n");
+						for (const line of lines) {
+							if (line.startsWith("data: ")) {
+								try {
+									const data = JSON.parse(line.slice(6));
+									const token = data.candidates?.[0]?.content?.parts?.[0]?.text;
+									if (token) emitChunk(token, false);
+								} catch {}
+							}
+						}
+					}
+				}
+				emitChunk("", true);
+				return;
+			} catch (err) {
+				emitChunk(`\n\n*(Error generating response: ${err instanceof Error ? err.message : String(err)})*`, true);
+				return;
+			}
+		}
+
+		// Helpful response when no direct API key is active
+		const defaultResponse = `I received your prompt: "${prompt}".\n\nTo enable autonomous model execution on your device, configure your API key in **Settings > AI Model Providers** (supporting Google Gemini, Anthropic Claude, OpenAI, and Ollama) or connect to your **Desktop Hub**.`;
+		emitChunk(defaultResponse, true);
+	}
 }
 
 export const desktopClient = new DesktopClient();
@@ -1092,6 +1079,13 @@ export async function openExternalUrl(url: string): Promise<void> {
 	if (isTauriAvailable()) {
 		await desktopClient.invoke("open_external_url", { url });
 		return;
+	}
+	if (typeof window !== "undefined" && "AndroidInterface" in window) {
+		const android = (window as unknown as { AndroidInterface: { openExternalUrl: (u: string) => void } }).AndroidInterface;
+		if (typeof android.openExternalUrl === "function") {
+			android.openExternalUrl(url);
+			return;
+		}
 	}
 	window.open(url, "_blank", "noopener,noreferrer");
 }

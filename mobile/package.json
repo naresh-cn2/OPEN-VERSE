@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:webview": "cd ../desktop/apps/examples/desktop-app && bun run build:web",
-    "sync": "bun run scripts/sync-canonical-assets.ts",
-    "build": "bun run sync",
     "dev": "vite",
+    "sync-canonical": "bun scripts/sync-canonical-assets.ts",
+    "build:canonical": "bun scripts/sync-canonical-assets.ts",
+    "build": "bun scripts/sync-canonical-assets.ts",
     "preview": "vite preview"
   },
   "dependencies": {
