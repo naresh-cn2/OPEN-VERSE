@@ -320,17 +320,31 @@ class DesktopClient {
 
 	constructor() {
 		if (typeof window !== "undefined") {
-			const hasCustomEndpoint = Boolean(
-				(window as unknown as Record<string, unknown>).__SIDECAR_WS_ENDPOINT__ ||
-				window.localStorage.getItem("openverse_hub_endpoint"),
-			);
-			if (isMobileEnvironment() && !hasCustomEndpoint) {
-				this.isStandalone = true;
-				this.transportState = "connected";
-				this.cachedHubStatus = { state: "ready" };
-				setTimeout(() => {
-					this.enableStandaloneMode();
-				}, 0);
+			try {
+				let hasCustomEndpoint = false;
+				try {
+					hasCustomEndpoint = Boolean(
+						(window as unknown as Record<string, unknown>).__SIDECAR_WS_ENDPOINT__ ||
+						window.localStorage?.getItem("openverse_hub_endpoint"),
+					);
+				} catch {
+					hasCustomEndpoint = false;
+				}
+				if (isMobileEnvironment() && !hasCustomEndpoint) {
+					this.isStandalone = true;
+					this.transportState = "connected";
+					this.cachedHubStatus = { state: "ready" };
+					setTimeout(() => {
+						this.enableStandaloneMode();
+					}, 0);
+				}
+			} catch (e) {
+				console.warn("DesktopClient init error", e);
+				if (isMobileEnvironment()) {
+					this.isStandalone = true;
+					this.transportState = "connected";
+					this.cachedHubStatus = { state: "ready" };
+				}
 			}
 		}
 	}
@@ -959,6 +973,26 @@ class DesktopClient {
 			}
 			case "read_session_hooks":
 				return [] as T;
+			case "list_remote_environments":
+				return { profiles: [] } as T;
+			case "list_cloud_models":
+				return [] as T;
+			case "list_cloud_repositories":
+				return { repositories: [] } as T;
+			case "list_importable_sessions":
+				return { sessions: [] } as T;
+			case "cline_account":
+				return { user: null } as T;
+			case "cline_integrations":
+				return { ok: true } as T;
+			case "composio_integrations":
+				return { ok: true, integrations: [] } as T;
+			case "get_keybindings":
+				return { bindings: [] } as T;
+			case "provider_models":
+				return { models: [] } as T;
+			case "get_local_models_status":
+				return { status: "disabled", models: [] } as T;
 			case "pick_workspace_directory":
 				return "workspace" as T;
 			case "get_git_branch":
@@ -996,9 +1030,27 @@ class DesktopClient {
 				return true as T;
 			}
 			case "get_update_status":
-				return { isChecking: false, isAvailable: false } as T;
 			case "check_for_update_now":
-				return { available: false } as T;
+				return {
+					state: "idle",
+					isChecking: false,
+					isAvailable: false,
+					available: false,
+					version: "0.2.0",
+				} as T;
+			case "restart_to_apply_update": {
+				if (typeof window !== "undefined" && "AndroidInterface" in window) {
+					const android = (window as unknown as { AndroidInterface: { downloadAndInstallApk: (u: string) => void } }).AndroidInterface;
+					if (typeof android.downloadAndInstallApk === "function") {
+						android.downloadAndInstallApk("https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.0/open-verse-mobile.apk");
+						return true as T;
+					}
+				}
+				if (typeof window !== "undefined") {
+					window.location.reload();
+				}
+				return true as T;
+			}
 			case "export_diagnostics":
 				return { path: "memory://diagnostics.json" } as T;
 			case "chat_session_command": {

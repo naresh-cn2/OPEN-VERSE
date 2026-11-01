@@ -85,6 +85,7 @@ import {
 } from "@/lib/desktop-app-state";
 import {
 	desktopClient,
+	isMobileEnvironment,
 	isTauriAvailable,
 	openExternalUrl,
 } from "@/lib/desktop-client";
@@ -363,17 +364,23 @@ function reapOrphanedTerminals(): Promise<void> {
 
 export default function Home() {
 	const startup = useHubStartup();
+	const [isStandalone, setIsStandalone] = useState(false);
+	const [loaded, setLoaded] = useState(false);
+
+	useEffect(() => {
+		const mobile = isMobileEnvironment();
+		const standalone = mobile || desktopClient.isStandaloneMode();
+		if (standalone) {
+			desktopClient.enableStandaloneMode();
+			setIsStandalone(true);
+		}
+		setLoaded(true);
+	}, []);
+
 	const hubReady =
 		(startup.transport === "connected" && startup.hub.state === "ready") ||
-		desktopClient.isStandaloneMode();
-	// Mount the app once the Hub is first ready, then hide it with Activity
-	// whenever the Hub is not ready. Hidden Activity content keeps its state
-	// (open conversations) but unmounts effects, so its dialogs, including
-	// portaled ones, release focus traps and body pointer-events.
-	const [loaded, setLoaded] = useState(hubReady);
-	useEffect(() => {
-		if (hubReady) setLoaded(true);
-	}, [hubReady]);
+		isStandalone;
+
 	return (
 		<>
 			{loaded ? (

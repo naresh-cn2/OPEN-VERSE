@@ -78,7 +78,7 @@ export const DownloadCenter: React.FC = () => {
     android: {
       name: `open-verse-mobile.apk`,
       size: "12.7 MB",
-      sha256: "077e020363a323a77f52ff765f9dc1e3be7379ad94fcbe517f82e85d9dc3e0b1",
+      sha256: "d1cdf63d526b463ce818237001dc21cf1d6f985fa587c74204c76561e495a086",
       available: true,
     },
     ios: {

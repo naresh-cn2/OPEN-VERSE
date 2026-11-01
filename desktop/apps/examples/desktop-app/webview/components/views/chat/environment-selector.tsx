@@ -42,10 +42,11 @@ export type EnvironmentSelectorProps = {
 
 export function buildEnvironmentSelectorModel(
 	activeEnvironmentId: string,
-	profiles: RemoteEnvironmentProfile[],
+	profiles: RemoteEnvironmentProfile[] = [],
 ): EnvironmentSelectorModel {
 	const remoteById = new Map<string, EnvironmentSelectorOption>();
-	for (const profile of profiles) {
+	const safeProfiles = Array.isArray(profiles) ? profiles : [];
+	for (const profile of safeProfiles) {
 		const id = profile.id?.trim();
 		if (!id || remoteById.has(id)) continue;
 		const selected = id === activeEnvironmentId;

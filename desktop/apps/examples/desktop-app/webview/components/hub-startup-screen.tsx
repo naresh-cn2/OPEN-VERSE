@@ -24,6 +24,12 @@ export function HubStartupScreen({
 	const connected = transport === "connected";
 	const [backendUnresponsive, setBackendUnresponsive] = useState(false);
 	const [exportStatus, setExportStatus] = useState<string | null>(null);
+	const [startupDelayed, setStartupDelayed] = useState(false);
+
+	useEffect(() => {
+		const timer = setTimeout(() => setStartupDelayed(true), 1500);
+		return () => clearTimeout(timer);
+	}, []);
 
 	// The client keeps reconnecting on its own; only call it out once it has
 	// been unreachable for a while.
@@ -103,6 +109,16 @@ export function HubStartupScreen({
 				<output className="text-sm text-muted-foreground">
 					Starting OPEN VERSE…
 				</output>
+				{startupDelayed ? (
+					<Button
+						variant="outline"
+						size="sm"
+						className="mt-2 text-xs"
+						onClick={() => desktopClient.enableStandaloneMode()}
+					>
+						Enter OPEN-VERSE Workspace
+					</Button>
+				) : null}
 			</>
 		);
 	}

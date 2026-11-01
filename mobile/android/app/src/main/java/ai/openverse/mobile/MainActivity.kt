@@ -16,29 +16,21 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
-import androidx.webkit.WebViewAssetLoader
-import androidx.webkit.WebViewAssetLoader.AssetsPathHandler
+import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private lateinit var assetLoader: WebViewAssetLoader
 
     companion object {
         private const val TAG = "OPEN-VERSE-Native"
         private const val ASSET_DOMAIN = "appassets.androidplatform.net"
-        private const val ASSET_URL = "https://$ASSET_DOMAIN/assets/index.html"
+        private const val ASSET_URL = "https://$ASSET_DOMAIN/index.html"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize AndroidX WebViewAssetLoader for secure origin & CORS compliance
-        assetLoader = WebViewAssetLoader.Builder()
-            .setDomain(ASSET_DOMAIN)
-            .addPathHandler("/assets/", AssetsPathHandler(this))
-            .build()
 
         webView = WebView(this).apply {
             // Dark background prevents white flash during view creation
@@ -79,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         val defaultUserAgent = settings.userAgentString
         settings.userAgentString = "$defaultUserAgent OPEN-VERSE-Mobile/0.2.0"
 
-        // Register Native JavaScript Bridge
+        // Register Native JavaScript Bridge before loading URL
         webView.addJavascriptInterface(OpenVerseWebAppInterface(this), "AndroidInterface")
     }
 
@@ -108,63 +100,74 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
 
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                Log.i(TAG, "WebView page started: $url")
+                // Inject mobile flags before React script evaluation begins
+                view?.evaluateJavascript(
+                    "window.__OPENVERSE_MOBILE__ = true; window.__OPENVERSE_PLATFORM__ = 'android';",
+                    null
+                )
+            }
+
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                 val url = request?.url ?: return null
-                val scheme = url.scheme
                 val host = url.host
+                val scheme = url.scheme
 
-                // 1. Intercept virtual HTTPS domain for assets
+                // Intercept virtual HTTPS domain for assets
                 if (scheme == "https" && host == ASSET_DOMAIN) {
-                    val path = url.path ?: ""
-
-                    // Direct check with WebViewAssetLoader
-                    var response = assetLoader.shouldInterceptRequest(url)
-                    if (response != null) {
-                        return response
+                    var path = url.path?.trimStart('/') ?: ""
+                    if (path.isEmpty() || path == "assets" || path == "assets/") {
+                        path = "index.html"
+                    }
+                    if (path.startsWith("assets/")) {
+                        path = path.removePrefix("assets/")
                     }
 
-                    // Normalize root-relative URLs (e.g. /_next/... -> /assets/_next/...)
-                    if (!path.startsWith("/assets/")) {
-                        val cleanPath = if (path.startsWith("/")) path else "/$path"
-                        val mappedUri = Uri.parse("https://$ASSET_DOMAIN/assets$cleanPath")
-                        response = assetLoader.shouldInterceptRequest(mappedUri)
-                        if (response != null) {
-                            return response
-                        }
-                    }
-
-                    // Direct asset stream fallback with complete MIME mappings
                     try {
-                        val assetPath = (if (path.startsWith("/assets/")) path.removePrefix("/assets/") else path.removePrefix("/")).trimStart('/')
-                        val inputStream = assets.open(assetPath)
+                        val inputStream: InputStream = assets.open(path)
                         val mimeType = when {
-                            assetPath.endsWith(".html") -> "text/html"
-                            assetPath.endsWith(".js") || assetPath.endsWith(".mjs") -> "application/javascript"
-                            assetPath.endsWith(".css") -> "text/css"
-                            assetPath.endsWith(".svg") -> "image/svg+xml"
-                            assetPath.endsWith(".png") -> "image/png"
-                            assetPath.endsWith(".jpg") || assetPath.endsWith(".jpeg") -> "image/jpeg"
-                            assetPath.endsWith(".json") || assetPath.endsWith(".txt") -> "application/json"
-                            assetPath.endsWith(".woff2") -> "font/woff2"
-                            assetPath.endsWith(".woff") -> "font/woff"
-                            assetPath.endsWith(".ttf") -> "font/ttf"
+                            path.endsWith(".html") -> "text/html"
+                            path.endsWith(".js") || path.endsWith(".mjs") -> "application/javascript"
+                            path.endsWith(".css") -> "text/css"
+                            path.endsWith(".json") -> "application/json"
+                            path.endsWith(".svg") -> "image/svg+xml"
+                            path.endsWith(".png") -> "image/png"
+                            path.endsWith(".jpg") || path.endsWith(".jpeg") -> "image/jpeg"
+                            path.endsWith(".woff2") -> "font/woff2"
+                            path.endsWith(".woff") -> "font/woff"
+                            path.endsWith(".ttf") -> "font/ttf"
+                            path.endsWith(".txt") -> "text/plain"
                             else -> "application/octet-stream"
                         }
-                        return WebResourceResponse(mimeType, "UTF-8", inputStream)
+                        val headers = mapOf(
+                            "Access-Control-Allow-Origin" to "*",
+                            "Access-Control-Allow-Methods" to "GET, HEAD, OPTIONS",
+                            "Access-Control-Allow-Headers" to "*"
+                        )
+                        return WebResourceResponse(mimeType, "UTF-8", 200, "OK", headers, inputStream)
                     } catch (e: Exception) {
-                        // Let WebView handle normal resolution
+                        // For client-side routes without file extension, fallback to index.html
+                        if (!path.contains(".")) {
+                            try {
+                                val fallbackStream = assets.open("index.html")
+                                val headers = mapOf("Access-Control-Allow-Origin" to "*")
+                                return WebResourceResponse("text/html", "UTF-8", 200, "OK", headers, fallbackStream)
+                            } catch (_: Exception) {}
+                        }
+                        Log.w(TAG, "Asset not found: $path (${e.message})")
                     }
                 }
 
-                // 2. Intercept legacy file:///android_asset/ if requested
+                // Intercept legacy file:///android_asset/ if requested
                 val urlString = url.toString()
                 if (urlString.startsWith("file:///android_asset/")) {
-                    val relativePath = urlString.removePrefix("file:///android_asset/")
-                    val virtualUri = Uri.parse("https://$ASSET_DOMAIN/assets/$relativePath")
-                    val response = assetLoader.shouldInterceptRequest(virtualUri)
-                    if (response != null) {
-                        return response
-                    }
+                    val relativePath = urlString.removePrefix("file:///android_asset/").trimStart('/')
+                    try {
+                        val stream = assets.open(relativePath)
+                        return WebResourceResponse("application/octet-stream", "UTF-8", stream)
+                    } catch (_: Exception) {}
                 }
 
                 return super.shouldInterceptRequest(view, request)
@@ -176,19 +179,15 @@ class MainActivity : AppCompatActivity() {
                 val errorDesc = error?.description?.toString() ?: "Unknown error"
                 val errorCode = error?.errorCode ?: 0
                 Log.e(TAG, "WebView load error [$errorCode] on $failingUrl: $errorDesc")
-
-                if (request?.isForMainFrame == true) {
-                    val escaped = errorDesc.replace("'", "\\'")
-                    view?.post {
-                        view.evaluateJavascript("if (window.__showDiagnosticError) { window.__showDiagnosticError('$escaped ($errorCode)', '$failingUrl'); }", null)
-                    }
-                }
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Log.i(TAG, "WebView page finished loading: $url")
-                view?.evaluateJavascript("window.__OPENVERSE_MOBILE__ = true; window.__OPENVERSE_PLATFORM__ = 'android';", null)
+                view?.evaluateJavascript(
+                    "window.__OPENVERSE_MOBILE__ = true; window.__OPENVERSE_PLATFORM__ = 'android';",
+                    null
+                )
                 // Check if pending deep link needs to be delivered
                 pendingDeepLinkUrl?.let {
                     dispatchDeepLinkToWeb(it)
@@ -205,9 +204,7 @@ class MainActivity : AppCompatActivity() {
                 val level = consoleMessage?.messageLevel() ?: ConsoleMessage.MessageLevel.LOG
 
                 when (level) {
-                    ConsoleMessage.MessageLevel.ERROR -> {
-                        Log.e("OPEN-VERSE-JS", "[$src:$line] $msg")
-                    }
+                    ConsoleMessage.MessageLevel.ERROR -> Log.e("OPEN-VERSE-JS", "[$src:$line] $msg")
                     ConsoleMessage.MessageLevel.WARNING -> Log.w("OPEN-VERSE-JS", "[$src:$line] $msg")
                     else -> Log.d("OPEN-VERSE-JS", "[$src:$line] $msg")
                 }
@@ -225,32 +222,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val data: Uri? = intent?.data
-        if (data != null && data.scheme == "openverse") {
-            val deepLinkString = data.toString()
-            Log.i(TAG, "Received deep link intent: $deepLinkString")
-            dispatchDeepLinkToWeb(deepLinkString)
+        val action = intent?.action
+        val data = intent?.data
+        if (Intent.ACTION_VIEW == action && data != null) {
+            val url = data.toString()
+            Log.i(TAG, "Received deep link intent: $url")
+            if (::webView.isInitialized) {
+                dispatchDeepLinkToWeb(url)
+            } else {
+                pendingDeepLinkUrl = url
+            }
         }
     }
 
     private fun dispatchDeepLinkToWeb(url: String) {
-        val escapedUrl = url.replace("'", "\\'")
-        val js = "if (window.dispatchNativeDeepLink) { window.dispatchNativeDeepLink('$escapedUrl'); }"
-        webView.post {
-            webView.evaluateJavascript(js, null)
-        }
+        val escaped = url.replace("'", "\\'")
+        val js = """
+            if (window.__dispatchOpenVerseDeepLink) {
+                window.__dispatchOpenVerseDeepLink('$escaped');
+            } else {
+                window.location.hash = '$escaped';
+            }
+        """.trimIndent()
+        webView.evaluateJavascript(js, null)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && ::webView.isInitialized && webView.canGoBack()) {
             webView.goBack()
             return true
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onDestroy() {
-        webView.destroy()
-        super.onDestroy()
     }
 }

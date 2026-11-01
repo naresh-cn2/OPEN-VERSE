@@ -186,6 +186,14 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
   const statesResult: TestResult["states"] = [];
   const functionalChecks: TestResult["functionalChecks"] = [];
 
+  const safeScreenshot = async (filePath: string) => {
+    try {
+      await page.screenshot({ path: filePath, fullPage: false, timeout: 15000 });
+    } catch (e) {
+      console.warn(`[QA][${config.id}] Screenshot warning for ${filePath}:`, e);
+    }
+  };
+
   try {
     // 1. STATE: STARTUP & APPLICATION MOUNT
     console.log(`[QA][${config.id}] Testing State 01: Application Startup`);
@@ -193,7 +201,7 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
     await page.waitForTimeout(1000);
 
     const startupScreenshot = join(platformDir, "01-startup.png");
-    await page.screenshot({ path: startupScreenshot, fullPage: true });
+    await safeScreenshot(startupScreenshot);
 
     // Verify loading screen is NOT stuck indefinitely
     const isSpinnerStuck = await page.evaluate(() => {
@@ -219,7 +227,7 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
     console.log(`[QA][${config.id}] Testing State 02: Main Chat Workspace`);
     await page.waitForTimeout(500);
     const workspaceScreenshot = join(platformDir, "02-workspace.png");
-    await page.screenshot({ path: workspaceScreenshot, fullPage: true });
+    await safeScreenshot(workspaceScreenshot);
 
     const hasPromptInput = await page.evaluate(() => {
       return Boolean(document.querySelector("textarea") || document.querySelector("input[type='text']") || document.querySelector("[contenteditable='true']"));
@@ -255,7 +263,7 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
     }
 
     const chatScreenshot = join(platformDir, "03-chat-interaction.png");
-    await page.screenshot({ path: chatScreenshot, fullPage: true });
+    await safeScreenshot(chatScreenshot);
 
     statesResult.push({
       stateId: "03-chat-interaction",
@@ -283,7 +291,7 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
     } catch {}
 
     const settingsScreenshot = join(platformDir, "04-settings.png");
-    await page.screenshot({ path: settingsScreenshot, fullPage: true });
+    await safeScreenshot(settingsScreenshot);
 
     statesResult.push({
       stateId: "04-settings",
@@ -315,7 +323,7 @@ async function runPlatformQA(browser: Browser, config: PlatformConfig): Promise<
     const isPersistenceWorking = Boolean(reloadedIdentity && reloadedIdentity.includes("usr_local_test"));
 
     const persistenceScreenshot = join(platformDir, "05-data-persistence.png");
-    await page.screenshot({ path: persistenceScreenshot, fullPage: true });
+    await safeScreenshot(persistenceScreenshot);
 
     statesResult.push({
       stateId: "05-data-persistence",

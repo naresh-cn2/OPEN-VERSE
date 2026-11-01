@@ -226,7 +226,7 @@
         "stateName": "Canonical Workspace & Navigation",
         "screenshotPath": "screenshots/mobile-android/02-workspace.png",
         "verified": true,
-        "details": "Workspace rendered in initial view"
+        "details": "Workspace prompt input active"
       },
       {
         "stateId": "03-chat-interaction",
@@ -296,7 +296,7 @@
         "stateName": "Canonical Workspace & Navigation",
         "screenshotPath": "screenshots/mobile-ios/02-workspace.png",
         "verified": true,
-        "details": "Workspace rendered in initial view"
+        "details": "Workspace prompt input active"
       },
       {
         "stateId": "03-chat-interaction",
