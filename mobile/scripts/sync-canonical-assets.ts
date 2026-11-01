@@ -13,11 +13,14 @@ if (!existsSync(srcDir) || !existsSync(resolve(srcDir, "index.html"))) {
 console.log("Syncing canonical OPEN-VERSE webview assets from:", srcDir);
 
 // Sync to Android
+rmSync(androidAssets, { recursive: true, force: true });
 mkdirSync(androidAssets, { recursive: true });
 cpSync(srcDir, androidAssets, { recursive: true, force: true });
 console.log("Synced canonical assets to Android:", androidAssets);
 
 // Sync to iOS
+rmSync(iosAssets, { recursive: true, force: true });
 mkdirSync(iosAssets, { recursive: true });
 cpSync(srcDir, iosAssets, { recursive: true, force: true });
 console.log("Synced canonical assets to iOS:", iosAssets);
+

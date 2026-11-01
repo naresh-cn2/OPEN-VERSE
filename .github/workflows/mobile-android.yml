@@ -33,13 +33,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Build Canonical Webview
+        run: |
+          cd desktop
+          bun install
+          cd apps/examples/desktop-app
+          bun run build:web
+
       - name: Sync Canonical Webview Assets
         run: |
-          mkdir -p mobile/android/app/src/main/assets
-          if [ -d "desktop/apps/examples/desktop-app/webview/out" ] && [ -f "desktop/apps/examples/desktop-app/webview/out/index.html" ]; then
-            echo "Syncing canonical Next.js webview assets to Android..."
-            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
-          fi
+          cd mobile
+          bun scripts/sync-canonical-assets.ts
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x mobile/android/gradlew

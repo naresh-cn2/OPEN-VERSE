@@ -27,13 +27,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Build Canonical Webview
+        run: |
+          cd desktop
+          bun install
+          cd apps/examples/desktop-app
+          bun run build:web
+
       - name: Sync Canonical Webview Assets
         run: |
-          mkdir -p mobile/ios/OPEN-VERSE/www
-          if [ -d "desktop/apps/examples/desktop-app/webview/out" ] && [ -f "desktop/apps/examples/desktop-app/webview/out/index.html" ]; then
-            echo "Syncing canonical Next.js webview assets to iOS..."
-            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/ios/OPEN-VERSE/www/
-          fi
+          cd mobile
+          bun scripts/sync-canonical-assets.ts
 
       - name: Select Xcode Version
         run: |

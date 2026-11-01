@@ -15,7 +15,12 @@ export function useHubStartup() {
 	const [transport, setTransport] = useState<DesktopTransportState>(
 		desktopClient.getTransportState(),
 	);
-	const [hub, setHub] = useState<DesktopHubStatus>({ state: "starting" });
+	const [hub, setHub] = useState<DesktopHubStatus>(() => {
+		const status = desktopClient.getHubStatus?.();
+		return status && typeof status === "object" && "state" in status
+			? (status as DesktopHubStatus)
+			: { state: "starting" };
+	});
 
 	useEffect(
 		() =>
@@ -23,7 +28,7 @@ export function useHubStartup() {
 				setTransport(next);
 				// A restarted sidecar replays its own status on connect; never reuse
 				// the previous sidecar's "ready".
-				if (next !== "connected") setHub({ state: "starting" });
+				if (next !== "connected" && !desktopClient.isStandaloneMode()) setHub({ state: "starting" });
 			}),
 		[],
 	);

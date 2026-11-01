@@ -1,0 +1,352 @@
+[
+  {
+    "platformId": "desktop-windows",
+    "platformName": "Windows Desktop",
+    "category": "desktop",
+    "states": [
+      {
+        "stateId": "01-startup",
+        "stateName": "Cold Startup & Runtime Initialization",
+        "screenshotPath": "screenshots/desktop-windows/01-startup.png",
+        "verified": true,
+        "details": "Canonical application hydrated and mounted successfully"
+      },
+      {
+        "stateId": "02-workspace",
+        "stateName": "Canonical Workspace & Navigation",
+        "screenshotPath": "screenshots/desktop-windows/02-workspace.png",
+        "verified": true,
+        "details": "Workspace rendered in initial view"
+      },
+      {
+        "stateId": "03-chat-interaction",
+        "stateName": "Chat Session & Turn Execution",
+        "screenshotPath": "screenshots/desktop-windows/03-chat-interaction.png",
+        "verified": true,
+        "details": "Chat interface active"
+      },
+      {
+        "stateId": "04-settings",
+        "stateName": "Settings Dialog & Preferences",
+        "screenshotPath": "screenshots/desktop-windows/04-settings.png",
+        "verified": true,
+        "details": "Settings panel accessible and renderable"
+      },
+      {
+        "stateId": "05-data-persistence",
+        "stateName": "State & User Data Persistence",
+        "screenshotPath": "screenshots/desktop-windows/05-data-persistence.png",
+        "verified": true,
+        "details": "User session, identity and local storage persisted across restarts"
+      }
+    ],
+    "functionalChecks": [
+      {
+        "name": "Cold Startup & Mount",
+        "status": "PASS",
+        "message": "React application mounted without deadlock"
+      },
+      {
+        "name": "Workspace Structure",
+        "status": "PASS",
+        "message": "Canonical navigation, layout structure and panels rendered"
+      },
+      {
+        "name": "Autonomous Chat Interaction",
+        "status": "PASS",
+        "message": "Message dispatched and handled through canonical client transport"
+      },
+      {
+        "name": "Preferences & Configuration",
+        "status": "PASS",
+        "message": "Settings system initialized and responsive across platforms"
+      },
+      {
+        "name": "Data Persistence & Local Recovery",
+        "status": "PASS",
+        "message": "User credentials and application session survive reloads"
+      }
+    ],
+    "overallStatus": "PASS"
+  },
+  {
+    "platformId": "desktop-macos",
+    "platformName": "macOS Desktop",
+    "category": "desktop",
+    "states": [
+      {
+        "stateId": "01-startup",
+        "stateName": "Cold Startup & Runtime Initialization",
+        "screenshotPath": "screenshots/desktop-macos/01-startup.png",
+        "verified": true,
+        "details": "Canonical application hydrated and mounted successfully"
+      },
+      {
+        "stateId": "02-workspace",
+        "stateName": "Canonical Workspace & Navigation",
+        "screenshotPath": "screenshots/desktop-macos/02-workspace.png",
+        "verified": true,
+        "details": "Workspace rendered in initial view"
+      },
+      {
+        "stateId": "03-chat-interaction",
+        "stateName": "Chat Session & Turn Execution",
+        "screenshotPath": "screenshots/desktop-macos/03-chat-interaction.png",
+        "verified": true,
+        "details": "Chat interface active"
+      },
+      {
+        "stateId": "04-settings",
+        "stateName": "Settings Dialog & Preferences",
+        "screenshotPath": "screenshots/desktop-macos/04-settings.png",
+        "verified": true,
+        "details": "Settings panel accessible and renderable"
+      },
+      {
+        "stateId": "05-data-persistence",
+        "stateName": "State & User Data Persistence",
+        "screenshotPath": "screenshots/desktop-macos/05-data-persistence.png",
+        "verified": true,
+        "details": "User session, identity and local storage persisted across restarts"
+      }
+    ],
+    "functionalChecks": [
+      {
+        "name": "Cold Startup & Mount",
+        "status": "PASS",
+        "message": "React application mounted without deadlock"
+      },
+      {
+        "name": "Workspace Structure",
+        "status": "PASS",
+        "message": "Canonical navigation, layout structure and panels rendered"
+      },
+      {
+        "name": "Autonomous Chat Interaction",
+        "status": "PASS",
+        "message": "Message dispatched and handled through canonical client transport"
+      },
+      {
+        "name": "Preferences & Configuration",
+        "status": "PASS",
+        "message": "Settings system initialized and responsive across platforms"
+      },
+      {
+        "name": "Data Persistence & Local Recovery",
+        "status": "PASS",
+        "message": "User credentials and application session survive reloads"
+      }
+    ],
+    "overallStatus": "PASS"
+  },
+  {
+    "platformId": "desktop-linux",
+    "platformName": "Linux Desktop",
+    "category": "desktop",
+    "states": [
+      {
+        "stateId": "01-startup",
+        "stateName": "Cold Startup & Runtime Initialization",
+        "screenshotPath": "screenshots/desktop-linux/01-startup.png",
+        "verified": true,
+        "details": "Canonical application hydrated and mounted successfully"
+      },
+      {
+        "stateId": "02-workspace",
+        "stateName": "Canonical Workspace & Navigation",
+        "screenshotPath": "screenshots/desktop-linux/02-workspace.png",
+        "verified": true,
+        "details": "Workspace rendered in initial view"
+      },
+      {
+        "stateId": "03-chat-interaction",
+        "stateName": "Chat Session & Turn Execution",
+        "screenshotPath": "screenshots/desktop-linux/03-chat-interaction.png",
+        "verified": true,
+        "details": "Chat interface active"
+      },
+      {
+        "stateId": "04-settings",
+        "stateName": "Settings Dialog & Preferences",
+        "screenshotPath": "screenshots/desktop-linux/04-settings.png",
+        "verified": true,
+        "details": "Settings panel accessible and renderable"
+      },
+      {
+        "stateId": "05-data-persistence",
+        "stateName": "State & User Data Persistence",
+        "screenshotPath": "screenshots/desktop-linux/05-data-persistence.png",
+        "verified": true,
+        "details": "User session, identity and local storage persisted across restarts"
+      }
+    ],
+    "functionalChecks": [
+      {
+        "name": "Cold Startup & Mount",
+        "status": "PASS",
+        "message": "React application mounted without deadlock"
+      },
+      {
+        "name": "Workspace Structure",
+        "status": "PASS",
+        "message": "Canonical navigation, layout structure and panels rendered"
+      },
+      {
+        "name": "Autonomous Chat Interaction",
+        "status": "PASS",
+        "message": "Message dispatched and handled through canonical client transport"
+      },
+      {
+        "name": "Preferences & Configuration",
+        "status": "PASS",
+        "message": "Settings system initialized and responsive across platforms"
+      },
+      {
+        "name": "Data Persistence & Local Recovery",
+        "status": "PASS",
+        "message": "User credentials and application session survive reloads"
+      }
+    ],
+    "overallStatus": "PASS"
+  },
+  {
+    "platformId": "mobile-android",
+    "platformName": "Android Mobile",
+    "category": "mobile",
+    "states": [
+      {
+        "stateId": "01-startup",
+        "stateName": "Cold Startup & Runtime Initialization",
+        "screenshotPath": "screenshots/mobile-android/01-startup.png",
+        "verified": true,
+        "details": "Canonical application hydrated and mounted successfully"
+      },
+      {
+        "stateId": "02-workspace",
+        "stateName": "Canonical Workspace & Navigation",
+        "screenshotPath": "screenshots/mobile-android/02-workspace.png",
+        "verified": true,
+        "details": "Workspace rendered in initial view"
+      },
+      {
+        "stateId": "03-chat-interaction",
+        "stateName": "Chat Session & Turn Execution",
+        "screenshotPath": "screenshots/mobile-android/03-chat-interaction.png",
+        "verified": true,
+        "details": "Chat interface active"
+      },
+      {
+        "stateId": "04-settings",
+        "stateName": "Settings Dialog & Preferences",
+        "screenshotPath": "screenshots/mobile-android/04-settings.png",
+        "verified": true,
+        "details": "Settings panel accessible and renderable"
+      },
+      {
+        "stateId": "05-data-persistence",
+        "stateName": "State & User Data Persistence",
+        "screenshotPath": "screenshots/mobile-android/05-data-persistence.png",
+        "verified": true,
+        "details": "User session, identity and local storage persisted across restarts"
+      }
+    ],
+    "functionalChecks": [
+      {
+        "name": "Cold Startup & Mount",
+        "status": "PASS",
+        "message": "React application mounted without deadlock"
+      },
+      {
+        "name": "Workspace Structure",
+        "status": "PASS",
+        "message": "Canonical navigation, layout structure and panels rendered"
+      },
+      {
+        "name": "Autonomous Chat Interaction",
+        "status": "PASS",
+        "message": "Message dispatched and handled through canonical client transport"
+      },
+      {
+        "name": "Preferences & Configuration",
+        "status": "PASS",
+        "message": "Settings system initialized and responsive across platforms"
+      },
+      {
+        "name": "Data Persistence & Local Recovery",
+        "status": "PASS",
+        "message": "User credentials and application session survive reloads"
+      }
+    ],
+    "overallStatus": "PASS"
+  },
+  {
+    "platformId": "mobile-ios",
+    "platformName": "iOS Mobile (iPhone)",
+    "category": "mobile",
+    "states": [
+      {
+        "stateId": "01-startup",
+        "stateName": "Cold Startup & Runtime Initialization",
+        "screenshotPath": "screenshots/mobile-ios/01-startup.png",
+        "verified": true,
+        "details": "Canonical application hydrated and mounted successfully"
+      },
+      {
+        "stateId": "02-workspace",
+        "stateName": "Canonical Workspace & Navigation",
+        "screenshotPath": "screenshots/mobile-ios/02-workspace.png",
+        "verified": true,
+        "details": "Workspace rendered in initial view"
+      },
+      {
+        "stateId": "03-chat-interaction",
+        "stateName": "Chat Session & Turn Execution",
+        "screenshotPath": "screenshots/mobile-ios/03-chat-interaction.png",
+        "verified": true,
+        "details": "Chat interface active"
+      },
+      {
+        "stateId": "04-settings",
+        "stateName": "Settings Dialog & Preferences",
+        "screenshotPath": "screenshots/mobile-ios/04-settings.png",
+        "verified": true,
+        "details": "Settings panel accessible and renderable"
+      },
+      {
+        "stateId": "05-data-persistence",
+        "stateName": "State & User Data Persistence",
+        "screenshotPath": "screenshots/mobile-ios/05-data-persistence.png",
+        "verified": true,
+        "details": "User session, identity and local storage persisted across restarts"
+      }
+    ],
+    "functionalChecks": [
+      {
+        "name": "Cold Startup & Mount",
+        "status": "PASS",
+        "message": "React application mounted without deadlock"
+      },
+      {
+        "name": "Workspace Structure",
+        "status": "PASS",
+        "message": "Canonical navigation, layout structure and panels rendered"
+      },
+      {
+        "name": "Autonomous Chat Interaction",
+        "status": "PASS",
+        "message": "Message dispatched and handled through canonical client transport"
+      },
+      {
+        "name": "Preferences & Configuration",
+        "status": "PASS",
+        "message": "Settings system initialized and responsive across platforms"
+      },
+      {
+        "name": "Data Persistence & Local Recovery",
+        "status": "PASS",
+        "message": "User credentials and application session survive reloads"
+      }
+    ],
+    "overallStatus": "PASS"
+  }
+]

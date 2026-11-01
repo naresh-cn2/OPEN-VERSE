@@ -217,8 +217,11 @@ export function isMobileEnvironment(): boolean {
 	) {
 		return true;
 	}
+	if (Boolean((window as unknown as Record<string, unknown>).__OPENVERSE_MOBILE__)) {
+		return true;
+	}
 	const ua = navigator.userAgent || "";
-	return /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+	return /Android|iPhone|iPad|iPod|Mobile|OPEN-VERSE-Mobile/i.test(ua);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -313,6 +316,7 @@ class DesktopClient {
 	private reportedErrorObjects = new WeakSet<object>();
 	private errorObjectDeliveries = new WeakMap<object, Promise<boolean>>();
 	private isStandalone = false;
+	private cachedHubStatus: Record<string, unknown> = { state: "starting" };
 
 	constructor() {
 		if (typeof window !== "undefined") {
@@ -323,9 +327,10 @@ class DesktopClient {
 			if (isMobileEnvironment() && !hasCustomEndpoint) {
 				this.isStandalone = true;
 				this.transportState = "connected";
+				this.cachedHubStatus = { state: "ready" };
 				setTimeout(() => {
 					this.enableStandaloneMode();
-				}, 10);
+				}, 0);
 			}
 		}
 	}
@@ -334,10 +339,15 @@ class DesktopClient {
 		return this.isStandalone;
 	}
 
+	public getHubStatus(): { state: string; error?: string } {
+		return (this.isStandalone ? { state: "ready" } : this.cachedHubStatus) as { state: string; error?: string };
+	}
+
 	public enableStandaloneMode(): void {
 		this.isStandalone = true;
 		this.hasConnectedOnce = true;
 		this.transportError = null;
+		this.cachedHubStatus = { state: "ready" };
 		this.setTransportState("connected");
 		this.dispatchEvent({
 			type: "event",
@@ -463,6 +473,9 @@ class DesktopClient {
 	}
 
 	private dispatchEvent(message: DesktopTransportEvent) {
+		if (message.event.name === "hub_status" && isRecord(message.event.payload)) {
+			this.cachedHubStatus = message.event.payload as Record<string, unknown>;
+		}
 		if (message.event.name === DESKTOP_DEBUG_LOG_EVENT) {
 			writeDesktopDebugLog(message.event.payload);
 		}
@@ -780,6 +793,13 @@ class DesktopClient {
 		const handlers = this.handlers.get(eventName) ?? new Set<EventHandler>();
 		handlers.add(handler);
 		this.handlers.set(eventName, handlers);
+		if (eventName === "hub_status" && (this.isStandalone || this.cachedHubStatus?.state === "ready")) {
+			try {
+				handler(this.cachedHubStatus?.state === "ready" ? this.cachedHubStatus : { state: "ready" });
+			} catch (e) {
+				console.error("Error in immediate hub_status handler", e);
+			}
+		}
 		return () => {
 			const current = this.handlers.get(eventName);
 			if (!current) {
@@ -903,7 +923,20 @@ class DesktopClient {
 				return {
 					appVersion: "0.2.0",
 					isMobile: isMobileEnvironment(),
-					hub: { state: "ready", status: "ready" },
+					hub: { state: "ready", status: "connected", url: "standalone://local" },
+				} as T;
+			case "get_feature_flags":
+				return { flags: {} } as T;
+			case "get_source_control_state":
+				return {
+					environmentId: (args?.environmentId as string) || "local",
+					root: null,
+					branch: "main",
+					hasUpstream: false,
+					status: "clean",
+					files: [],
+					staged: [],
+					commits: [],
 				} as T;
 			case "get_discovered_session":
 				return null as T;
@@ -929,7 +962,11 @@ class DesktopClient {
 			case "pick_workspace_directory":
 				return "workspace" as T;
 			case "get_git_branch":
-				return { environmentId: "local", branch: "main", branches: ["main"] } as T;
+				return { environmentId: (args?.environmentId as string) || "local", branch: "main", branches: ["main"] } as T;
+			case "list_git_branches":
+				return { environmentId: (args?.environmentId as string) || "local", current: "main", branches: ["main"] } as T;
+			case "checkout_git_branch":
+				return { environmentId: (args?.environmentId as string) || "local", branch: (args?.branch as string) || "main" } as T;
 			case "update_chat_session_title": {
 				const sid = (args?.sessionId as string) || "";
 				const title = (args?.title as string) || "";
