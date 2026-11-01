@@ -21,7 +21,7 @@ export function HubStartupScreen({
 	transport,
 	hub,
 }: ReturnType<typeof useHubStartup>) {
-	if (typeof window !== "undefined" && isMobileEnvironment()) {
+	if (typeof window === "undefined" || isMobileEnvironment()) {
 		return null;
 	}
 	const connected = transport === "connected";

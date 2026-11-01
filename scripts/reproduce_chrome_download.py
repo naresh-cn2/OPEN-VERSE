@@ -29,3 +29,4 @@ res = subprocess.run([ADB, "-s", "emulator-5554", "exec-out", "cat", "/data/loca
 for line in res.stdout.split("><"):
     if any(k in line.lower() for k in ["download", "harmful", "keep", "cancel", "detail", "file", "open"]):
         print(line[:140], flush=True)
+

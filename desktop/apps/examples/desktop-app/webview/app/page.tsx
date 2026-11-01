@@ -393,13 +393,15 @@ export default function Home() {
 		isStandalone ||
 		(startup.transport === "connected" && startup.hub.state === "ready");
 
+	if (!loaded) {
+		return <div className="fixed inset-0 bg-[#09090b]" />;
+	}
+
 	return (
 		<>
-			{loaded ? (
-				<Activity mode={hubReady ? "visible" : "hidden"}>
-					<App />
-				</Activity>
-			) : null}
+			<Activity mode={hubReady ? "visible" : "hidden"}>
+				<App />
+			</Activity>
 			{hubReady || isMobile ? null : <HubStartupScreen {...startup} />}
 			{/* Outside the gate: the startup mismatch check can fire before App mounts. */}
 			<HubUpdateRequiredDialog />

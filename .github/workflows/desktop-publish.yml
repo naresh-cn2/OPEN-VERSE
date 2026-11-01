@@ -27,7 +27,7 @@ on:
         default: stable
 
 concurrency:
-  group: desktop-publish-${{ inputs.channel }}
+  group: desktop-publish-${{ github.event.inputs.channel || 'manual' }}
   cancel-in-progress: false
 
 permissions:
@@ -96,7 +96,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.channel == 'nightly' && github.sha || inputs.git_tag }}
+          ref: ${{ (github.event.inputs.channel == 'nightly' && github.sha) || github.event.inputs.git_tag }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -106,7 +106,7 @@ jobs:
           TAG: ${{ github.event.inputs.git_tag }}
           # inputs.* (not github.event.inputs.*) so the declared default
           # applies when an API dispatch omits the channel input entirely.
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ github.event.inputs.channel || 'stable' }}
         run: |
           # Fail-closed channel mapping: every channel defines its tag shape,
           # its ancestry source, its feed, and its product name, and an unknown

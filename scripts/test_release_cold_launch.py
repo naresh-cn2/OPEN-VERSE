@@ -39,3 +39,4 @@ if "Starting OPEN" in dump.stdout:
     print("STATUS: FAILED - 'Starting OPEN' still detected!", flush=True)
 else:
     print("STATUS: PASSED - 'Starting OPEN' is 100% GONE!", flush=True)
+
