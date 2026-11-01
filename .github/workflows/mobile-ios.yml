@@ -27,17 +27,14 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Canonical Webview
-        run: |
-          cd desktop
-          bun install
-          cd apps/examples/desktop-app
-          bun run build:web
-
       - name: Sync Canonical Webview Assets
         run: |
-          cd mobile
-          bun scripts/sync-canonical-assets.ts
+          mkdir -p mobile/ios/OPEN-VERSE/www
+          if [ -d "desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/ios/OPEN-VERSE/www/
+          elif [ -d "mobile/android/app/src/main/assets" ]; then
+            cp -r mobile/android/app/src/main/assets/* mobile/ios/OPEN-VERSE/www/
+          fi
 
       - name: Select Xcode Version
         run: |

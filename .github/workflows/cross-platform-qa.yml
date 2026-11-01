@@ -28,13 +28,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Canonical Webview
-        run: |
-          cd desktop
-          bun install
-          cd apps/examples/desktop-app
-          bun run build:web
-
       - name: Install QA Suite & Playwright Dependencies
         run: |
           cd tests/visual-qa

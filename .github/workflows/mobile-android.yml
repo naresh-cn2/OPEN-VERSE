@@ -33,17 +33,12 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Canonical Webview
+      - name: Ensure Canonical Assets Synced
         run: |
-          cd desktop
-          bun install
-          cd apps/examples/desktop-app
-          bun run build:web
-
-      - name: Sync Canonical Webview Assets
-        run: |
-          cd mobile
-          bun scripts/sync-canonical-assets.ts
+          mkdir -p mobile/android/app/src/main/assets
+          if [ -d "desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
+          fi
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x mobile/android/gradlew
