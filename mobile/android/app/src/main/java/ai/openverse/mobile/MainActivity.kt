@@ -193,10 +193,7 @@ class MainActivity : AppCompatActivity() {
                         function removeOrphanOverlays() {
                             var overlays = document.querySelectorAll('main.fixed.inset-0.z-40');
                             for (var i = 0; i < overlays.length; i++) {
-                                var el = overlays[i];
-                                if (!Object.keys(el).some(function(k) { return k.startsWith('__reactFiber'); })) {
-                                    el.remove();
-                                }
+                                overlays[i].remove();
                             }
                         }
                         removeOrphanOverlays();

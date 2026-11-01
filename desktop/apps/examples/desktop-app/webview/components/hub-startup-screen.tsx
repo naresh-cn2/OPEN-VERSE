@@ -8,7 +8,7 @@ import {
 	WindowTitleBarProvider,
 } from "@/components/window-title-bar";
 import type { useHubStartup } from "@/hooks/use-hub-startup";
-import { desktopClient } from "@/lib/desktop-client";
+import { desktopClient, isMobileEnvironment } from "@/lib/desktop-client";
 
 const BACKEND_UNRESPONSIVE_MS = 30_000;
 
@@ -21,6 +21,9 @@ export function HubStartupScreen({
 	transport,
 	hub,
 }: ReturnType<typeof useHubStartup>) {
+	if (typeof window !== "undefined" && isMobileEnvironment()) {
+		return null;
+	}
 	const connected = transport === "connected";
 	const [backendUnresponsive, setBackendUnresponsive] = useState(false);
 	const [exportStatus, setExportStatus] = useState<string | null>(null);

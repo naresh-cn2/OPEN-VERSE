@@ -44,3 +44,4 @@ time.sleep(1)
 capture("demo_04_chat_typing")
 
 print("Interactive test complete!", flush=True)
+

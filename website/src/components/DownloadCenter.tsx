@@ -77,8 +77,8 @@ export const DownloadCenter: React.FC = () => {
     },
     android: {
       name: `open-verse-mobile.apk`,
-      size: "12.7 MB",
-      sha256: "5b3f8e670d84ced85121a26f0860f68aa8fb199332145d4456265ef40ebbe542",
+      size: "9.9 MB",
+      sha256: "9aefda8d91a850b9792ddc8ecacef30f54b936b575d5b69524bafef572273d2a",
       available: true,
     },
     ios: {
@@ -440,6 +440,27 @@ export const DownloadCenter: React.FC = () => {
                     <Download size={18} />
                     <span>Download Android APK (v{DESKTOP_VERSION})</span>
                   </a>
+                  <a
+                    href="/open-verse-mobile.apk"
+                    download="open-verse-mobile.apk"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      width: "100%",
+                      padding: "9px 16px",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                      borderRadius: 8,
+                      border: "1px solid var(--border-subtle)",
+                      background: "rgba(255, 255, 255, 0.04)",
+                      color: "var(--text-secondary)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>Alternative Direct Mirror (Local)</span>
+                  </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
                     <span>Size: {FILE_META.android.size}</span>
                     <button
@@ -461,10 +482,13 @@ export const DownloadCenter: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                <div style={{ background: "rgba(14, 165, 233, 0.08)", border: "1px solid rgba(14, 165, 233, 0.25)", borderRadius: 8, padding: "10px 14px", fontSize: "0.78rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
+                  <strong style={{ color: "var(--sky)" }}>Android Chrome Tip:</strong> If Chrome displays <em>&ldquo;File might be harmful&rdquo;</em>, tap <strong>&ldquo;Download anyway&rdquo;</strong> to complete the download, then tap <strong>&ldquo;Open&rdquo;</strong> to install.
+                </div>
                 <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
                   <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Installation Instructions:</div>
                   <div>1. Download the APK file directly to your Android device.</div>
-                  <div>2. Tap to install (enable "Install unknown apps" if prompted).</div>
+                  <div>2. Tap to install (enable &quot;Install unknown apps&quot; if prompted).</div>
                   <div>3. Launch OPEN-VERSE. Requires Android 7.0+ (API 24 to 34).</div>
                 </div>
               </div>

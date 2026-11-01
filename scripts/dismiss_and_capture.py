@@ -21,3 +21,4 @@ out_png = r"C:\Users\nares\.gemini\antigravity\brain\93ce855d-86e9-462b-9f77-f77
 ADB = r"C:\Users\nares\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 subprocess.run([ADB, "-s", "emulator-5554", "pull", "/data/local/tmp/screen_after_dialog.png", out_png], capture_output=True)
 print("Screenshot captured successfully to:", out_png, flush=True)
+

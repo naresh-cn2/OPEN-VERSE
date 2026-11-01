@@ -19,3 +19,4 @@ adb_cmd(["shell", "screencap", "-p", "/data/local/tmp/screen_split.png"])
 out = os.path.join(ARTIFACT_DIR, "screen_split_tap.png")
 subprocess.run([ADB, "-s", "emulator-5554", "pull", "/data/local/tmp/screen_split.png", out], capture_output=True)
 print("Saved to:", out, flush=True)
+

@@ -364,7 +364,11 @@ function reapOrphanedTerminals(): Promise<void> {
 
 export default function Home() {
 	const startup = useHubStartup();
-	const [isStandalone, setIsStandalone] = useState(false);
+	const isMobile = typeof window !== "undefined" && isMobileEnvironment();
+	const [isStandalone, setIsStandalone] = useState(() => {
+		if (typeof window === "undefined") return false;
+		return isMobileEnvironment() || desktopClient.isStandaloneMode();
+	});
 	const [loaded, setLoaded] = useState(false);
 
 	useEffect(() => {
@@ -378,17 +382,16 @@ export default function Home() {
 		if (typeof document !== "undefined") {
 			const orphanedOverlays = document.querySelectorAll("main.fixed.inset-0.z-40");
 			orphanedOverlays.forEach((el) => {
-				if (!Object.keys(el).some((k) => k.startsWith("__reactFiber"))) {
-					el.remove();
-				}
+				el.remove();
 			});
 		}
 		setLoaded(true);
 	}, []);
 
 	const hubReady =
-		(startup.transport === "connected" && startup.hub.state === "ready") ||
-		isStandalone;
+		isMobile ||
+		isStandalone ||
+		(startup.transport === "connected" && startup.hub.state === "ready");
 
 	return (
 		<>
@@ -397,7 +400,7 @@ export default function Home() {
 					<App />
 				</Activity>
 			) : null}
-			{hubReady ? null : <HubStartupScreen {...startup} />}
+			{hubReady || isMobile ? null : <HubStartupScreen {...startup} />}
 			{/* Outside the gate: the startup mismatch check can fire before App mounts. */}
 			<HubUpdateRequiredDialog />
 		</>

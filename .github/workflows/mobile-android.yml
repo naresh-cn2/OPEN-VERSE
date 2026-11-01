@@ -43,26 +43,23 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x mobile/android/gradlew
 
-      - name: Build Android Debug APK
+      - name: Build Android Release APK & AAB
         run: |
           cd mobile/android
-          ./gradlew assembleDebug --no-daemon
-
-      - name: Build Android Release AAB
-        run: |
-          cd mobile/android
-          ./gradlew bundleRelease --no-daemon
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Rename and Prepare Deliverables
         run: |
           mkdir -p mobile/artifacts
-          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk mobile/artifacts/open-verse-mobile-v0.2.0-debug.apk
-          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk mobile/artifacts/open-verse-mobile.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v0.2.0.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile.apk
           if [ -f mobile/android/app/build/outputs/bundle/release/app-release.aab ]; then
             cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v0.2.0.aab
+            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile.aab
           fi
           cd mobile/artifacts
           sha256sum open-verse-mobile.apk > open-verse-mobile.apk.sha256
+          sha256sum open-verse-mobile.aab > open-verse-mobile.aab.sha256
           cat open-verse-mobile.apk.sha256
 
       - name: Upload Android APK Artifact
@@ -83,8 +80,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view desktop-latest >/dev/null 2>&1; then
-            gh release upload desktop-latest mobile/artifacts/open-verse-mobile.apk --clobber
-            gh release upload desktop-latest mobile/artifacts/open-verse-mobile.apk.sha256 --clobber
-            echo "Uploaded open-verse-mobile.apk to desktop-latest release"
-          fi
+          for TAG in v0.2.0 desktop-latest; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.apk --clobber
+              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.apk.sha256 --clobber
+              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.aab --clobber
+              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.aab.sha256 --clobber
+              echo "Uploaded release deliverables to $TAG"
+            fi
+          done

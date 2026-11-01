@@ -60,3 +60,4 @@ time.sleep(2)
 capture("native_step07_chat_sent")
 
 print("All native verification steps completed successfully!", flush=True)
+
