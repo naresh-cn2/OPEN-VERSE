@@ -457,9 +457,10 @@ function openUrlInDefaultBrowser(url: string): Promise<void> {
 		platform === "darwin"
 			? spawn("open", [url], { stdio: "ignore", detached: true })
 			: platform === "win32"
-				? spawn("explorer.exe", [url], {
+				? spawn("cmd.exe", ["/c", "start", "", url], {
 						stdio: "ignore",
 						detached: true,
+						windowsHide: true,
 					})
 				: spawn("xdg-open", [url], {
 						stdio: "ignore",

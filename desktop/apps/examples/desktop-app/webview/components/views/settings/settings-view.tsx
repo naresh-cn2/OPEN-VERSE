@@ -497,7 +497,11 @@ export function SettingsView({
 			setSelectedProviderId(id);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			window.alert(`Failed to sign in to ${id}: ${message}`);
+			if (!message.toLowerCase().includes("cancelled") && !message.toLowerCase().includes("aborted")) {
+				window.alert(`Could not complete sign in for ${id}: ${message}`);
+			} else {
+				console.info(`[OAuth] Sign in cancelled or replaced for ${id}`);
+			}
 		} finally {
 			setOauthSigningProviderId(null);
 		}

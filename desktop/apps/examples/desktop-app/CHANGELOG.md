@@ -1,6 +1,21 @@
-# Cline Desktop Changelog
+# OPEN-VERSE Changelog
 
-## 0.0.49
+## 0.2.0
+
+- **Unified Cross-Platform Experience**: Seamless, real-time continuity across Windows, Android, iOS, and Web.
+- **Google Account Identity**: Google OAuth as primary account identity for persistent multi-device workspace and session synchronization.
+- **Cloud Synchronization & Continuity**: Real-time cross-device conversation sync, automatic merging of multi-turn messages, and synchronized provider configurations.
+- **Provider & Model Configuration**: Native support for Google Gemini, OpenAI, Anthropic Claude, OpenRouter, DeepSeek, and Ollama with local secure credential isolation.
+- **Device-Local Lifecycle**: Independent application launch per device with authorized, explicit cross-device action execution.
+- **In-App Automatic Updates**: Integrated update detection with cryptographic verification on desktop and mobile.
+
+## 0.1.0
+
+- Initial release of OPEN-VERSE autonomous AI development workspace.
+- Standalone execution runtime with multi-turn chat and integrated tools.
+- Remote Hub relay and mobile companion support.
+
+## 0.0.49 (Upstream Engine)
 
 - A new **Changes** button in the session header shows the session's line counts and opens a pane listing the files changed in the last turn or across the whole session, with a diff of each. When a turn finishes, a summary under it lists the files it changed; click it to open the pane on that turn
 - A **project files panel** (folder button in the session header) shows a file tree beside the conversation, with a read-only tabbed viewer, git status letters, and a marker on files the session changed. Files the agent edited get a File/Diff toggle. Works on local and SSH environments

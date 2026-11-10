@@ -32,8 +32,10 @@ export const OAUTH_LOGIN_TIMEOUT_MS = 15 * 60_000;
 
 // Cancellation targets the provider, so it must finish before another screen signs in.
 let pendingClineCancellation: Promise<unknown> | null = null;
+const activeLoginPromises = new Map<string, Promise<{ provider: string; accessToken: string }>>();
 
 export function cancelClineOAuthLogin(): Promise<unknown> {
+	activeLoginPromises.delete("cline");
 	if (!pendingClineCancellation) {
 		pendingClineCancellation = desktopClient
 			.invoke("cancel_provider_oauth_login", { provider: "cline" })
@@ -51,11 +53,26 @@ export async function runProviderOAuthLogin(
 	if (provider === "cline" && pendingClineCancellation) {
 		await pendingClineCancellation.catch(() => undefined);
 	}
-	return desktopClient.invoke(
-		"run_provider_oauth_login",
-		{ provider },
-		{ timeoutMs: OAUTH_LOGIN_TIMEOUT_MS, signal },
-	);
+	// Return active in-flight login if one is already running to avoid cancellation races
+	const existing = activeLoginPromises.get(provider);
+	if (existing) {
+		return existing;
+	}
+
+	const promise = desktopClient
+		.invoke<{ provider: string; accessToken: string }>(
+			"run_provider_oauth_login",
+			{ provider },
+			{ timeoutMs: OAUTH_LOGIN_TIMEOUT_MS, signal },
+		)
+		.finally(() => {
+			if (activeLoginPromises.get(provider) === promise) {
+				activeLoginPromises.delete(provider);
+			}
+		});
+
+	activeLoginPromises.set(provider, promise);
+	return promise;
 }
 
 /**

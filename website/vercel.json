@@ -23,6 +23,10 @@
       "destination": "/api/devices/:path*"
     },
     {
+      "source": "/api/sync/:path*",
+      "destination": "/api/sync/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -298,6 +298,7 @@ const NATIVE_COMMANDS = new Set([
 	"set_tray_status",
 	"relaunch_app",
 	"quit_app",
+	"open_external_url",
 	"set_quit_shortcut_native",
 ]);
 
@@ -945,7 +946,7 @@ class DesktopClient {
 				return this.currentEndpoint.replace(/\/+$/, "");
 			}
 		}
-		return "http://127.0.0.1:3000";
+		return "https://open-verse-website.vercel.app";
 	}
 
 	public getCloudSyncAuthToken(): string | null {

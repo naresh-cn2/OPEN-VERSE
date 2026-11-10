@@ -1015,6 +1015,37 @@ fn quit_app(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+/// Open an external URL in the system's default browser.
+#[tauri::command]
+fn open_external_url(url: String) -> Result<(), String> {
+    let trimmed = url.trim();
+    if trimmed.is_empty() {
+        return Err("URL is empty".to_string());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("cmd")
+            .args(&["/c", "start", "", trimmed])
+            .spawn()
+            .map_err(|e| format!("Failed to open URL in browser: {e}"))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(trimmed)
+            .spawn()
+            .map_err(|e| format!("Failed to open URL in browser: {e}"))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(trimmed)
+            .spawn()
+            .map_err(|e| format!("Failed to open URL in browser: {e}"))?;
+    }
+    Ok(())
+}
+
 /// Run one updater check/download/stage cycle immediately instead of waiting
 /// for the next background interval, and report the resulting status. Used by
 /// flows that need an update staged right now (e.g. the "Cline Hub was
@@ -1715,6 +1746,7 @@ fn main() {
             set_tray_status,
             relaunch_app,
             quit_app,
+            open_external_url,
             set_quit_shortcut_native,
             terminal::terminal_spawn,
             terminal::terminal_write,
