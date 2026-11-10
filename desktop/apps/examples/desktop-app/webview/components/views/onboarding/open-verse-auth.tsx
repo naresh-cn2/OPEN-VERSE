@@ -11,7 +11,7 @@ import {
 	RotateCw,
 	ShieldCheck,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,65 @@ export function OpenVerseAuth({
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [successNotice, setSuccessNotice] = useState<string | null>(null);
+	const pendingProviderRef = useRef<"google" | "github" | null>(pendingProvider);
+	pendingProviderRef.current = pendingProvider;
+
+	useEffect(() => {
+		const handleDeepLink = async (rawUrl: string) => {
+			if (
+				!rawUrl ||
+				(!rawUrl.includes("openverse://") &&
+					!rawUrl.includes("access_token=") &&
+					!rawUrl.includes("code="))
+			) {
+				return;
+			}
+			setLoading(true);
+			setErrorMessage(null);
+			setSuccessNotice(null);
+			try {
+				const session = await completeOAuthCallback(
+					rawUrl,
+					pendingProviderRef.current || "google",
+				);
+				setSuccessNotice("Authentication successful! Welcome to OPEN-VERSE.");
+				onAuthenticated(session.user);
+			} catch (err) {
+				setErrorMessage(err instanceof Error ? err.message : String(err));
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		// 1. Android / Desktop bridge invokes window.__dispatchOpenVerseDeepLink
+		(window as any).__dispatchOpenVerseDeepLink = (url: string) => {
+			void handleDeepLink(url);
+		};
+
+		// 2. Fallback: hashchange listener
+		const onHashChange = () => {
+			const hash = window.location.hash;
+			if (
+				hash &&
+				(hash.includes("openverse://") ||
+					hash.includes("access_token=") ||
+					hash.includes("code="))
+			) {
+				void handleDeepLink(hash.startsWith("#") ? hash.slice(1) : hash);
+			}
+		};
+		window.addEventListener("hashchange", onHashChange);
+
+		// 3. Check existing hash on initial mount
+		if (window.location.hash) {
+			onHashChange();
+		}
+
+		return () => {
+			delete (window as any).__dispatchOpenVerseDeepLink;
+			window.removeEventListener("hashchange", onHashChange);
+		};
+	}, [onAuthenticated]);
 
 	const clearErrors = () => {
 		setErrorMessage(null);

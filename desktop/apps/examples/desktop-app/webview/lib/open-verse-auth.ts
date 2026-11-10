@@ -172,18 +172,39 @@ export async function completeOAuthCallback(
 
 	// Check if input is a URL or fragment containing parameters
 	if (trimmed.includes("=") || trimmed.includes("?") || trimmed.includes("#")) {
-		const fragment = trimmed.includes("#")
-			? trimmed.split("#")[1]
-			: trimmed.includes("?")
-				? trimmed.split("?")[1]
-				: trimmed;
+		let queryString = "";
+		let hashString = "";
+		if (trimmed.includes("?")) {
+			queryString = trimmed.split("?")[1].split("#")[0];
+		}
+		if (trimmed.includes("#")) {
+			hashString = trimmed.split("#")[1];
+		}
+		const queryParams = new URLSearchParams(queryString);
+		const hashParams = new URLSearchParams(hashString);
 
-		const params = new URLSearchParams(fragment);
-		accessToken = params.get("access_token") || params.get("code") || "";
-		refreshToken = params.get("refresh_token") || undefined;
-		email = params.get("email") || "";
-		displayName = params.get("name") || params.get("user_name") || "";
-		const provParam = params.get("provider");
+		accessToken =
+			hashParams.get("access_token") ||
+			queryParams.get("access_token") ||
+			hashParams.get("code") ||
+			queryParams.get("code") ||
+			"";
+		refreshToken =
+			hashParams.get("refresh_token") ||
+			queryParams.get("refresh_token") ||
+			undefined;
+		email =
+			hashParams.get("email") ||
+			queryParams.get("email") ||
+			"";
+		displayName =
+			hashParams.get("name") ||
+			queryParams.get("name") ||
+			hashParams.get("user_name") ||
+			queryParams.get("user_name") ||
+			"";
+		const provParam =
+			hashParams.get("provider") || queryParams.get("provider");
 		if (provParam === "google" || provParam === "github") {
 			provider = provParam;
 		}

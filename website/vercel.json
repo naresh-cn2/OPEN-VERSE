@@ -5,6 +5,16 @@
   "installCommand": "bun install",
   "devCommand": "bun run dev",
   "regions": ["iad1"],
+  "rewrites": [
+    {
+      "source": "/api/auth/authorize",
+      "destination": "/api/auth/authorize"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
