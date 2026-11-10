@@ -220,6 +220,102 @@ export function subscribeToProviderModels(
 	return () => providerModelsListeners.delete(listener);
 }
 
+export const DEFAULT_FALLBACK_PROVIDERS: Provider[] = [
+	{
+		id: "gemini",
+		name: "Google Gemini",
+		enabled: true,
+		modelList: [
+			{
+				id: "gemini-2.5-flash",
+				name: "Gemini 2.5 Flash",
+				description: "Google's fastest and most intelligent multimodal assistant",
+				supportsAttachments: true,
+				supportsVision: true,
+				supportsReasoning: true,
+				contextWindow: 1048576,
+			},
+			{
+				id: "gemini-1.5-pro",
+				name: "Gemini 1.5 Pro",
+				description: "Google's flagship model for deep analysis and reasoning",
+				supportsAttachments: true,
+				supportsVision: true,
+				supportsReasoning: true,
+				contextWindow: 2097152,
+			},
+			{
+				id: "gemini-2.0-flash",
+				name: "Gemini 2.0 Flash",
+				description: "Low-latency multimodal intelligence",
+				supportsAttachments: true,
+				supportsVision: true,
+				contextWindow: 1048576,
+			},
+		],
+	},
+	{
+		id: "openai",
+		name: "OpenAI",
+		enabled: true,
+		modelList: [
+			{
+				id: "gpt-4o",
+				name: "GPT-4o",
+				description: "Omni multimodal model",
+				supportsAttachments: true,
+				supportsVision: true,
+				contextWindow: 128000,
+			},
+			{
+				id: "gpt-4o-mini",
+				name: "GPT-4o Mini",
+				description: "Fast, affordable intelligence",
+				supportsAttachments: true,
+				supportsVision: true,
+				contextWindow: 128000,
+			},
+		],
+	},
+	{
+		id: "anthropic",
+		name: "Anthropic",
+		enabled: true,
+		modelList: [
+			{
+				id: "claude-3-5-sonnet-20241022",
+				name: "Claude 3.5 Sonnet",
+				description: "Advanced reasoning and coding",
+				supportsAttachments: true,
+				supportsVision: true,
+				contextWindow: 200000,
+			},
+		],
+	},
+	{
+		id: "deepseek",
+		name: "DeepSeek",
+		enabled: true,
+		modelList: [
+			{
+				id: "deepseek-chat",
+				name: "DeepSeek V3",
+				description: "General language intelligence",
+				supportsAttachments: true,
+				contextWindow: 64000,
+			},
+			{
+				id: "deepseek-reasoner",
+				name: "DeepSeek R1",
+				description: "Deep reasoning model",
+				supportsAttachments: true,
+				supportsReasoning: true,
+				contextWindow: 64000,
+			},
+		],
+	},
+];
+
 export function fetchProviderCatalog(options?: {
 	fresh?: boolean;
 }): Promise<ProviderCatalogResponse> {
@@ -239,11 +335,15 @@ export function fetchProviderCatalog(options?: {
 			return payload;
 		})
 		.catch((error) => {
-			// Never cache failures.
+			// In standalone mobile or web mode without local daemon, fallback to Google Gemini-first default catalog
+			const fallbackPayload: ProviderCatalogResponse = {
+				providers: DEFAULT_FALLBACK_PROVIDERS,
+				enabledProviderIds: DEFAULT_FALLBACK_PROVIDERS.map((p) => p.id),
+			};
 			if (providerCatalogCache?.promise === promise) {
-				providerCatalogCache = null;
+				providerCatalogPayload = fallbackPayload;
 			}
-			throw error;
+			return fallbackPayload;
 		});
 	providerCatalogCache = { fetchedAt: now, promise };
 	return promise;

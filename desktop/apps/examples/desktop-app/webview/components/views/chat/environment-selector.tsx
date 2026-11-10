@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Cloud, Laptop, Loader2, Server, Settings } from "lucide-react";
+import { Check, Cloud, Globe, Laptop, Loader2, Server, Settings, Smartphone } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +11,28 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { detectPlatform } from "@/lib/open-verse-updater";
 import type { RemoteEnvironmentProfile } from "@/lib/remote-environments";
 import { LOCAL_WORKSPACE_ENVIRONMENT_ID } from "@/lib/workspace-paths";
+
+export function getLocalDeviceDetails(): { label: string; icon: typeof Laptop } {
+	const platform = detectPlatform();
+	switch (platform) {
+		case "android":
+			return { label: "This Phone (Android)", icon: Smartphone };
+		case "ios":
+			return { label: "This iPhone", icon: Smartphone };
+		case "desktop-mac":
+			return { label: "This Mac", icon: Laptop };
+		case "desktop-linux":
+			return { label: "This Linux PC", icon: Laptop };
+		case "desktop-windows":
+			return { label: "This Laptop (Windows)", icon: Laptop };
+		case "web":
+		default:
+			return { label: "This Device (Local)", icon: Laptop };
+	}
+}
 
 export type EnvironmentSelectorOption = {
 	id: string;
@@ -63,13 +83,14 @@ export function buildEnvironmentSelectorModel(
 	);
 	const localSelected = activeEnvironmentId === LOCAL_WORKSPACE_ENVIRONMENT_ID;
 	const activeRemote = remotes.find((option) => option.selected);
+	const device = getLocalDeviceDetails();
 
 	return {
 		activeKind: localSelected ? "local" : "remote",
-		activeLabel: activeRemote?.label ?? (localSelected ? "Local" : "Remote"),
+		activeLabel: activeRemote?.label ?? (localSelected ? device.label : "Remote"),
 		local: {
 			id: LOCAL_WORKSPACE_ENVIRONMENT_ID,
-			label: "Local",
+			label: device.label,
 			kind: "local",
 			selected: localSelected,
 		},
@@ -100,11 +121,13 @@ export function EnvironmentSelector({
 	const busy = loading || pendingEnvironmentId !== null;
 	const cloudSelected = executionTarget === "cloud";
 	const activeLabel = cloudSelected ? "Cloud" : model.activeLabel;
+	const device = getLocalDeviceDetails();
+	const LocalDeviceIcon = device.icon;
 	const ActiveIcon = cloudSelected
 		? Cloud
 		: model.activeKind === "remote"
 			? Server
-			: Laptop;
+			: LocalDeviceIcon;
 
 	const selectEnvironment = async (environmentId: string) => {
 		// Clicking Local must save the choice even after an automatic fallback.
@@ -171,7 +194,7 @@ export function EnvironmentSelector({
 					disabled={busy}
 					onSelect={() => void selectEnvironment(model.local.id)}
 				>
-					<Laptop />
+					<LocalDeviceIcon className="size-4" />
 					<span className="uppercase">{model.local.label}</span>
 					{optionStatus(model.local)}
 					{!cloudSelected && model.local.selected ? (
