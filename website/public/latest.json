@@ -1,7 +1,7 @@
 {
-  "version": "v0.2.0",
-  "notes": "• Unified cross-platform authentication with Google and GitHub\n• In-app automatic update notification and delivery\n• Native Android and Desktop performance optimizations",
-  "pub_date": "2026-11-10T12:00:00Z",
+  "version": "v0.2.1",
+  "notes": "• Unified cross-platform cloud synchronization\n• In-app automatic update delivery for all devices\n• Direct mobile APK installer support",
+  "pub_date": "2026-11-10T15:25:00Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENUJENEE1ODRBQ0QzQzMKUldURDA2eUVwZFJiVGJmWjduOFk4VTBnVTVLL2pDRWJLV3lySXlEeHlXRThZTEVCMGorQ0ZMTUcK",

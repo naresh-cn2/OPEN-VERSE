@@ -425,6 +425,7 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                   <a
                     href={ASSETS.androidApk}
+                    download="open-verse-mobile.apk"
                     className="btn btn-primary"
                     style={{
                       display: "flex",
