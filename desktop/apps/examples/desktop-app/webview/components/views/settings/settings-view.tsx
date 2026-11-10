@@ -126,7 +126,7 @@ export function SettingsView({
 	const [marketplaceInitialFilter, setMarketplaceInitialFilter] =
 		useState<MarketplaceTypeFilter | null>(null);
 	const [providers, setProviders] = useState<Provider[]>(
-		() => providerCatalogCache?.providers ?? [],
+		() => Array.isArray(providerCatalogCache?.providers) ? providerCatalogCache.providers : [],
 	);
 	const [providersLoading, setProvidersLoading] = useState(
 		() => !providerCatalogCache,
@@ -169,10 +169,12 @@ export function SettingsView({
 	const setProvidersWithCache = useCallback(
 		(next: Provider[] | ((prev: Provider[]) => Provider[])) => {
 			setProviders((prev) => {
-				const resolved =
+				const prevArray = Array.isArray(prev) ? prev : [];
+				const resolvedRaw =
 					typeof next === "function"
-						? (next as (prev: Provider[]) => Provider[])(prev)
+						? (next as (prev: Provider[]) => Provider[])(prevArray)
 						: next;
+				const resolved = Array.isArray(resolvedRaw) ? resolvedRaw : [];
 				providerCatalogCache = {
 					providers: resolved,
 					fetchedAt: Date.now(),
@@ -211,7 +213,7 @@ export function SettingsView({
 			if (generation !== catalogGenerationRef.current) {
 				return false;
 			}
-			setProvidersWithCache(payload.providers);
+			setProvidersWithCache(Array.isArray(payload?.providers) ? payload.providers : []);
 		} catch (error) {
 			if (generation !== catalogGenerationRef.current) {
 				return false;
@@ -253,7 +255,7 @@ export function SettingsView({
 			if (generation !== catalogGenerationRef.current) {
 				return;
 			}
-			setProvidersWithCache(payload.providers);
+			setProvidersWithCache(Array.isArray(payload?.providers) ? payload.providers : []);
 		} catch {
 			// Background refresh only; the optimistic state remains until the
 			// next full load.
@@ -358,7 +360,7 @@ export function SettingsView({
 			const clineKeyChanged =
 				(id === "cline" || id === "cline-pass") &&
 				Boolean(updates.apiKey) &&
-				updates.apiKey !== providers.find((p) => p.id === id)?.apiKey;
+				updates.apiKey !== (providers ?? []).find((p) => p.id === id)?.apiKey;
 			// Saving settings creates the provider's persisted entry, which is
 			// what "connected" means for keyless providers — reflect it locally.
 			catalogGenerationRef.current++;
@@ -406,18 +408,19 @@ export function SettingsView({
 						provider: id,
 					},
 				);
+				const modelList = Array.isArray(payload?.models) ? payload.models : [];
 				setProvidersWithCache((prev) =>
-					prev.map((provider) =>
+					(Array.isArray(prev) ? prev : []).map((provider) =>
 						provider.id === id
 							? {
 									...provider,
-									modelList: payload.models,
-									models: payload.models.length,
+									modelList,
+									models: modelList.length,
 								}
 							: provider,
 					),
 				);
-				publishProviderModels(id, payload.models);
+				publishProviderModels(id, modelList);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				setModelsErrorByProvider((prev) => ({ ...prev, [id]: message }));
@@ -450,17 +453,18 @@ export function SettingsView({
 
 	// The detail panel is always open: with no explicit selection, default to
 	// the provider the chat uses, then the first connected one, then the first.
+	const safeProviders = Array.isArray(providers) ? providers : [];
 	const effectiveSelectedProviderId =
 		selectedProviderId ??
-		providers.find(
+		safeProviders.find(
 			(provider) =>
 				provider.id === inUseProviderId && isProviderConnected(provider),
 		)?.id ??
-		providers.find(isProviderConnected)?.id ??
-		providers[0]?.id ??
+		safeProviders.find(isProviderConnected)?.id ??
+		safeProviders[0]?.id ??
 		null;
 	const selectedProvider = effectiveSelectedProviderId
-		? (providers.find((p) => p.id === effectiveSelectedProviderId) ?? null)
+		? (safeProviders.find((p) => p.id === effectiveSelectedProviderId) ?? null)
 		: null;
 
 	const usesOAuth = (provider: Provider) =>
@@ -564,7 +568,7 @@ export function SettingsView({
 					</DialogDescription>
 				</DialogHeader>
 				<AddProviderContent
-					existingProviderIds={providers.map((provider) => provider.id)}
+					existingProviderIds={safeProviders.map((provider) => provider.id)}
 					onBack={() => setAddingProvider(false)}
 					onSave={saveNewProvider}
 					variant="dialog"
@@ -592,7 +596,7 @@ export function SettingsView({
 				<ProviderListContent
 					onAddProvider={openAddProvider}
 					onConfigure={openProviderDetail}
-					providers={providers}
+					providers={safeProviders}
 					selectedProviderId={selectedProvider.id}
 					variant="panel"
 				/>
@@ -625,7 +629,7 @@ export function SettingsView({
 		<ProviderListContent
 			onAddProvider={openAddProvider}
 			onConfigure={openProviderDetail}
-			providers={providers}
+			providers={safeProviders}
 		/>
 	);
 

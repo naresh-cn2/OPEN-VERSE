@@ -106,15 +106,18 @@ export function HubPanel() {
 			{!status && !error ? (
 				<p className="mt-4 text-sm text-muted-foreground">Loading hub…</p>
 			) : null}
-			{status ? (
+			{status ? (() => {
+				const clients = Array.isArray(status.clients) ? status.clients : [];
+				const events = Array.isArray(status.events) ? status.events : [];
+				return (
 				<div className="mt-4 grid gap-4 lg:grid-cols-2">
 					<div className="min-w-0 rounded-lg border">
 						<h3 className="flex items-center gap-2 border-b px-4 py-3 text-sm font-semibold">
 							Connected clients
-							<Badge variant="secondary">{status.clients.length}</Badge>
+							<Badge variant="secondary">{clients.length}</Badge>
 						</h3>
 						<ul className="max-h-72 overflow-auto divide-y">
-							{status.clients.map((client) => (
+							{clients.map((client) => (
 								<li className="px-4 py-3" key={client.clientId}>
 									<p className="break-words text-sm font-medium">
 										{client.displayName || client.clientType}
@@ -128,7 +131,7 @@ export function HubPanel() {
 								</li>
 							))}
 						</ul>
-						{status.clients.length === 0 ? (
+						{clients.length === 0 ? (
 							<p className="p-4 text-sm text-muted-foreground">
 								No connected clients.
 							</p>
@@ -139,7 +142,7 @@ export function HubPanel() {
 							Recent events
 						</h3>
 						<ol className="max-h-72 overflow-auto divide-y">
-							{status.events.map((event) => (
+							{events.map((event) => (
 								<li className="px-4 py-3" key={event.id}>
 									<div className="flex justify-between gap-3 text-sm">
 										<span>{event.title}</span>
@@ -156,7 +159,7 @@ export function HubPanel() {
 								</li>
 							))}
 						</ol>
-						{status.events.length === 0 ? (
+						{events.length === 0 ? (
 							<p className="p-4 text-sm text-muted-foreground">
 								No recent events. Activity is recorded while the desktop app is
 								running.
@@ -164,7 +167,8 @@ export function HubPanel() {
 						) : null}
 					</div>
 				</div>
-			) : null}
+				);
+			})() : null}
 			<AlertDialog
 				open={confirmOpen}
 				onOpenChange={(open) => {

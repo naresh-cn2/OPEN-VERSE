@@ -1,4 +1,5 @@
 import { CORE_BUILD_VERSION } from "@cline/core";
+import { handleCloudSyncRequest } from "./server/cloud-sync";
 import { isNonLocalBindHost } from "./options";
 import {
 	handleToolApprovalResponse,
@@ -76,7 +77,11 @@ function isPublicStaticAssetPath(pathname: string): boolean {
 }
 
 function isPublicBrowserRoute(_req: Request, url: URL): boolean {
-	return isWebviewRoute(url.pathname) || isPublicStaticAssetPath(url.pathname);
+	return (
+		isWebviewRoute(url.pathname) ||
+		isPublicStaticAssetPath(url.pathname) ||
+		url.pathname.startsWith("/api/sync/")
+	);
 }
 
 export async function startClineHubDashboardServer(): Promise<ClineHubDashboardServer> {
@@ -112,6 +117,9 @@ export async function startClineHubDashboardServer(): Promise<ClineHubDashboardS
 				)
 			) {
 				return createJsonResponse({ error: "unauthorized_browser" }, 403);
+			}
+			if (url.pathname.startsWith("/api/sync/")) {
+				return handleCloudSyncRequest(req, url);
 			}
 			if (url.pathname === "/version") {
 				return createJsonResponse({ coreVersion: CORE_BUILD_VERSION });

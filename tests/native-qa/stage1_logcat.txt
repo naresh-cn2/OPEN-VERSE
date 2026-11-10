@@ -1,0 +1,7 @@
+﻿--------- beginning of main
+11-09 22:24:54.072  3857  3909 I chromium: [INFO:child_process_service.cc(69)] ChildProcessService: Exiting child process.
+11-09 22:24:54.808  3794  3794 I OPEN-VERSE-Native: Launching OPEN-VERSE mobile via AssetLoader: https://appassets.androidplatform.net/index.html
+11-09 22:24:56.984  3794  3794 I OPEN-VERSE-Native: WebView page started: https://appassets.androidplatform.net/index.html
+11-09 22:24:59.421  3794  3794 I OPEN-VERSE-Native: WebView page finished loading: https://appassets.androidplatform.net/index.html
+11-09 22:24:59.426  4180  4213 I chromium: [INFO:child_process_service.cc(69)] ChildProcessService: Exiting child process.
+11-09 22:24:59.456  3794  3794 I OPEN-VERSE-Native: WebView page finished loading: https://appassets.androidplatform.net/index.html

@@ -230,7 +230,10 @@ export function AccountView() {
 	const [billingLoading, setBillingLoading] = useState(false);
 	const [billingError, setBillingError] = useState<string | null>(null);
 	const [billingLoaded, setBillingLoaded] = useState(false);
-	const activeOrganization = organizations.find((org) => org.active) ?? null;
+	const activeOrganization =
+		(Array.isArray(organizations) ? organizations : []).find(
+			(org) => org.active,
+		) ?? null;
 
 	const resetAccountData = useCallback(() => {
 		setUser(null);
@@ -283,8 +286,9 @@ export function AccountView() {
 				setSignedOut(true);
 				return;
 			}
+			const safeOrgsData = Array.isArray(orgsData) ? orgsData : [];
 			const nextActiveOrganization =
-				orgsData.find((organization) => organization.active) ?? null;
+				safeOrgsData.find((organization) => organization.active) ?? null;
 			const organizationBalanceData = nextActiveOrganization
 				? await fetchOrganizationBalance(nextActiveOrganization.organizationId)
 				: null;
@@ -297,7 +301,7 @@ export function AccountView() {
 			setUser(userData);
 			setBalance(balanceData);
 			setOrganizationBalance(organizationBalanceData);
-			setOrganizations(orgsData);
+			setOrganizations(safeOrgsData);
 		} catch (err) {
 			resetAccountData();
 			const message = normalizeAccountViewError(err).message;
@@ -841,7 +845,8 @@ export function AccountView() {
 										switching: switchTargetId === "",
 										onSelect: () => void switchAccount(null),
 									})}
-									{organizations.map((org) =>
+									{(Array.isArray(organizations) ? organizations : []).map(
+										(org) =>
 										renderAccountRow({
 											key: org.organizationId,
 											name: org.name,

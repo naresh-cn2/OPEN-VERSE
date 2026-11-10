@@ -6,6 +6,7 @@ target/
 *.tsbuildinfo
 .env*
 .openverse/
+.openverse-cloud-sync/
 desktop/apps/examples/desktop-app/src-tauri/bin/
 website/saved_preview.html
 

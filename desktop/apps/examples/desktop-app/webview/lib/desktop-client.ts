@@ -16,6 +16,7 @@ import type {
 	DesktopTransportResponse,
 	DesktopTransportState,
 } from "@/lib/desktop-transport";
+import type { Provider, ProviderModel } from "@/lib/provider-schema";
 
 // Lazily import the Tauri invoke API only when available. When running in
 // sidecar/web mode (without Tauri), this module may not exist or the bridge
@@ -928,6 +929,322 @@ class DesktopClient {
 		return response.policy;
 	}
 
+	public getCloudSyncBaseUrl(): string {
+		if (typeof window !== "undefined") {
+			const custom = window.localStorage.getItem("openverse.cloud_sync_url.v1");
+			if (custom) return custom.replace(/\/+$/, "");
+			if (this.currentEndpoint && this.currentEndpoint.startsWith("http")) {
+				return this.currentEndpoint.replace(/\/+$/, "");
+			}
+		}
+		return "http://127.0.0.1:3000";
+	}
+
+	public getCloudSyncAuthToken(): string | null {
+		if (typeof window === "undefined") return null;
+		try {
+			const raw = window.localStorage.getItem("openverse.auth.session.v1");
+			if (!raw) return null;
+			const session = JSON.parse(raw);
+			return session.accessToken || session.user?.id || null;
+		} catch {
+			return null;
+		}
+	}
+
+	public async syncCloudPull(): Promise<{ success: boolean; sessionsCount?: number }> {
+		const token = this.getCloudSyncAuthToken();
+		if (!token) return { success: false };
+		const baseUrl = this.getCloudSyncBaseUrl();
+		try {
+			const res = await fetch(`${baseUrl}/api/sync/v1/pull`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({}),
+			});
+			if (!res.ok) return { success: false };
+			const data = (await res.json()) as { success?: boolean; sessions?: Record<string, unknown>[]; messages?: Record<string, Record<string, unknown>[]> };
+			if (!data.success) return { success: false };
+
+			if (typeof window !== "undefined" && Array.isArray(data.sessions)) {
+				const localRaw = window.localStorage.getItem("openverse_sessions_v1");
+				const localSessions: Record<string, unknown>[] = localRaw ? JSON.parse(localRaw) : [];
+				const sessionMap = new Map<string, Record<string, unknown>>();
+
+				for (const s of localSessions) {
+					const sid = (s.sessionId || s.id) as string;
+					if (sid) sessionMap.set(sid, s);
+				}
+				for (const s of data.sessions) {
+					const sid = (s.sessionId || s.id) as string;
+					if (!sid) continue;
+					if (!sessionMap.has(sid)) {
+						sessionMap.set(sid, s);
+					} else {
+						const existing = sessionMap.get(sid)!;
+						const exTime = new Date((existing.lastActivityAt as string) || 0).getTime();
+						const inTime = new Date((s.lastActivityAt as string) || 0).getTime();
+						if (inTime >= exTime) {
+							sessionMap.set(sid, { ...existing, ...s });
+						}
+					}
+				}
+				window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(Array.from(sessionMap.values())));
+
+				if (data.messages && typeof data.messages === "object") {
+					for (const [sid, cloudMsgs] of Object.entries(data.messages)) {
+						const msgKey = `openverse_msg_${sid}`;
+						const localMsgRaw = window.localStorage.getItem(msgKey);
+						const localMsgs: Record<string, unknown>[] = localMsgRaw ? JSON.parse(localMsgRaw) : [];
+						const msgMap = new Map<string, Record<string, unknown>>();
+						for (const m of localMsgs) {
+							const mid = (m.id || `${m.role}_${m.createdAt}`) as string;
+							msgMap.set(mid, m);
+						}
+						for (const m of (cloudMsgs as Record<string, unknown>[])) {
+							const mid = (m.id || `${m.role}_${m.createdAt}`) as string;
+							if (!msgMap.has(mid)) msgMap.set(mid, m);
+						}
+						const sorted = Array.from(msgMap.values()).sort(
+							(a, b) => ((a.createdAt as number) || 0) - ((b.createdAt as number) || 0),
+						);
+						window.localStorage.setItem(msgKey, JSON.stringify(sorted));
+					}
+				}
+				window.dispatchEvent(new CustomEvent("openverse:sessions-updated"));
+			}
+			return { success: true, sessionsCount: data.sessions?.length };
+		} catch {
+			return { success: false };
+		}
+	}
+
+	public async syncCloudPush(): Promise<{ success: boolean }> {
+		const token = this.getCloudSyncAuthToken();
+		if (!token || typeof window === "undefined") return { success: false };
+		const baseUrl = this.getCloudSyncBaseUrl();
+		try {
+			const sessRaw = window.localStorage.getItem("openverse_sessions_v1");
+			const sessions = sessRaw ? JSON.parse(sessRaw) : [];
+			const messages: Record<string, unknown[]> = {};
+			for (const s of sessions) {
+				const sid = (s.sessionId || s.id) as string;
+				if (sid) {
+					const msgRaw = window.localStorage.getItem(`openverse_msg_${sid}`);
+					if (msgRaw) {
+						messages[sid] = JSON.parse(msgRaw);
+					}
+				}
+			}
+
+			const res = await fetch(`${baseUrl}/api/sync/v1/push`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ sessions, messages }),
+			});
+			if (!res.ok) return { success: false };
+			const data = (await res.json()) as { success?: boolean };
+			return { success: Boolean(data.success) };
+		} catch {
+			return { success: false };
+		}
+	}
+
+	private getStandaloneProviders(): Provider[] {
+		const defaultProviders: Provider[] = [
+			{
+				id: "gemini",
+				name: "Google Gemini",
+				models: 5,
+				color: "#4285F4",
+				letter: "G",
+				enabled: true,
+				configured: false,
+				defaultModelId: "gemini-2.5-flash",
+				capabilities: ["streaming", "tools", "vision"],
+				docUrl: "https://aistudio.google.com/apikey",
+				docLabel: "Google AI Studio",
+				authDescription: "Enter your Gemini API key from Google AI Studio",
+			},
+			{
+				id: "openai",
+				name: "OpenAI",
+				models: 5,
+				color: "#10A37F",
+				letter: "O",
+				enabled: true,
+				configured: false,
+				defaultModelId: "gpt-4o",
+				capabilities: ["streaming", "tools", "vision"],
+				docUrl: "https://platform.openai.com/api-keys",
+				docLabel: "OpenAI Platform",
+				authDescription: "Enter your OpenAI API key",
+			},
+			{
+				id: "anthropic",
+				name: "Anthropic Claude",
+				models: 3,
+				color: "#D97706",
+				letter: "A",
+				enabled: true,
+				configured: false,
+				defaultModelId: "claude-3-7-sonnet-latest",
+				capabilities: ["streaming", "tools", "vision", "reasoning"],
+				docUrl: "https://console.anthropic.com/settings/keys",
+				docLabel: "Anthropic Console",
+				authDescription: "Enter your Anthropic API key",
+			},
+			{
+				id: "openrouter",
+				name: "OpenRouter",
+				models: 4,
+				color: "#6366F1",
+				letter: "R",
+				enabled: true,
+				configured: false,
+				defaultModelId: "google/gemini-2.5-flash",
+				capabilities: ["streaming", "tools", "vision"],
+				docUrl: "https://openrouter.ai/settings/keys",
+				docLabel: "OpenRouter Console",
+				authDescription: "Enter your OpenRouter API key",
+			},
+			{
+				id: "deepseek",
+				name: "DeepSeek",
+				models: 2,
+				color: "#0066FF",
+				letter: "D",
+				enabled: true,
+				configured: false,
+				defaultModelId: "deepseek-chat",
+				capabilities: ["streaming", "tools", "reasoning"],
+				docUrl: "https://platform.deepseek.com/api_keys",
+				docLabel: "DeepSeek Platform",
+				authDescription: "Enter your DeepSeek API key",
+			},
+			{
+				id: "groq",
+				name: "Groq",
+				models: 3,
+				color: "#F55036",
+				letter: "Q",
+				enabled: true,
+				configured: false,
+				defaultModelId: "llama-3.3-70b-versatile",
+				capabilities: ["streaming", "tools"],
+				docUrl: "https://console.groq.com/keys",
+				docLabel: "Groq Console",
+				authDescription: "Enter your Groq API key",
+			},
+			{
+				id: "ollama",
+				name: "Ollama (Local/LAN)",
+				models: 4,
+				color: "#111827",
+				letter: "L",
+				enabled: true,
+				configured: true,
+				baseUrl: "http://localhost:11434/v1",
+				defaultModelId: "llama3.2",
+				capabilities: ["streaming", "tools"],
+				authDescription: "Local or LAN Ollama endpoint without an API key",
+			},
+		];
+
+		try {
+			if (typeof window !== "undefined") {
+				const storedRaw = window.localStorage.getItem("openverse_providers_v1");
+				const storedProviders: Provider[] = storedRaw ? JSON.parse(storedRaw) : [];
+				const keysRaw = window.localStorage.getItem("cline.providers.keys");
+				const storedKeys: Record<string, string> = keysRaw ? JSON.parse(keysRaw) : {};
+
+				const merged = defaultProviders.map((def) => {
+					const custom = storedProviders.find((p) => p.id === def.id);
+					const apiKey = custom?.apiKey || storedKeys[def.id] || "";
+					const isConfigured = Boolean(apiKey.trim()) || def.id === "ollama";
+					return {
+						...def,
+						...(custom || {}),
+						apiKey,
+						configured: isConfigured,
+					};
+				});
+
+				for (const custom of storedProviders) {
+					if (!merged.some((p) => p.id === custom.id)) {
+						merged.push({
+							...custom,
+							configured: Boolean(custom.apiKey?.trim() || custom.baseUrl?.trim()),
+						});
+					}
+				}
+				return merged;
+			}
+		} catch {}
+		return defaultProviders;
+	}
+
+	private getStandaloneModels(providerId: string): ProviderModel[] {
+		const catalog: Record<string, ProviderModel[]> = {
+			gemini: [
+				{ id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", contextWindow: 1048576, supportsVision: true, supportsReasoning: true, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", contextWindow: 2097152, supportsVision: true, supportsReasoning: true, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", contextWindow: 1048576, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", contextWindow: 1048576, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", contextWindow: 2097152, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			openai: [
+				{ id: "gpt-4o", name: "GPT-4o (Omni)", contextWindow: 128000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gpt-4o-mini", name: "GPT-4o Mini (Fast)", contextWindow: 128000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "o1", name: "o1 (High Reasoning)", contextWindow: 200000, supportsVision: true, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "o3-mini", name: "o3-mini (Reasoning)", contextWindow: 200000, supportsVision: false, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			anthropic: [
+				{ id: "claude-3-7-sonnet-latest", name: "Claude 3.7 Sonnet (Hybrid Reasoning)", contextWindow: 200000, supportsVision: true, supportsReasoning: true, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "claude-3-5-sonnet-latest", name: "Claude 3.5 Sonnet", contextWindow: 200000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "claude-3-5-haiku-latest", name: "Claude 3.5 Haiku", contextWindow: 200000, supportsVision: true, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			openrouter: [
+				{ id: "google/gemini-2.5-flash", name: "Google: Gemini 2.5 Flash", contextWindow: 1000000, supportsVision: true, supportsReasoning: true, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "anthropic/claude-3.5-sonnet", name: "Anthropic: Claude 3.5 Sonnet", contextWindow: 200000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "openai/gpt-4o", name: "OpenAI: GPT-4o", contextWindow: 128000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "deepseek/deepseek-chat", name: "DeepSeek: V3", contextWindow: 64000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			deepseek: [
+				{ id: "deepseek-chat", name: "DeepSeek-V3", contextWindow: 64000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "deepseek-reasoner", name: "DeepSeek-R1 (Reasoning)", contextWindow: 64000, supportsVision: false, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			groq: [
+				{ id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile", contextWindow: 128000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "llama-3.1-8b-instant", name: "Llama 3.1 8B Instant", contextWindow: 128000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			ollama: [
+				{ id: "llama3.2", name: "Llama 3.2 (Local)", contextWindow: 128000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "deepseek-r1:8b", name: "DeepSeek-R1 8B (Local)", contextWindow: 64000, supportsVision: false, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+		};
+		return (
+			catalog[providerId] || [
+				{
+					id: "default-model",
+					name: `${providerId} Default Model`,
+					contextWindow: 128000,
+					supportsVision: false,
+					supportsReasoning: false,
+					inputModalities: ["text"],
+					outputModalities: ["text"],
+					operationModes: ["streaming"],
+				},
+			]
+		);
+	}
+
 	private async handleStandaloneCommand<T>(
 		command: string,
 		args?: Record<string, unknown>,
@@ -952,8 +1269,25 @@ class DesktopClient {
 					staged: [],
 					commits: [],
 				} as T;
-			case "get_discovered_session":
-				return null as T;
+			case "get_discovered_session": {
+				const sid = (args?.sessionId as string) || "";
+				try {
+					const raw = typeof window !== "undefined" ? window.localStorage.getItem("openverse_sessions_v1") : null;
+					const sessions: Record<string, unknown>[] = raw ? JSON.parse(raw) : [];
+					const found = sessions.find((s) => s.sessionId === sid || s.id === sid);
+					return (found || null) as T;
+				} catch {
+					return null as T;
+				}
+			}
+			case "list_discovered_sessions": {
+				try {
+					const raw = typeof window !== "undefined" ? window.localStorage.getItem("openverse_sessions_v1") : null;
+					return (raw ? JSON.parse(raw) : []) as T;
+				} catch {
+					return [] as T;
+				}
+			}
 			case "read_session_history": {
 				try {
 					const raw = typeof window !== "undefined" ? window.localStorage.getItem("openverse_sessions_v1") : null;
@@ -982,13 +1316,123 @@ class DesktopClient {
 			case "list_importable_sessions":
 				return { sessions: [] } as T;
 			case "cline_account":
-				return { user: null } as T;
+				return {
+					signedIn: false,
+					code: "ACCOUNT_NOT_AUTHENTICATED",
+				} as T;
 			case "cline_integrations":
-				return { ok: true } as T;
+				return {
+					signedIn: false,
+					code: "ACCOUNT_NOT_AUTHENTICATED",
+				} as T;
 			case "composio_integrations":
 				return { ok: true, integrations: [] } as T;
 			case "get_keybindings":
 				return { bindings: [] } as T;
+			case "get_global_settings":
+				return {
+					telemetryOptOut: false,
+					autoUpdateEnabled: true,
+				} as T;
+			case "set_telemetry_opt_out":
+				return {
+					telemetryOptOut: (args?.telemetry_opt_out as boolean) ?? false,
+					autoUpdateEnabled: true,
+				} as T;
+			case "set_auto_update_enabled":
+				return {
+					telemetryOptOut: false,
+					autoUpdateEnabled: (args?.auto_update_enabled as boolean) ?? true,
+				} as T;
+			case "get_hub_status":
+				return {
+					url: "standalone://local",
+					clients: [],
+					events: [],
+				} as T;
+			case "restart_hub":
+				return {
+					url: "standalone://local",
+					clients: [],
+					events: [],
+				} as T;
+			case "list_provider_catalog":
+				return {
+					providers: this.getStandaloneProviders(),
+					settingsPath: "local://openverse/settings.json",
+				} as T;
+			case "list_provider_models": {
+				const providerId = (args?.provider as string) || "";
+				return {
+					providerId,
+					models: this.getStandaloneModels(providerId),
+				} as T;
+			}
+			case "save_provider_settings": {
+				const providerId = (args?.provider as string) || "";
+				const enabled = args?.enabled !== false;
+				const apiKey = (args?.api_key as string) ?? undefined;
+				const baseUrl = (args?.base_url as string) ?? undefined;
+				try {
+					if (typeof window !== "undefined") {
+						const raw = window.localStorage.getItem("openverse_providers_v1");
+						const list: Provider[] = raw ? JSON.parse(raw) : [];
+						const existingIdx = list.findIndex((p) => p.id === providerId);
+						const updatedEntry: Provider = {
+							id: providerId,
+							name: providerId,
+							models: 1,
+							color: "#6366F1",
+							letter: providerId.charAt(0).toUpperCase(),
+							enabled,
+							configured: Boolean(apiKey?.trim() || baseUrl?.trim() || providerId === "ollama"),
+							apiKey,
+							baseUrl,
+						};
+						if (existingIdx >= 0) {
+							list[existingIdx] = { ...list[existingIdx], ...updatedEntry };
+						} else {
+							list.push(updatedEntry);
+						}
+						window.localStorage.setItem("openverse_providers_v1", JSON.stringify(list));
+
+						if (apiKey) {
+							const keysRaw = window.localStorage.getItem("cline.providers.keys");
+							const keys = keysRaw ? JSON.parse(keysRaw) : {};
+							keys[providerId] = apiKey;
+							window.localStorage.setItem("cline.providers.keys", JSON.stringify(keys));
+						}
+					}
+				} catch {}
+				return true as T;
+			}
+			case "add_provider": {
+				const providerId = (args?.provider_id as string) || `custom_${Date.now()}`;
+				const name = (args?.name as string) || providerId;
+				const baseUrl = (args?.base_url as string) || "";
+				const apiKey = (args?.api_key as string) || undefined;
+				try {
+					if (typeof window !== "undefined") {
+						const raw = window.localStorage.getItem("openverse_providers_v1");
+						const list: Provider[] = raw ? JSON.parse(raw) : [];
+						const newEntry: Provider = {
+							id: providerId,
+							name,
+							models: Array.isArray(args?.models) ? (args.models as string[]).length : 1,
+							color: "#10B981",
+							letter: name.charAt(0).toUpperCase(),
+							enabled: true,
+							configured: Boolean(apiKey?.trim() || baseUrl.trim()),
+							apiKey,
+							baseUrl,
+							capabilities: (args?.capabilities as string[]) || ["streaming"],
+						};
+						list.push(newEntry);
+						window.localStorage.setItem("openverse_providers_v1", JSON.stringify(list));
+					}
+				} catch {}
+				return true as T;
+			}
 			case "provider_models":
 				return { models: [] } as T;
 			case "get_local_models_status":
@@ -1009,7 +1453,7 @@ class DesktopClient {
 						const raw = window.localStorage.getItem("openverse_sessions_v1");
 						const list = raw ? JSON.parse(raw) : [];
 						const updated = list.map((s: Record<string, unknown>) =>
-							s.id === sid ? { ...s, title } : s,
+							s.id === sid || s.sessionId === sid ? { ...s, title } : s,
 						);
 						window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(updated));
 					}
@@ -1022,12 +1466,24 @@ class DesktopClient {
 					if (typeof window !== "undefined") {
 						const raw = window.localStorage.getItem("openverse_sessions_v1");
 						const list = raw ? JSON.parse(raw) : [];
-						const updated = list.filter((s: Record<string, unknown>) => s.id !== sid);
+						const updated = list.filter((s: Record<string, unknown>) => s.id !== sid && s.sessionId !== sid);
 						window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(updated));
 						window.localStorage.removeItem(`openverse_msg_${sid}`);
 					}
 				} catch {}
+				void this.syncCloudPush();
 				return true as T;
+			}
+			case "sync_cloud_pull":
+				return (await this.syncCloudPull()) as T;
+			case "sync_cloud_push":
+				return (await this.syncCloudPush()) as T;
+			case "get_cloud_sync_status": {
+				const token = this.getCloudSyncAuthToken();
+				return {
+					configured: Boolean(token),
+					baseUrl: this.getCloudSyncBaseUrl(),
+				} as T;
 			}
 			case "get_update_status":
 			case "check_for_update_now":
@@ -1059,6 +1515,46 @@ class DesktopClient {
 				const action = req.action as string;
 				if (action === "send" || action === "start") {
 					const prompt = (req.prompt as string) || "";
+					try {
+						if (typeof window !== "undefined") {
+							const msgKey = `openverse_msg_${sid}`;
+							const existingRaw = window.localStorage.getItem(msgKey);
+							const msgs = existingRaw ? JSON.parse(existingRaw) : [];
+							msgs.push({
+								id: `msg_u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+								sessionId: sid,
+								role: "user",
+								content: prompt,
+								createdAt: Date.now(),
+							});
+							window.localStorage.setItem(msgKey, JSON.stringify(msgs));
+
+							const sessRaw = window.localStorage.getItem("openverse_sessions_v1");
+							const sessions: Record<string, unknown>[] = sessRaw ? JSON.parse(sessRaw) : [];
+							const existingIdx = sessions.findIndex((s) => s.sessionId === sid || s.id === sid);
+							const sessionRecord = {
+								sessionId: sid,
+								id: sid,
+								title: prompt.slice(0, 35) + (prompt.length > 35 ? "..." : ""),
+								provider: (req.config as Record<string, unknown>)?.provider || "gemini",
+								model: (req.config as Record<string, unknown>)?.modelId || "gemini-2.5-flash",
+								status: "idle",
+								startedAt: new Date().toISOString(),
+								lastActivityAt: new Date().toISOString(),
+								cwd: "",
+								workspaceRoot: "",
+								environmentId: (req.config as Record<string, unknown>)?.environmentId || "local",
+							};
+							if (existingIdx >= 0) {
+								sessions[existingIdx] = { ...sessions[existingIdx], ...sessionRecord };
+							} else {
+								sessions.unshift(sessionRecord);
+							}
+							window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(sessions));
+						}
+					} catch {}
+					void this.syncCloudPush();
+
 					setTimeout(() => {
 						void this.executeStandaloneTurn(sid, prompt, req.config as Record<string, unknown>);
 					}, 20);
@@ -1078,8 +1574,12 @@ class DesktopClient {
 	): Promise<void> {
 		const environmentId = (config?.environmentId as string) || "local";
 		let streamIndex = 0;
+		let fullResponseText = "";
 
 		const emitChunk = (text: string, isFinal = false) => {
+			if (text) {
+				fullResponseText += text;
+			}
 			this.dispatchEvent({
 				type: "event",
 				event: {
@@ -1095,23 +1595,65 @@ class DesktopClient {
 			});
 		};
 
-		// Check if user has an AI key configured (e.g. Gemini, OpenAI, Claude)
+		const persistAssistantResponse = (finalText: string) => {
+			try {
+				if (typeof window !== "undefined") {
+					const msgKey = `openverse_msg_${sessionId}`;
+					const existingRaw = window.localStorage.getItem(msgKey);
+					const msgs = existingRaw ? JSON.parse(existingRaw) : [];
+					msgs.push({
+						id: `msg_a_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+						sessionId,
+						role: "assistant",
+						content: finalText,
+						createdAt: Date.now(),
+					});
+					window.localStorage.setItem(msgKey, JSON.stringify(msgs));
+
+					const sessRaw = window.localStorage.getItem("openverse_sessions_v1");
+					const sessions: Record<string, unknown>[] = sessRaw ? JSON.parse(sessRaw) : [];
+					const idx = sessions.findIndex((s) => s.sessionId === sessionId || s.id === sessionId);
+					if (idx >= 0) {
+						sessions[idx].lastActivityAt = new Date().toISOString();
+						window.localStorage.setItem("openverse_sessions_v1", JSON.stringify(sessions));
+					}
+				}
+			} catch {}
+			void this.syncCloudPush();
+		};
+
+		// Check configured keys from all storage locations
 		let apiKey = "";
+		let baseUrl = "";
 		const provider = (config?.provider as string) || "gemini";
+		const model = (config?.modelId as string) || "gemini-2.5-flash";
+
 		try {
 			if (typeof window !== "undefined") {
-				const keysRaw = window.localStorage.getItem("cline.providers.keys");
-				if (keysRaw) {
-					const keys = JSON.parse(keysRaw);
-					apiKey = keys[provider] || keys.gemini || keys.openai || keys.anthropic || "";
+				const providersRaw = window.localStorage.getItem("openverse_providers_v1");
+				if (providersRaw) {
+					const providers: Provider[] = JSON.parse(providersRaw);
+					const match = providers.find((p) => p.id === provider);
+					if (match) {
+						apiKey = match.apiKey || "";
+						baseUrl = match.baseUrl || "";
+					}
+				}
+				if (!apiKey) {
+					const keysRaw = window.localStorage.getItem("cline.providers.keys");
+					if (keysRaw) {
+						const keys = JSON.parse(keysRaw);
+						apiKey = keys[provider] || keys.gemini || keys.openai || keys.anthropic || "";
+					}
 				}
 			}
 		} catch {}
 
+		// 1. Google Gemini
 		if (provider === "gemini" && apiKey) {
 			try {
-				const model = (config?.modelId as string) || "gemini-2.5-flash";
-				const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+				const geminiModel = model.startsWith("gemini-") ? model : "gemini-2.5-flash";
+				const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
 				const response = await fetch(url, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -1120,7 +1662,7 @@ class DesktopClient {
 					}),
 				});
 				if (!response.ok) {
-					throw new Error(`Gemini API returned status ${response.status}`);
+					throw new Error(`Gemini API error (HTTP ${response.status})`);
 				}
 				const reader = response.body?.getReader();
 				const decoder = new TextDecoder();
@@ -1142,16 +1684,144 @@ class DesktopClient {
 					}
 				}
 				emitChunk("", true);
+				persistAssistantResponse(fullResponseText);
 				return;
 			} catch (err) {
-				emitChunk(`\n\n*(Error generating response: ${err instanceof Error ? err.message : String(err)})*`, true);
+				const errText = `\n\n*(Error generating response: ${err instanceof Error ? err.message : String(err)})*`;
+				emitChunk(errText, true);
+				persistAssistantResponse(fullResponseText);
 				return;
 			}
 		}
 
-		// Helpful response when no direct API key is active
+		// 2. Anthropic Claude
+		if (provider === "anthropic" && apiKey) {
+			try {
+				const claudeModel = model.startsWith("claude-") ? model : "claude-3-7-sonnet-latest";
+				const response = await fetch("https://api.anthropic.com/v1/messages", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"x-api-key": apiKey,
+						"anthropic-version": "2023-06-01",
+						"anthropic-dangerous-direct-browser-access": "true",
+					},
+					body: JSON.stringify({
+						model: claudeModel,
+						max_tokens: 4096,
+						stream: true,
+						messages: [{ role: "user", content: prompt }],
+					}),
+				});
+				if (!response.ok) {
+					throw new Error(`Anthropic API error (HTTP ${response.status})`);
+				}
+				const reader = response.body?.getReader();
+				const decoder = new TextDecoder();
+				if (reader) {
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						const chunkStr = decoder.decode(value, { stream: true });
+						const lines = chunkStr.split("\n");
+						for (const line of lines) {
+							if (line.startsWith("data: ")) {
+								try {
+									const data = JSON.parse(line.slice(6));
+									if (data.type === "content_block_delta" && data.delta?.text) {
+										emitChunk(data.delta.text, false);
+									}
+								} catch {}
+							}
+						}
+					}
+				}
+				emitChunk("", true);
+				persistAssistantResponse(fullResponseText);
+				return;
+			} catch (err) {
+				const errText = `\n\n*(Error generating response: ${err instanceof Error ? err.message : String(err)})*`;
+				emitChunk(errText, true);
+				persistAssistantResponse(fullResponseText);
+				return;
+			}
+		}
+
+		// 3. OpenAI / OpenRouter / DeepSeek / Groq / Ollama / Custom
+		if (apiKey || provider === "ollama" || baseUrl) {
+			try {
+				let endpoint = "https://api.openai.com/v1/chat/completions";
+				const headers: Record<string, string> = {
+					"Content-Type": "application/json",
+				};
+				if (apiKey) {
+					headers.Authorization = `Bearer ${apiKey}`;
+				}
+
+				if (provider === "openrouter") {
+					endpoint = "https://openrouter.ai/api/v1/chat/completions";
+					headers["HTTP-Referer"] = "https://openverse.ai";
+					headers["X-Title"] = "OPEN-VERSE";
+				} else if (provider === "deepseek") {
+					endpoint = "https://api.deepseek.com/chat/completions";
+				} else if (provider === "groq") {
+					endpoint = "https://api.groq.com/openai/v1/chat/completions";
+				} else if (provider === "ollama") {
+					endpoint = baseUrl ? `${baseUrl.replace(/\/+$/, "")}/chat/completions` : "http://localhost:11434/v1/chat/completions";
+				} else if (baseUrl) {
+					endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+				}
+
+				const response = await fetch(endpoint, {
+					method: "POST",
+					headers,
+					body: JSON.stringify({
+						model,
+						messages: [{ role: "user", content: prompt }],
+						stream: true,
+					}),
+				});
+
+				if (!response.ok) {
+					throw new Error(`${provider} API error (HTTP ${response.status})`);
+				}
+
+				const reader = response.body?.getReader();
+				const decoder = new TextDecoder();
+				if (reader) {
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						const chunkStr = decoder.decode(value, { stream: true });
+						const lines = chunkStr.split("\n");
+						for (const line of lines) {
+							if (line.startsWith("data: ")) {
+								const payload = line.slice(6).trim();
+								if (payload === "[DONE]") break;
+								try {
+									const data = JSON.parse(payload);
+									const token = data.choices?.[0]?.delta?.content;
+									if (token) emitChunk(token, false);
+								} catch {}
+							}
+						}
+					}
+				}
+				emitChunk("", true);
+				persistAssistantResponse(fullResponseText);
+				return;
+			} catch (err) {
+				const errText = `\n\n*(Error generating response: ${err instanceof Error ? err.message : String(err)})*`;
+				emitChunk(errText, true);
+				persistAssistantResponse(fullResponseText);
+				return;
+			}
+		}
+
+		// 4. Default helpful offline response
 		const defaultResponse = `I received your prompt: "${prompt}".\n\nTo enable autonomous model execution on your device, configure your API key in **Settings > AI Model Providers** (supporting Google Gemini, Anthropic Claude, OpenAI, and Ollama) or connect to your **Desktop Hub**.`;
 		emitChunk(defaultResponse, true);
+		persistAssistantResponse(defaultResponse);
 	}
 }
 
