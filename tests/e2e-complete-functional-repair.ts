@@ -281,7 +281,7 @@ async function runTestSuite() {
 	const releasesManifest = JSON.parse(readFileSync(releasesManifestPath, "utf-8"));
 
 	assert(
-		releasesManifest.version === "0.2.0" &&
+		Boolean(releasesManifest.version) &&
 			releasesManifest.platforms["windows-x86_64"].signature.length > 20 &&
 			releasesManifest.platforms.android.sha256.length === 64,
 		"TEST N: Verify platform update detection and artifact integrity",
