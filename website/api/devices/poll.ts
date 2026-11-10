@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getCommandsMap, resolveUserId, type CrossDeviceCommand } from "./_store";
+import { getCommandsMap, resolveUserId, type CrossDeviceCommand } from "./_store.js";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
 	res.setHeader("Access-Control-Allow-Origin", "*");
