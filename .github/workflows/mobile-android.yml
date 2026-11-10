@@ -76,16 +76,9 @@ jobs:
           path: mobile/artifacts/*.aab
           if-no-files-found: ignore
 
-      - name: Publish to Latest Release Assets
+      - name: Publish to GitHub Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v0.2.0
         run: |
-          for TAG in v0.2.0 desktop-latest; do
-            if gh release view "$TAG" >/dev/null 2>&1; then
-              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.apk --clobber
-              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.apk.sha256 --clobber
-              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.aab --clobber
-              gh release upload "$TAG" mobile/artifacts/open-verse-mobile.aab.sha256 --clobber
-              echo "Uploaded release deliverables to $TAG"
-            fi
-          done
+          bun run mobile/scripts/publish-android-release.ts
