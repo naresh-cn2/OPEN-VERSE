@@ -10,7 +10,7 @@ import {
 	type SyncSettings,
 } from "../_store";
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
 	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -24,7 +24,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 	}
 
 	const { userId, email } = resolveUserId(req.headers.authorization);
-	const userState = loadUserState(userId, email);
+	const userState = await loadUserState(userId, email);
 
 	const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 	const incomingSessions: SyncSession[] = Array.isArray(body.sessions) ? body.sessions : [];
@@ -73,7 +73,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 		userState.settings.defaultModelId = incomingSettings.defaultModelId;
 	}
 
-	saveUserState(userState);
+	await saveUserState(userState);
 
 	return res.status(200).json({
 		success: true,
@@ -82,3 +82,4 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 		timestamp: userState.lastSyncTimestamp,
 	});
 }
+

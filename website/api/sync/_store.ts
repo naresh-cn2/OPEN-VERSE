@@ -1,11 +1,13 @@
 /**
  * OPEN-VERSE Production Cloud Sync Store
- * 
- * Provides authenticated multi-device sync for Google accounts:
- * - Sessions & turn-by-turn conversation messages
- * - Providers, default models, favorite models & non-secret preferences
- * - Robust conflict resolution (timestamp-based + chronological message union)
- * - Persistent storage scoped strictly to authenticated user identity
+ *
+ * Implements persistent, globally distributed multi-device cloud storage:
+ * - Backed by GitHub Distributed Cloud Database (branch: cloud-sync-data)
+ * - Turn-by-turn conversation messages & sessions
+ * - Provider preferences & non-secret settings
+ * - Conflict resolution (timestamp-based + chronological message union)
+ * - User isolation enforced per authenticated identity
+ * - Memory & disk tiered caching for fast responses
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -53,12 +55,26 @@ export interface UserCloudState {
 }
 
 const userStateCache = new Map<string, UserCloudState>();
+const userFileShaMap = new Map<string, string>();
 
 const STORAGE_DIR =
 	process.env.OPENVERSE_SYNC_DIR ||
 	(process.platform === "win32"
 		? join(process.cwd(), ".openverse-cloud-sync")
 		: join(tmpdir(), "openverse-cloud-sync"));
+
+const CLOUD_REPO = "naresh-cn2/OPEN-VERSE";
+const CLOUD_BRANCH = "cloud-sync-data";
+const GITHUB_API_BASE = "https://api.github.com";
+
+function getCloudAuthToken(): string {
+	return (
+		process.env.OPENVERSE_CLOUD_SYNC_TOKEN ||
+		process.env.GH_TOKEN ||
+		process.env.GITHUB_TOKEN ||
+		""
+	);
+}
 
 function ensureStorageDir() {
 	try {
@@ -91,11 +107,53 @@ export function resolveUserId(authHeader?: string): { userId: string; email: str
 	return { userId: `ov-${clean.slice(0, 16)}`, email: `${clean.slice(0, 8)}@openverse.internal` };
 }
 
-export function loadUserState(userId: string, email = "user@openverse.internal"): UserCloudState {
+/**
+ * Loads user state from Cloud Database (GitHub Distributed Store) with local caching
+ */
+export async function loadUserState(
+	userId: string,
+	email = "user@openverse.internal",
+): Promise<UserCloudState> {
+	// 1. Fast in-memory cache check
 	if (userStateCache.has(userId)) {
 		return userStateCache.get(userId)!;
 	}
 
+	const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+	// 2. Fetch from Cloud Database (GitHub Branch cloud-sync-data)
+	const token = getCloudAuthToken();
+	if (token) {
+		try {
+			const res = await fetch(
+				`${GITHUB_API_BASE}/repos/${CLOUD_REPO}/contents/data/sync/${safeId}.json?ref=${CLOUD_BRANCH}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						Accept: "application/vnd.github+json",
+						"User-Agent": "OPEN-VERSE-CloudSync",
+					},
+				},
+			);
+			if (res.ok) {
+				const json = (await res.json()) as { content?: string; sha?: string };
+				if (json.content) {
+					if (json.sha) {
+						userFileShaMap.set(userId, json.sha);
+					}
+					const parsed = JSON.parse(
+						Buffer.from(json.content, "base64").toString("utf-8"),
+					) as UserCloudState;
+					userStateCache.set(userId, parsed);
+					return parsed;
+				}
+			}
+		} catch (err) {
+			console.warn("[CloudSync] Cloud fetch fallback:", err);
+		}
+	}
+
+	// 3. Fallback to local storage cache
 	ensureStorageDir();
 	const filePath = getUserFilePath(userId);
 	if (existsSync(filePath)) {
@@ -106,6 +164,7 @@ export function loadUserState(userId: string, email = "user@openverse.internal")
 		} catch {}
 	}
 
+	// 4. Initial state if user has no prior history
 	const initialState: UserCloudState = {
 		userId,
 		email,
@@ -118,14 +177,61 @@ export function loadUserState(userId: string, email = "user@openverse.internal")
 	return initialState;
 }
 
-export function saveUserState(state: UserCloudState): void {
+/**
+ * Saves user state to Cloud Database (GitHub Distributed Store) and local storage
+ */
+export async function saveUserState(state: UserCloudState): Promise<void> {
 	state.lastSyncTimestamp = Date.now();
 	userStateCache.set(state.userId, state);
+
+	// 1. Save to local disk cache
 	try {
 		ensureStorageDir();
 		const filePath = getUserFilePath(state.userId);
 		writeFileSync(filePath, JSON.stringify(state, null, 2), "utf-8");
 	} catch {}
+
+	// 2. Save asynchronously to Cloud Database
+	const token = getCloudAuthToken();
+	if (token) {
+		try {
+			const safeId = state.userId.replace(/[^a-zA-Z0-9_-]/g, "_");
+			const contentStr = JSON.stringify(state, null, 2);
+			const base64Content = Buffer.from(contentStr, "utf-8").toString("base64");
+			const currentSha = userFileShaMap.get(state.userId);
+
+			const body: Record<string, unknown> = {
+				message: `sync: update user state for ${safeId}`,
+				content: base64Content,
+				branch: CLOUD_BRANCH,
+			};
+			if (currentSha) {
+				body.sha = currentSha;
+			}
+
+			const res = await fetch(
+				`${GITHUB_API_BASE}/repos/${CLOUD_REPO}/contents/data/sync/${safeId}.json`,
+				{
+					method: "PUT",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+						Accept: "application/vnd.github+json",
+						"User-Agent": "OPEN-VERSE-CloudSync",
+					},
+					body: JSON.stringify(body),
+				},
+			);
+			if (res.ok) {
+				const json = (await res.json()) as { content?: { sha?: string } };
+				if (json.content?.sha) {
+					userFileShaMap.set(state.userId, json.content.sha);
+				}
+			}
+		} catch (err) {
+			console.warn("[CloudSync] Cloud save error:", err);
+		}
+	}
 }
 
 export function mergeSessions(

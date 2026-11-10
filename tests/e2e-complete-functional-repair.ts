@@ -115,15 +115,15 @@ async function runTestSuite() {
 	};
 
 	// Windows pushes to Cloud Sync
-	const cloudState = loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
+	const cloudState = await loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
 	cloudState.sessions = mergeSessions(cloudState.sessions, [initialSession]);
 	cloudState.messages = mergeMessages(cloudState.messages, {
 		[testSessionId]: [windowsMsg1, windowsMsg2],
 	});
-	saveUserState(cloudState);
+	await saveUserState(cloudState);
 
 	// Android pulls from Cloud Sync
-	const androidPulled = loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
+	const androidPulled = await loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
 	const pulledSession = androidPulled.sessions[testSessionId];
 	const pulledMsgs = androidPulled.messages[testSessionId] || [];
 
@@ -146,10 +146,10 @@ async function runTestSuite() {
 		[testSessionId]: [androidMsg3],
 	});
 	cloudState.sessions[testSessionId].lastActivityAt = new Date().toISOString();
-	saveUserState(cloudState);
+	await saveUserState(cloudState);
 
 	// Windows pulls updated conversation
-	const windowsRefreshed = loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
+	const windowsRefreshed = await loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
 	const refreshedMsgs = windowsRefreshed.messages[testSessionId] || [];
 
 	assert(
@@ -160,7 +160,7 @@ async function runTestSuite() {
 
 	// --- TEST F: Restart Persistence ---
 	console.log("\n--- TEST F: Restart & Storage Persistence ---");
-	const reloadedState = loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
+	const reloadedState = await loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL);
 	assert(
 		reloadedState.sessions[testSessionId] !== undefined &&
 			(reloadedState.messages[testSessionId] || []).length === 3,
@@ -250,9 +250,9 @@ async function runTestSuite() {
 		defaultModelId: "gemini-2.5-flash",
 	};
 	cloudState.settings = providersConfig;
-	saveUserState(cloudState);
+	await saveUserState(cloudState);
 
-	const pulledSettings = loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL).settings;
+	const pulledSettings = (await loadUserState(GOOGLE_USER_ID, GOOGLE_EMAIL)).settings;
 	assert(
 		(pulledSettings.providers as any[]).length === 4 &&
 			pulledSettings.defaultModelId === "gemini-2.5-flash",
