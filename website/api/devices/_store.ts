@@ -121,3 +121,4 @@ export function getDefaultCapabilities(platform: DevicePlatform): DeviceCapabili
 			return ["open_browser_url", "send_notification"];
 	}
 }
+

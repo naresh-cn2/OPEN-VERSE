@@ -188,3 +188,4 @@ export async function executeCrossDeviceIntent(intent: IntentResult): Promise<st
 
 	return `✅ Command sent to ${target.deviceName} (Status: ${res.command?.status || "dispatched"}).`;
 }
+

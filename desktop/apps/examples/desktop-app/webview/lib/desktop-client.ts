@@ -347,6 +347,14 @@ class DesktopClient {
 					this.cachedHubStatus = { state: "ready" };
 				}
 			}
+
+			// Periodic cloud sync pull for unified cross-device continuity (ChatGPT/Gemini style)
+			setTimeout(() => {
+				void this.syncCloudPull();
+			}, 1500);
+			setInterval(() => {
+				void this.syncCloudPull();
+			}, 25_000);
 		}
 	}
 
@@ -1014,6 +1022,45 @@ class DesktopClient {
 						window.localStorage.setItem(msgKey, JSON.stringify(sorted));
 					}
 				}
+
+				// Synchronize AI Provider configurations and Model preferences across devices
+				if (data.settings && typeof data.settings === "object") {
+					const cloudSettings = data.settings as Record<string, unknown>;
+					if (Array.isArray(cloudSettings.providers)) {
+						const localProvidersRaw = window.localStorage.getItem("openverse_providers_v1");
+						const localProviders: Provider[] = localProvidersRaw ? JSON.parse(localProvidersRaw) : [];
+						const providerMap = new Map<string, Provider>();
+						for (const p of localProviders) {
+							providerMap.set(p.id, p);
+						}
+						for (const cp of (cloudSettings.providers as Provider[])) {
+							if (!providerMap.has(cp.id)) {
+								providerMap.set(cp.id, {
+									...cp,
+									apiKey: undefined, // Requires local credentials or reconnect
+								});
+							} else {
+								const existing = providerMap.get(cp.id)!;
+								providerMap.set(cp.id, {
+									...existing,
+									enabled: cp.enabled ?? existing.enabled,
+									defaultModelId: cp.defaultModelId ?? existing.defaultModelId,
+									baseUrl: cp.baseUrl || existing.baseUrl,
+								});
+							}
+						}
+						window.localStorage.setItem("openverse_providers_v1", JSON.stringify(Array.from(providerMap.values())));
+					}
+
+					if (cloudSettings.favoriteModels && typeof cloudSettings.favoriteModels === "object") {
+						window.localStorage.setItem("cline.favorite-provider-models.v1", JSON.stringify(cloudSettings.favoriteModels));
+					}
+					if (typeof cloudSettings.defaultModelId === "string") {
+						window.localStorage.setItem("openverse.default_model_id", cloudSettings.defaultModelId);
+					}
+					window.dispatchEvent(new CustomEvent("openverse:providers-updated"));
+				}
+
 				window.dispatchEvent(new CustomEvent("openverse:sessions-updated"));
 			}
 			return { success: true, sessionsCount: data.sessions?.length };
@@ -1040,13 +1087,41 @@ class DesktopClient {
 				}
 			}
 
+			// Read settings: configured providers, favorite models, default model
+			let settings: Record<string, unknown> | undefined;
+			try {
+				const providersRaw = window.localStorage.getItem("openverse_providers_v1");
+				const providersList: Provider[] = providersRaw ? JSON.parse(providersRaw) : [];
+				const sanitizedProviders = providersList.map((p) => ({
+					id: p.id,
+					name: p.name,
+					models: p.models,
+					color: p.color,
+					letter: p.letter,
+					enabled: p.enabled,
+					configured: p.configured,
+					defaultModelId: p.defaultModelId,
+					baseUrl: p.baseUrl,
+				}));
+
+				const favoritesRaw = window.localStorage.getItem("cline.favorite-provider-models.v1");
+				const favoriteModels = favoritesRaw ? JSON.parse(favoritesRaw) : undefined;
+				const defaultModelId = window.localStorage.getItem("openverse.default_model_id");
+
+				settings = {
+					providers: sanitizedProviders,
+					favoriteModels,
+					defaultModelId,
+				};
+			} catch {}
+
 			const res = await fetch(`${baseUrl}/api/sync/v1/push`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ sessions, messages }),
+				body: JSON.stringify({ sessions, messages, settings }),
 			});
 			if (!res.ok) return { success: false };
 			const data = (await res.json()) as { success?: boolean };
@@ -1404,6 +1479,7 @@ class DesktopClient {
 						}
 					}
 				} catch {}
+				void this.syncCloudPush();
 				return true as T;
 			}
 			case "add_provider": {
@@ -1431,6 +1507,7 @@ class DesktopClient {
 						window.localStorage.setItem("openverse_providers_v1", JSON.stringify(list));
 					}
 				} catch {}
+				void this.syncCloudPush();
 				return true as T;
 			}
 			case "provider_models":

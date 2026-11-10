@@ -371,3 +371,4 @@ class MobileDeviceNetwork {
 }
 
 export const mobileDeviceNetwork = new MobileDeviceNetwork();
+

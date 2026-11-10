@@ -19,14 +19,19 @@ export interface OpenVerseMobileSession {
   user: OpenVerseMobileUser;
 }
 
-const AUTH_STORAGE_KEY = "openverse.mobile.auth_session.v1";
+const AUTH_STORAGE_KEY = "openverse.auth.session.v1";
+const LEGACY_MOBILE_STORAGE_KEY = "openverse.mobile.auth_session.v1";
 
 export function getMobileSession(): OpenVerseMobileSession | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(LEGACY_MOBILE_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (parsed && !localStorage.getItem(AUTH_STORAGE_KEY)) {
+      localStorage.setItem(AUTH_STORAGE_KEY, raw);
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -36,9 +41,12 @@ export function saveMobileSession(session: OpenVerseMobileSession | null): void 
   if (typeof window === "undefined") return;
   try {
     if (session) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+      const serialized = JSON.stringify(session);
+      localStorage.setItem(AUTH_STORAGE_KEY, serialized);
+      localStorage.setItem(LEGACY_MOBILE_STORAGE_KEY, serialized);
     } else {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_MOBILE_STORAGE_KEY);
     }
     window.dispatchEvent(new CustomEvent("openverse:auth-change", { detail: { session } }));
   } catch (err) {
