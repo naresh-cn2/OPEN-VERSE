@@ -22,6 +22,8 @@ import {
 import { streamDirectAI } from "./services/direct-ai";
 import { remoteHub, type HubStatusMessage } from "./services/remote-hub";
 import { checkMobileUpdate, type MobileUpdateInfo } from "./services/updater";
+import { mobileDeviceNetwork } from "./services/device-network";
+import { parseCrossDeviceIntent, executeCrossDeviceIntent } from "./services/cross-device-dispatcher";
 
 export function App() {
   const [user, setUser] = useState<OpenVerseMobileUser | null>(() => {
@@ -196,6 +198,32 @@ export function App() {
     setSessions(currentSessions);
     saveSessions(currentSessions);
     setIsStreaming(true);
+
+    // Check for Cross-Device Intent (e.g. "Open YouTube on my laptop", "Call my dad")
+    const crossDeviceIntent = parseCrossDeviceIntent(
+      text,
+      mobileDeviceNetwork.getKnownDevices(),
+      mobileDeviceNetwork.getDeviceId()
+    );
+
+    if (crossDeviceIntent.isCrossDevice) {
+      const responseText = await executeCrossDeviceIntent(crossDeviceIntent);
+      setSessions((prev) =>
+        prev.map((s) => {
+          if (s.id === currentSessionId) {
+            const updated = s.messages.map((m) =>
+              m.id === assistantMessageId
+                ? { ...m, content: responseText, isStreaming: false }
+                : m
+            );
+            return { ...s, messages: updated };
+          }
+          return s;
+        })
+      );
+      setIsStreaming(false);
+      return;
+    }
 
     // MODE 1: Execute via Desktop Hub Agent if active
     if (executionMode === "hub" && isHubConnected) {

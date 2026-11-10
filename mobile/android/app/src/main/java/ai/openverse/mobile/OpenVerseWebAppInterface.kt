@@ -25,14 +25,67 @@ class OpenVerseWebAppInterface(private val context: Context) {
     }
 
     @JavascriptInterface
-    fun openExternalUrl(url: String) {
-        try {
+    fun getDeviceDetails(): String {
+        return "{\"model\":\"${Build.MANUFACTURER} ${Build.MODEL}\",\"osVersion\":\"Android ${Build.VERSION.RELEASE}\",\"sdkInt\":${Build.VERSION.SDK_INT}}"
+    }
+
+    @JavascriptInterface
+    fun openExternalUrl(url: String): Boolean {
+        return try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
+            true
         } catch (e: Exception) {
             e.printStackTrace()
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun openApplication(packageName: String): Boolean {
+        return try {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
+            if (launchIntent != null) {
+                launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(launchIntent)
+                true
+            } else {
+                if (packageName.contains("youtube", ignoreCase = true)) {
+                    openExternalUrl("https://youtube.com")
+                } else {
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun initiatePhoneCall(phoneNumber: String): Boolean {
+        return try {
+            val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:${Uri.encode(phoneNumber)}")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(dialIntent)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun showNotification(title: String, message: String): Boolean {
+        return try {
+            Toast.makeText(context, "$title: $message", Toast.LENGTH_LONG).show()
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Cloud, Globe, Laptop, Loader2, Server, Settings, Smartphone } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Check, Cloud, Globe, Laptop, Loader2, Radio, Server, Settings, Smartphone } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -11,6 +11,10 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+	deviceNetwork,
+	type OpenVerseDevice,
+} from "@/lib/open-verse-device-network";
 import { detectPlatform } from "@/lib/open-verse-updater";
 import type { RemoteEnvironmentProfile } from "@/lib/remote-environments";
 import { LOCAL_WORKSPACE_ENVIRONMENT_ID } from "@/lib/workspace-paths";
@@ -117,6 +121,18 @@ export function EnvironmentSelector({
 		null,
 	);
 	const [open, setOpen] = useState(false);
+	const [personalDevices, setPersonalDevices] = useState<OpenVerseDevice[]>([]);
+
+	useEffect(() => {
+		setPersonalDevices(deviceNetwork.getKnownDevices());
+		const onUpdate = (e: any) => {
+			if (Array.isArray(e.detail?.devices)) {
+				setPersonalDevices(e.detail.devices);
+			}
+		};
+		window.addEventListener("openverse:devices-updated", onUpdate);
+		return () => window.removeEventListener("openverse:devices-updated", onUpdate);
+	}, []);
 	const pendingEnvironmentId = switchingEnvironmentId ?? internalSwitchingId;
 	const busy = loading || pendingEnvironmentId !== null;
 	const cloudSelected = executionTarget === "cloud";
@@ -201,6 +217,48 @@ export function EnvironmentSelector({
 						<Check className="ml-auto" />
 					) : null}
 				</DropdownMenuItem>
+
+				{personalDevices.filter((d) => d.deviceId !== deviceNetwork.getDeviceId()).length > 0 && (
+					<>
+						<DropdownMenuSeparator />
+						<DropdownMenuLabel className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+							<Radio className="size-3.5 text-violet-400" />
+							Authorized Personal Devices
+						</DropdownMenuLabel>
+						{personalDevices
+							.filter((d) => d.deviceId !== deviceNetwork.getDeviceId())
+							.map((dev) => (
+								<DropdownMenuItem
+									key={dev.deviceId}
+									className="flex items-center justify-between py-1.5"
+									onSelect={() => {}}
+								>
+									<div className="flex items-center gap-2 min-w-0">
+										{dev.platform === "android" || dev.platform === "ios" ? (
+											<Smartphone className="size-4 shrink-0 text-muted-foreground" />
+										) : (
+											<Laptop className="size-4 shrink-0 text-muted-foreground" />
+										)}
+										<span className="truncate text-xs font-medium">{dev.deviceName}</span>
+									</div>
+									<span
+										className={`ml-2 inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+											dev.isOnline
+												? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+												: "bg-zinc-500/10 text-zinc-400"
+										}`}
+									>
+										<span
+											className={`size-1.5 rounded-full ${
+												dev.isOnline ? "bg-emerald-400 animate-pulse" : "bg-zinc-500"
+											}`}
+										/>
+										{dev.isOnline ? "Online" : "Offline"}
+									</span>
+								</DropdownMenuItem>
+							))}
+					</>
+				)}
 
 				<DropdownMenuSeparator />
 				<DropdownMenuItem

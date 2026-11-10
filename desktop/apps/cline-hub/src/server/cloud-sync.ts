@@ -10,6 +10,16 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
+import {
+	acknowledgeCommand,
+	dispatchCommand,
+	getUserDevices,
+	pollCommandsForDevice,
+	registerDevice,
+	setDeviceAuthorization,
+	type DeviceCapability,
+	type DevicePlatform,
+} from "./device-network";
 
 export interface SyncMessage {
 	id: string;
@@ -465,6 +475,219 @@ export async function handleCloudSyncRequest(
 				status: 200,
 				headers: corsHeaders,
 			});
+		} catch (err) {
+			return new Response(
+				JSON.stringify({ success: false, error: String(err) }),
+				{ status: 500, headers: corsHeaders },
+			);
+		}
+	}
+
+	// -------------------------------------------------------------
+	// DEVICE NETWORK & CROSS-DEVICE COMMAND EXECUTION ENDPOINTS
+	// -------------------------------------------------------------
+
+	// Device registration & heartbeat
+	if (
+		(pathname === "/api/devices/register" || pathname === "/api/sync/v1/devices/register") &&
+		req.method === "POST"
+	) {
+		try {
+			const body = (await req.json()) as {
+				deviceId: string;
+				platform: DevicePlatform;
+				deviceName?: string;
+				capabilities?: DeviceCapability[];
+				modelInfo?: string;
+				batteryLevel?: number;
+				appVersion?: string;
+				activeSessionId?: string;
+			};
+
+			if (!body.deviceId || !body.platform) {
+				return new Response(
+					JSON.stringify({ success: false, error: "deviceId and platform are required" }),
+					{ status: 400, headers: corsHeaders },
+				);
+			}
+
+			const registered = registerDevice(user.userId, body);
+			const allDevices = getUserDevices(user.userId);
+
+			return new Response(
+				JSON.stringify({
+					success: true,
+					device: registered,
+					devices: allDevices,
+					timestamp: Date.now(),
+				}),
+				{ status: 200, headers: corsHeaders },
+			);
+		} catch (err) {
+			return new Response(
+				JSON.stringify({ success: false, error: String(err) }),
+				{ status: 500, headers: corsHeaders },
+			);
+		}
+	}
+
+	// List all authorized devices for this user
+	if (
+		(pathname === "/api/devices/list" || pathname === "/api/sync/v1/devices/list") &&
+		(req.method === "GET" || req.method === "POST")
+	) {
+		const devices = getUserDevices(user.userId);
+		return new Response(
+			JSON.stringify({
+				success: true,
+				userId: user.userId,
+				devices,
+				count: devices.length,
+				timestamp: Date.now(),
+			}),
+			{ status: 200, headers: corsHeaders },
+		);
+	}
+
+	// Dispatch cross-device command
+	if (
+		(pathname === "/api/devices/command" || pathname === "/api/sync/v1/devices/command") &&
+		req.method === "POST"
+	) {
+		try {
+			const body = (await req.json()) as {
+				sourceDeviceId: string;
+				sourceDeviceName?: string;
+				targetDeviceId: string;
+				type:
+					| "open_application"
+					| "open_url"
+					| "phone_call"
+					| "send_notification"
+					| "continue_conversation"
+					| "shell_exec";
+				payload: Record<string, unknown>;
+			};
+
+			if (!body.sourceDeviceId || !body.targetDeviceId || !body.type) {
+				return new Response(
+					JSON.stringify({
+						success: false,
+						error: "sourceDeviceId, targetDeviceId, and type are required",
+					}),
+					{ status: 400, headers: corsHeaders },
+				);
+			}
+
+			const result = dispatchCommand(user.userId, {
+				sourceDeviceId: body.sourceDeviceId,
+				sourceDeviceName: body.sourceDeviceName || "Personal Device",
+				targetDeviceId: body.targetDeviceId,
+				type: body.type,
+				payload: body.payload,
+			});
+
+			return new Response(
+				JSON.stringify(result),
+				{ status: result.success ? 200 : 400, headers: corsHeaders },
+			);
+		} catch (err) {
+			return new Response(
+				JSON.stringify({ success: false, error: String(err) }),
+				{ status: 500, headers: corsHeaders },
+			);
+		}
+	}
+
+	// Poll incoming commands for a target device
+	if (
+		(pathname === "/api/devices/poll" || pathname === "/api/sync/v1/devices/poll") &&
+		(req.method === "GET" || req.method === "POST")
+	) {
+		let deviceId = url.searchParams.get("deviceId");
+		if (!deviceId && req.method === "POST") {
+			try {
+				const body = (await req.json().catch(() => ({}))) as { deviceId?: string };
+				deviceId = body.deviceId || null;
+			} catch {}
+		}
+
+		if (!deviceId) {
+			return new Response(
+				JSON.stringify({ success: false, error: "deviceId is required" }),
+				{ status: 400, headers: corsHeaders },
+			);
+		}
+
+		const pending = pollCommandsForDevice(user.userId, deviceId);
+		return new Response(
+			JSON.stringify({
+				success: true,
+				deviceId,
+				commands: pending,
+				count: pending.length,
+				timestamp: Date.now(),
+			}),
+			{ status: 200, headers: corsHeaders },
+		);
+	}
+
+	// Acknowledge command execution
+	if (
+		(pathname === "/api/devices/ack" || pathname === "/api/sync/v1/devices/ack") &&
+		req.method === "POST"
+	) {
+		try {
+			const body = (await req.json()) as {
+				deviceId: string;
+				commandId: string;
+				status: "executed" | "failed";
+				resultMessage?: string;
+				errorMessage?: string;
+			};
+
+			if (!body.deviceId || !body.commandId || !body.status) {
+				return new Response(
+					JSON.stringify({
+						success: false,
+						error: "deviceId, commandId, and status are required",
+					}),
+					{ status: 400, headers: corsHeaders },
+				);
+			}
+
+			const acknowledged = acknowledgeCommand(user.userId, body.deviceId, body);
+			return new Response(
+				JSON.stringify({ success: acknowledged }),
+				{ status: acknowledged ? 200 : 404, headers: corsHeaders },
+			);
+		} catch (err) {
+			return new Response(
+				JSON.stringify({ success: false, error: String(err) }),
+				{ status: 500, headers: corsHeaders },
+			);
+		}
+	}
+
+	// Revoke device authorization
+	if (
+		(pathname === "/api/devices/revoke" || pathname === "/api/sync/v1/devices/revoke") &&
+		req.method === "POST"
+	) {
+		try {
+			const body = (await req.json()) as { deviceId: string };
+			if (!body.deviceId) {
+				return new Response(
+					JSON.stringify({ success: false, error: "deviceId is required" }),
+					{ status: 400, headers: corsHeaders },
+				);
+			}
+
+			const revoked = setDeviceAuthorization(user.userId, body.deviceId, false);
+			return new Response(
+				JSON.stringify({ success: revoked }),
+				{ status: revoked ? 200 : 404, headers: corsHeaders },
+			);
 		} catch (err) {
 			return new Response(
 				JSON.stringify({ success: false, error: String(err) }),
