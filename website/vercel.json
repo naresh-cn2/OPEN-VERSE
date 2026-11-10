@@ -11,6 +11,14 @@
       "destination": "/api/auth/authorize"
     },
     {
+      "source": "/api/auth/callback",
+      "destination": "/api/auth/callback"
+    },
+    {
+      "source": "/api/releases/latest",
+      "destination": "/api/releases/latest"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

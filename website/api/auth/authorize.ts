@@ -1,15 +1,55 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+/**
+ * OPEN-VERSE Identity Service - OAuth Authorize Gateway
+ *
+ * Checks if production provider OAuth credentials (Google / GitHub) are configured.
+ * - If configured: redirects user directly to real Google / GitHub OAuth authorization endpoint.
+ * - If unconfigured (preview/sandbox mode): provides clear sandbox authorization UI.
+ */
 export default function handler(req: VercelRequest, res: VercelResponse) {
   const provider = (req.query.provider as string) || "google";
   const redirectTo = (req.query.redirect_to as string) || "openverse://auth/callback";
+  const host = req.headers.host || "open-verse-website.vercel.app";
+  const callbackUrl = `https://${host}/api/auth/callback?provider=${provider}`;
+
+  const isGoogleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  const isGithubConfigured = Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+
+  // 1. Real Google OAuth redirect if credentials are configured
+  if (provider === "google" && isGoogleConfigured) {
+    const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    googleAuthUrl.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID!);
+    googleAuthUrl.searchParams.set("redirect_uri", callbackUrl);
+    googleAuthUrl.searchParams.set("response_type", "code");
+    googleAuthUrl.searchParams.set("scope", "openid email profile");
+    googleAuthUrl.searchParams.set("access_type", "offline");
+    googleAuthUrl.searchParams.set("prompt", "consent");
+    googleAuthUrl.searchParams.set("state", `goog_${Date.now()}`);
+
+    res.setHeader("Location", googleAuthUrl.toString());
+    return res.status(302).end();
+  }
+
+  // 2. Real GitHub OAuth redirect if credentials are configured
+  if (provider === "github" && isGithubConfigured) {
+    const githubAuthUrl = new URL("https://github.com/login/oauth/authorize");
+    githubAuthUrl.searchParams.set("client_id", process.env.GITHUB_CLIENT_ID!);
+    githubAuthUrl.searchParams.set("redirect_uri", callbackUrl);
+    githubAuthUrl.searchParams.set("scope", "read:user user:email");
+    githubAuthUrl.searchParams.set("state", `gh_${Date.now()}`);
+
+    res.setHeader("Location", githubAuthUrl.toString());
+    return res.status(302).end();
+  }
+
+  // 3. Fallback / Sandbox Authorization Interface (when OAuth secrets are not yet configured in Vercel environment)
   const providerName = provider === "github" ? "GitHub" : "Google";
   const safeEmail = provider === "github" ? "developer@github.account" : "user@gmail.com";
   const safeName = provider === "github" ? "GitHub Developer" : "Google User";
   
-  // Create secure session token
-  const token = `ov_auth_${provider}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const callbackUrl = `${redirectTo}#access_token=${token}&email=${encodeURIComponent(safeEmail)}&name=${encodeURIComponent(safeName)}&provider=${provider}`;
+  const token = `ov_sandbox_${provider}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const deepLinkCallback = `${redirectTo}#access_token=${token}&email=${encodeURIComponent(safeEmail)}&name=${encodeURIComponent(safeName)}&provider=${provider}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -62,6 +102,17 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       color: #c4b5fd;
       margin-bottom: 16px;
       border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    .notice {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+      font-size: 11px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 20px;
+      text-align: left;
+      line-height: 1.4;
     }
     .user-pill {
       background: #18181b;
@@ -130,6 +181,10 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     <h1>Connect to OPEN-VERSE</h1>
     <p>Authorize OPEN-VERSE Mobile to access your account securely.</p>
 
+    <div class="notice">
+      ℹ️ Note: Live OAuth Client secrets are pending configuration in Vercel. Operating in preview authorization mode.
+    </div>
+
     <div class="user-pill">
       <div class="avatar">${safeName.charAt(0)}</div>
       <div class="user-info">
@@ -138,7 +193,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       </div>
     </div>
 
-    <a href="${callbackUrl}" class="btn btn-primary" id="returnBtn">Authorize &amp; Open App</a>
+    <a href="${deepLinkCallback}" class="btn btn-primary" id="returnBtn">Authorize &amp; Open App</a>
     <button class="btn btn-secondary" onclick="copyToken()">Copy Token to Clipboard</button>
 
     <div class="token-box" id="tokenNotice">
@@ -147,7 +202,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   </div>
 
   <script>
-    const callbackUrl = ${JSON.stringify(callbackUrl)};
+    const callbackUrl = ${JSON.stringify(deepLinkCallback)};
     const token = ${JSON.stringify(token)};
 
     function copyToken() {
@@ -156,7 +211,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Attempt automatic deep link redirect
     setTimeout(() => {
       window.location.href = callbackUrl;
     }, 600);
@@ -168,4 +222,3 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
   return res.status(200).send(html);
 }
-

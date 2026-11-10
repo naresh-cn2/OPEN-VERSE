@@ -4,11 +4,17 @@ import { useEffect, useSyncExternalStore } from "react";
 import { ToastAction } from "@/components/ui/toast";
 import { toast } from "@/hooks/use-toast";
 import { desktopClient, isTauriAvailable } from "@/lib/desktop-client";
+import {
+	checkForAppUpdate,
+	installAvailableUpdate,
+	type UpdateCheckResult,
+} from "@/lib/open-verse-updater";
 
 export type AppUpdateStatus = {
 	state: "idle" | "checking" | "downloading" | "ready" | "error";
 	version?: string | null;
 	error?: string | null;
+	details?: UpdateCheckResult | null;
 };
 
 const POLL_INTERVAL_MS = 30_000;
@@ -67,43 +73,91 @@ export function useAppUpdateStatus(): AppUpdateStatus {
 }
 
 /**
- * Ask the Rust shell to check for, download, and stage an update right now,
- * instead of waiting for the next background updater interval. Resolves with
- * the resulting updater status ("ready" means an update is staged and a
- * restart will apply it), or null when the check could not run at all
- * (web/sidecar mode, or a bridge failure).
+ * Ask the shell or release server to check for an update right now.
+ * Works across Desktop Tauri, Android, iOS, and Web.
  */
 export async function checkForUpdateNow(): Promise<AppUpdateStatus | null> {
+	if (isTauriAvailable()) {
+		try {
+			const status = await desktopClient.invoke<AppUpdateStatus>(
+				"check_for_update_now",
+			);
+			setUpdateStatus(status);
+			return status;
+		} catch {
+			return null;
+		}
+	}
+
 	try {
-		const status = await desktopClient.invoke<AppUpdateStatus>(
-			"check_for_update_now",
-		);
-		// Keep the shared polled store in sync so the sidebar indicator and
-		// update toast reflect an update staged through this path too.
+		setUpdateStatus({ state: "checking" });
+		const result = await checkForAppUpdate();
+		if (result.updateAvailable) {
+			const status: AppUpdateStatus = {
+				state: "ready",
+				version: result.latestVersion,
+				details: result,
+			};
+			setUpdateStatus(status);
+			return status;
+		}
+		const status: AppUpdateStatus = {
+			state: "idle",
+			version: result.currentVersion,
+			details: result,
+		};
 		setUpdateStatus(status);
 		return status;
-	} catch {
-		return null;
+	} catch (err) {
+		const status: AppUpdateStatus = {
+			state: "error",
+			error: err instanceof Error ? err.message : String(err),
+		};
+		setUpdateStatus(status);
+		return status;
 	}
 }
 
 /**
- * Restart the app so the staged update takes effect. Resolves false (after
- * surfacing a toast) if the restart command fails, so callers can reset
- * pending UI.
+ * Restart the app or apply the downloaded update.
+ * On Desktop: restarts to apply.
+ * On Android: prompts Android package installer.
+ * On Web: reloads window.
  */
 export async function restartToApplyUpdate(): Promise<boolean> {
-	try {
-		await desktopClient.invoke("restart_to_apply_update");
-		return true;
-	} catch (error) {
-		toast({
-			variant: "destructive",
-			title: "Restart failed",
-			description: error instanceof Error ? error.message : String(error),
-		});
-		return false;
+	if (isTauriAvailable()) {
+		try {
+			await desktopClient.invoke("restart_to_apply_update");
+			return true;
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Restart failed",
+				description: error instanceof Error ? error.message : String(error),
+			});
+			return false;
+		}
 	}
+
+	if (currentStatus.details) {
+		try {
+			const res = await installAvailableUpdate(currentStatus.details);
+			toast({
+				title: "Update",
+				description: res.message,
+			});
+			return true;
+		} catch (err) {
+			toast({
+				variant: "destructive",
+				title: "Update failed",
+				description: err instanceof Error ? err.message : String(err),
+			});
+			return false;
+		}
+	}
+
+	return false;
 }
 
 // Module-scoped so a page remount does not re-toast an update the user
@@ -184,38 +238,49 @@ export async function checkForUpdateAndNotify(): Promise<void> {
  */
 export function useAppUpdate() {
 	useEffect(() => {
-		if (!isTauriAvailable()) {
-			return;
-		}
-
 		let cancelled = false;
 
 		const poll = async () => {
-			let status: AppUpdateStatus;
+			if (isTauriAvailable()) {
+				let status: AppUpdateStatus;
+				try {
+					status =
+						await desktopClient.invoke<AppUpdateStatus>("get_update_status");
+				} catch {
+					return;
+				}
+				if (cancelled) return;
+				setUpdateStatus(status);
+				if (status.state !== "ready" || !status.version) return;
+				if (notifiedVersion === status.version) return;
+				showUpdateReadyToast(status.version);
+				return;
+			}
+
+			// Mobile / Web background check
 			try {
-				status =
-					await desktopClient.invoke<AppUpdateStatus>("get_update_status");
+				const result = await checkForAppUpdate();
+				if (cancelled) return;
+				if (result.updateAvailable) {
+					const status: AppUpdateStatus = {
+						state: "ready",
+						version: result.latestVersion,
+						details: result,
+					};
+					setUpdateStatus(status);
+					if (notifiedVersion !== result.latestVersion) {
+						showUpdateReadyToast(result.latestVersion);
+					}
+				}
 			} catch {
-				// Update status is best-effort; ignore transient bridge failures.
-				return;
+				// Network error in background check, ignore
 			}
-			if (cancelled) {
-				return;
-			}
-			setUpdateStatus(status);
-			if (status.state !== "ready" || !status.version) {
-				return;
-			}
-			if (notifiedVersion === status.version) {
-				return;
-			}
-			showUpdateReadyToast(status.version);
 		};
 
 		void poll();
 		const interval = setInterval(() => {
 			void poll();
-		}, POLL_INTERVAL_MS);
+		}, POLL_INTERVAL_MS * 4); // Check every 2 minutes in background
 		return () => {
 			cancelled = true;
 			clearInterval(interval);

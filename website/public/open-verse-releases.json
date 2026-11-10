@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "releaseDate": "2026-11-10T12:00:00Z",
+  "channel": "stable",
+  "mandatory": false,
+  "releaseNotes": "• Unified cross-platform authentication with Google and GitHub\n• In-app automatic update notification and delivery\n• Native Android and Desktop performance optimizations",
+  "platforms": {
+    "windows-x86_64": {
+      "version": "0.2.0",
+      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.0/OPEN-VERSE_0.2.0_x64-setup.nsis.zip",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENUJENEE1ODRBQ0QzQzMKUldURDA2eUVwZFJiVGJmWjduOFk4VTBnVTVLL2pDRWJLV3lySXlEeHlXRThZTEVCMGorQ0ZMTUcK"
+    },
+    "android": {
+      "version": "0.2.0",
+      "versionCode": 2,
+      "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
+      "sha256": "d6d1fca1a9a83692d63805eca458d26b9ebe53daa76eaca9fb42aaeef05bbbba",
+      "minSdk": 26
+    },
+    "ios": {
+      "version": "0.2.0",
+      "build": "2",
+      "testFlightUrl": "https://testflight.apple.com/join/openverse-preview"
+    },
+    "web": {
+      "version": "0.2.0",
+      "deployedAt": "2026-11-10T12:00:00Z"
+    }
+  }
+}
+

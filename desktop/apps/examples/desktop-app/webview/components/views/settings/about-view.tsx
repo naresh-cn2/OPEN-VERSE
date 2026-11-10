@@ -69,7 +69,7 @@ function UpdateAction() {
 					: checkResult === "up-to-date"
 						? "You're up to date."
 						: checkResult === "unavailable"
-							? "Update checks are only available in the desktop app."
+							? "Unable to reach the update server. Please check your connection."
 							: null;
 
 	return (

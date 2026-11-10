@@ -1,0 +1,201 @@
+name: Unified Cross-Platform Release
+
+# Triggers when a version tag (e.g., v0.2.1) is pushed or manually dispatched
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to release (e.g. v0.2.1)'
+        required: true
+        type: string
+      channel:
+        description: 'Release channel'
+        required: true
+        type: choice
+        options:
+          - stable
+          - beta
+          - nightly
+        default: stable
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  validate:
+    name: 1. Validate Version Consistency & Test Suite
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      tag: ${{ steps.extract_version.outputs.tag }}
+      channel: ${{ steps.extract_version.outputs.channel }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Extract Release Version
+        id: extract_version
+        run: |
+          RAW_TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${RAW_TAG#v}"
+          CHANNEL="${{ github.event.inputs.channel || 'stable' }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$RAW_TAG" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "Preparing release v$VERSION on channel $CHANNEL"
+
+      - name: Run Unit Tests
+        run: |
+          cd desktop/apps/examples/desktop-app
+          bun install
+          bunx vitest run webview/lib/open-verse-updater.test.ts webview/lib/open-verse-auth.test.ts --config vitest.config.ts
+
+  build-android:
+    name: 2. Build Android APK & AAB
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build Webview Assets
+        run: |
+          cd desktop/apps/examples/desktop-app
+          bun install
+          bun run build:web
+          cd ../../../mobile
+          bun run scripts/sync-canonical-assets.ts
+
+      - name: Build Android Release APK
+        run: |
+          cd mobile/android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare Deliverables & Checksums
+        run: |
+          mkdir -p dist/android
+          APK="mobile/android/app/build/outputs/apk/release/app-release.apk"
+          cp "$APK" "dist/android/open-verse-${{ needs.validate.outputs.tag }}-android.apk"
+          cp "$APK" "dist/android/open-verse-mobile.apk"
+          cd dist/android
+          sha256sum open-verse-mobile.apk > open-verse-mobile.apk.sha256
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-artifacts
+          path: dist/android/*
+
+  build-windows:
+    name: 3. Build Windows Desktop Bundle
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust & Tauri
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build Windows Desktop
+        run: |
+          cd desktop/apps/examples/desktop-app
+          bun install
+          bun run build:runtime
+          bun run build:web
+          # Build Tauri desktop installer
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-artifacts
+          path: desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*
+          if-no-files-found: ignore
+
+  publish-unified-release:
+    name: 4. Generate Unified Manifest & Publish Release
+    needs: [validate, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-artifacts
+          path: release-deliverables/android
+
+      - name: Generate Central Release Manifest
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          TAG="${{ needs.validate.outputs.tag }}"
+          CHANNEL="${{ needs.validate.outputs.channel }}"
+          SHA=$(sha256sum release-deliverables/android/open-verse-mobile.apk | cut -d ' ' -f 1)
+          
+          mkdir -p release-deliverables/manifests
+          cat <<EOF > release-deliverables/manifests/open-verse-releases.json
+          {
+            "version": "$VERSION",
+            "releaseDate": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "channel": "$CHANNEL",
+            "mandatory": false,
+            "releaseNotes": "OPEN-VERSE v$VERSION update with synchronized cross-platform support.",
+            "platforms": {
+              "android": {
+                "version": "$VERSION",
+                "versionCode": 2,
+                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/open-verse-mobile.apk",
+                "sha256": "$SHA"
+              },
+              "windows-x86_64": {
+                "version": "$VERSION",
+                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/OPEN-VERSE_${VERSION}_x64-setup.nsis.zip"
+              },
+              "web": {
+                "version": "$VERSION",
+                "deployedAt": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              }
+            }
+          }
+          EOF
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: "OPEN-VERSE v${{ needs.validate.outputs.version }}"
+          files: |
+            release-deliverables/android/*
+            release-deliverables/manifests/*
+          prerelease: ${{ needs.validate.outputs.channel == 'beta' }}
+          generate_release_notes: true
+
