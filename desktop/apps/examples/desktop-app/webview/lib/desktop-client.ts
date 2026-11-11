@@ -1326,12 +1326,20 @@ class DesktopClient {
 		args?: Record<string, unknown>,
 	): Promise<T> {
 		switch (command) {
-			case "get_process_context":
+			case "get_process_context": {
+				let dynamicVer = "0.2.2";
+				if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
+					try {
+						const v = (window as any).AndroidInterface.getAppVersion();
+						if (v) dynamicVer = v;
+					} catch {}
+				}
 				return {
-					appVersion: "0.2.0",
+					appVersion: dynamicVer,
 					isMobile: isMobileEnvironment(),
 					hub: { state: "ready", status: "connected", url: "standalone://local" },
 				} as T;
+			}
 			case "get_feature_flags":
 				return { flags: {} } as T;
 			case "get_source_control_state":
@@ -1564,19 +1572,37 @@ class DesktopClient {
 				} as T;
 			}
 			case "get_update_status":
-			case "check_for_update_now":
+			case "check_for_update_now": {
+				let dynamicVer = "0.2.2";
+				if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
+					try {
+						const v = (window as any).AndroidInterface.getAppVersion();
+						if (v) dynamicVer = v;
+					} catch {}
+				}
 				return {
 					state: "idle",
 					isChecking: false,
 					isAvailable: false,
 					available: false,
-					version: "0.2.0",
+					version: dynamicVer,
 				} as T;
+			}
 			case "restart_to_apply_update": {
 				if (typeof window !== "undefined" && "AndroidInterface" in window) {
-					const android = (window as unknown as { AndroidInterface: { downloadAndInstallApk: (u: string) => void } }).AndroidInterface;
-					if (typeof android.downloadAndInstallApk === "function") {
-						android.downloadAndInstallApk("https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.0/open-verse-mobile.apk");
+					const android = (window as unknown as {
+						AndroidInterface: {
+							downloadAndInstallApkWithChecksum?: (u: string, s: string, v: number) => void;
+							downloadAndInstallApk: (u: string) => void;
+						};
+					}).AndroidInterface;
+					const apkUrl = "https://open-verse-website.vercel.app/open-verse-mobile.apk";
+					const sha256 = "8cce5d94bfa3066daac5ae0361e125a8294fac1f3dd390f7cef0c47366d0308c";
+					if (typeof android.downloadAndInstallApkWithChecksum === "function") {
+						android.downloadAndInstallApkWithChecksum(apkUrl, sha256, 4);
+						return true as T;
+					} else if (typeof android.downloadAndInstallApk === "function") {
+						android.downloadAndInstallApk(apkUrl);
 						return true as T;
 					}
 				}

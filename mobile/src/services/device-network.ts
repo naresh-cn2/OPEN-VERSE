@@ -193,7 +193,7 @@ class MobileDeviceNetwork {
 					deviceName: this.deviceName,
 					platform: this.platform,
 					capabilities: this.getLocalCapabilities(),
-					appVersion: "0.2.0",
+					appVersion: typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion ? (window as any).AndroidInterface.getAppVersion() : "0.2.2",
 				}),
 			});
 

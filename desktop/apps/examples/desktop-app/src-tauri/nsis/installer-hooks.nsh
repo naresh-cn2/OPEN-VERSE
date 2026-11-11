@@ -23,19 +23,39 @@
       Goto failed ; no session to end
     ${EndIf}
 
-    !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\${MAINBINARYNAME}.exe"
-    ${If} $0 != 0
-      Goto end_session
+    ${If} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\${MAINBINARYNAME}.exe"
+      ${If} $0 != 0
+        Goto end_session
+      ${EndIf}
     ${EndIf}
 
-    !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\cline-cli.exe"
-    ${If} $0 != 0
-      Goto end_session
+    ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
+      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\OPEN-VERSE.exe"
+      ${If} $0 != 0
+        Goto end_session
+      ${EndIf}
     ${EndIf}
 
-    !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\code-sidecar.exe"
-    ${If} $0 != 0
-      Goto end_session
+    ${If} ${FileExists} "$INSTDIR\cline-app.exe"
+      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\cline-app.exe"
+      ${If} $0 != 0
+        Goto end_session
+      ${EndIf}
+    ${EndIf}
+
+    ${If} ${FileExists} "$INSTDIR\cline-cli.exe"
+      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\cline-cli.exe"
+      ${If} $0 != 0
+        Goto end_session
+      ${EndIf}
+    ${EndIf}
+
+    ${If} ${FileExists} "$INSTDIR\code-sidecar.exe"
+      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\code-sidecar.exe"
+      ${If} $0 != 0
+        Goto end_session
+      ${EndIf}
     ${EndIf}
 
     StrCpy $3 0
@@ -55,13 +75,13 @@
     ${EndIf}
 
   failed:
-    DetailPrint "Could not stop Cline processes in $INSTDIR (Restart Manager error $0)."
+    DetailPrint "Could not stop OPEN-VERSE processes in $INSTDIR (Restart Manager error $0)."
     ; Tauri's updater runs the installer passive (/P): the user who clicked
     ; "Restart now" is watching, and NSIS's own write-failure dialog would
     ; have shown in that mode anyway, so offer a retry. Silent (/S) takes
     ; the default and fails closed. Aborting rather than continuing keeps
     ; the install from ending half-replaced.
-    MessageBox MB_RETRYCANCEL|MB_ICONSTOP "Could not stop Cline processes using files in:$\r$\n$INSTDIR$\r$\n$\r$\nClose Cline and its background tasks, then retry. Windows error: $0." /SD IDCANCEL IDRETRY retry
+    MessageBox MB_RETRYCANCEL|MB_ICONSTOP "Could not stop OPEN-VERSE processes using files in:$\r$\n$INSTDIR$\r$\n$\r$\nClose OPEN-VERSE and its background tasks, then retry. Windows error: $0." /SD IDCANCEL IDRETRY retry
     Pop $4
     Pop $3
     Pop $2
@@ -73,6 +93,12 @@
   done:
     ; Nothing installs the earlier backend executable any more.
     Delete "$INSTDIR\code-sidecar.exe"
+    ; Clean up legacy binary so it is not accidentally relaunched
+    ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
+      ${If} ${FileExists} "$INSTDIR\cline-app.exe"
+        Delete "$INSTDIR\cline-app.exe"
+      ${EndIf}
+    ${EndIf}
     Pop $4
     Pop $3
     Pop $2

@@ -59,9 +59,12 @@ function UpdateAction() {
 
 	const busy =
 		checking || status.state === "checking" || status.state === "downloading";
+	const isAndroid = typeof window !== "undefined" && Boolean((window as any).AndroidInterface);
 	const description =
 		status.state === "ready"
-			? `Version ${status.version} is downloaded and will be used the next time Cline starts.`
+			? isAndroid
+				? `Update version ${status.version ?? ""} is ready to install.`
+				: `Version ${status.version ?? ""} is downloaded and will be used the next time OPEN-VERSE starts.`
 			: status.state === "downloading"
 				? `Downloading version ${status.version ?? ""}…`
 				: status.state === "error" && status.error
@@ -88,7 +91,7 @@ function UpdateAction() {
 					type="button"
 				>
 					{restarting ? <Loader2 className="size-3 animate-spin" /> : null}
-					Restart to update
+					{isAndroid ? "Install Update" : "Restart to update"}
 				</Button>
 			) : (
 				<Button

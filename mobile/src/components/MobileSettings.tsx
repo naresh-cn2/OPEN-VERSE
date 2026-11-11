@@ -37,6 +37,9 @@ export function MobileSettings({
   onUserChange,
   onProviderConfigChange,
 }: MobileSettingsProps) {
+  const appVersion = typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion 
+    ? (window as any).AndroidInterface.getAppVersion() 
+    : "0.2.2";
   const [providerKeys, setProviderKeys] = useState<ModelProviderKeys>(getStoredProviderKeys());
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -74,7 +77,7 @@ export function MobileSettings({
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-white text-base">Settings</h3>
             <span className="rounded bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-mono text-violet-400 border border-violet-500/20">
-              v0.2.0
+              v{appVersion}
             </span>
           </div>
           <button onClick={onClose} className="p-1 text-zinc-400 hover:text-white">

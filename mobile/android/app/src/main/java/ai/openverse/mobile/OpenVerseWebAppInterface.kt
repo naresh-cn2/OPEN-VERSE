@@ -44,10 +44,10 @@ class OpenVerseWebAppInterface(private val context: Context) {
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            pInfo.versionName ?: "0.2.1"
+            pInfo.versionName ?: "0.2.2"
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read installed package versionName", e)
-            "0.2.1"
+            "0.2.2"
         }
     }
 
@@ -68,7 +68,7 @@ class OpenVerseWebAppInterface(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read installed package versionCode", e)
-            3L
+            4L
         }
     }
 
@@ -220,7 +220,7 @@ class OpenVerseWebAppInterface(private val context: Context) {
                 }
 
                 val tempFile = File(updatesDir, "open-verse-update.tmp")
-                val targetFile = File(updatesDir, "open-verse-v0.2.1.apk")
+                val targetFile = File(updatesDir, "open-verse-update.apk")
 
                 if (tempFile.exists()) tempFile.delete()
 
@@ -307,6 +307,12 @@ class OpenVerseWebAppInterface(private val context: Context) {
                     targetFile.delete()
                     showToast("Application is already at a newer version ($currentCode > $archiveVersionCode).")
                     Log.w(TAG, "Archive versionCode ($archiveVersionCode) is older than installed ($currentCode). Aborting.")
+                    return@Thread
+                }
+                if (archiveVersionCode == currentCode) {
+                    showToast("OPEN-VERSE v${archiveInfo.versionName ?: getAppVersion()} is already up to date.")
+                    Log.i(TAG, "Application is already at this version ($currentCode == $archiveVersionCode).")
+                    targetFile.delete()
                     return@Thread
                 }
 
@@ -408,14 +414,33 @@ class OpenVerseWebAppInterface(private val context: Context) {
 
             val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(apkUri, "application/vnd.android.package-archive")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                clipData = android.content.ClipData.newRawUri("OPEN-VERSE Update", apkUri)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
             }
 
-            // Explicitly grant read uri permission to all resolving installer activities
-            val resolvedList = context.packageManager.queryIntentActivities(installIntent, PackageManager.MATCH_DEFAULT_ONLY)
-            for (resolveInfo in resolvedList) {
-                context.grantUriPermission(resolveInfo.activityInfo.packageName, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            // Explicitly grant read uri permission to system package installer packages
+            val installerPackages = listOf(
+                "com.google.android.packageinstaller",
+                "com.android.packageinstaller",
+                "com.google.android.permissioncontroller"
+            )
+            for (pkg in installerPackages) {
+                try {
+                    context.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: Exception) {}
             }
+
+            // Also grant to any resolving package
+            try {
+                val resolvedList = context.packageManager.queryIntentActivities(installIntent, PackageManager.MATCH_DEFAULT_ONLY)
+                for (resolveInfo in resolvedList) {
+                    try {
+                        context.grantUriPermission(resolveInfo.activityInfo.packageName, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
 
             Log.i(TAG, "Launching Android PackageInstaller intent with URI: $apkUri")
             context.startActivity(installIntent)

@@ -29,6 +29,9 @@ export function MobileHeader({
   activeModel,
   user,
 }: MobileHeaderProps) {
+  const appVersion = typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion 
+    ? (window as any).AndroidInterface.getAppVersion() 
+    : "0.2.2";
   const initial = user?.displayName?.charAt(0).toUpperCase() || (user?.isOfflineMode ? "L" : "O");
 
   return (
@@ -52,7 +55,7 @@ export function MobileHeader({
                 OPEN-VERSE
               </span>
               <span className="rounded bg-violet-500/10 px-1 py-0.2 text-[9px] font-mono text-violet-400 border border-violet-500/20">
-                v0.2.0
+                v{appVersion}
               </span>
             </div>
             <span className="text-[10px] text-zinc-500 leading-none mt-0.5 font-medium">
