@@ -80,17 +80,16 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Webview Assets
+      - name: Ensure Canonical Assets Synced
         run: |
-          cd desktop/apps/examples/desktop-app
-          bun install
-          bun run build:web
-          cd "$GITHUB_WORKSPACE"
-          bun mobile/scripts/sync-canonical-assets.ts
+          mkdir -p mobile/android/app/src/main/assets
+          if [ -d "desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
+          fi
 
       - name: Build Android Release APK
         run: |
-          cd "$GITHUB_WORKSPACE/mobile/android"
+          cd mobile/android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
