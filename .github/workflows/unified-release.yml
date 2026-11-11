@@ -85,12 +85,12 @@ jobs:
           cd desktop/apps/examples/desktop-app
           bun install
           bun run build:web
-          cd ../../../mobile
-          bun run scripts/sync-canonical-assets.ts
+          cd "$GITHUB_WORKSPACE"
+          bun mobile/scripts/sync-canonical-assets.ts
 
       - name: Build Android Release APK
         run: |
-          cd mobile/android
+          cd "$GITHUB_WORKSPACE/mobile/android"
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
