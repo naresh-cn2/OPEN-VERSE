@@ -11,6 +11,7 @@ import {
 	readCloudRepositorySelection,
 	writeCloudRepositorySelection,
 } from "@/lib/cloud-repositories";
+import { resetProviderOAuthStateForTests } from "@/lib/provider-connection";
 import { WelcomeScreen } from "./welcome-chat";
 
 const { invokeMock, subscribeMock, accountRef, openExternalUrlMock } =
@@ -61,6 +62,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+	resetProviderOAuthStateForTests();
 	window.localStorage.clear();
 	accountRef.user = null;
 	accountRef.activeOrganization = null;
@@ -80,6 +82,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+	resetProviderOAuthStateForTests();
 	await act(async () => root.unmount());
 	container.remove();
 	vi.restoreAllMocks();
@@ -161,8 +164,8 @@ describe("WelcomeScreen", () => {
 		"cancel",
 	])("waits for both requests before retry when %s settles first", async (first) => {
 		invokeMock.mockReset();
-		let finishCancel!: () => void;
-		let rejectLogin!: (error: Error) => void;
+		let finishCancel: () => void = () => {};
+		let rejectLogin: (error: Error) => void = () => {};
 		invokeMock.mockImplementation(async (command) => {
 			if (command === "run_provider_oauth_login")
 				return await new Promise((_, reject) => {

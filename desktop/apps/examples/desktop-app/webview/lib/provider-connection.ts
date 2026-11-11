@@ -34,6 +34,11 @@ export const OAUTH_LOGIN_TIMEOUT_MS = 15 * 60_000;
 let pendingClineCancellation: Promise<unknown> | null = null;
 const activeLoginPromises = new Map<string, Promise<{ provider: string; accessToken: string }>>();
 
+export function resetProviderOAuthStateForTests(): void {
+	activeLoginPromises.clear();
+	pendingClineCancellation = null;
+}
+
 export function cancelClineOAuthLogin(): Promise<unknown> {
 	activeLoginPromises.delete("cline");
 	if (!pendingClineCancellation) {
