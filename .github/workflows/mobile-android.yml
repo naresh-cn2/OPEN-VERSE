@@ -51,10 +51,10 @@ jobs:
       - name: Rename and Prepare Deliverables
         run: |
           mkdir -p mobile/artifacts
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v0.2.0.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v0.2.1.apk
           cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile.apk
           if [ -f mobile/android/app/build/outputs/bundle/release/app-release.aab ]; then
-            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v0.2.0.aab
+            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v0.2.1.aab
             cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile.aab
           fi
           cd mobile/artifacts
@@ -79,6 +79,6 @@ jobs:
       - name: Publish to GitHub Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: v0.2.0
+          RELEASE_TAG: v0.2.1
         run: |
           bun run mobile/scripts/publish-android-release.ts

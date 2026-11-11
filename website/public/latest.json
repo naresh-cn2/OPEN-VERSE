@@ -1,11 +1,11 @@
 {
   "version": "v0.2.1",
   "notes": "• Unified cross-platform cloud synchronization\n• In-app automatic update delivery for all devices\n• Direct mobile APK installer support",
-  "pub_date": "2026-11-10T15:25:00Z",
+  "pub_date": "2026-11-11T03:04:33.267Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENUJENEE1ODRBQ0QzQzMKUldURDA2eUVwZFJiVGJmWjduOFk4VTBnVTVLL2pDRWJLV3lySXlEeHlXRThZTEVCMGorQ0ZMTUcK",
-      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.0/OPEN-VERSE_0.2.0_x64-setup.nsis.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFFsOStLSS9wWXZ2MWVyemxtblhHd2M2cVdkUHFkN09xQ1ppWnRQeDFnMHRObjkvZkkxU2FTbENYbklrcm5EYjloLy9ET0VXN3A4R0tKZWJFanlYVVFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0MzY2MjcyCWZpbGU6T1BFTi1WRVJTRV8wLjIuMV94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjEKSHJPc2x5cml3Vk13SnhMeFJzb3B3SW5lR1hkT3k4MEJaSUNPT0Z0Q3lTb2s3UitEYkpzMWtmM3dtNnFZVWNKdjBQQ3djS2FFM2lUZkhOaytDUGVJQ3c9PQo=",
+      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.1/OPEN-VERSE_0.2.1_x64-setup.exe"
     }
   }
 }

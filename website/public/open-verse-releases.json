@@ -7,14 +7,14 @@
   "platforms": {
     "windows-x86_64": {
       "version": "0.2.1",
-      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.0/OPEN-VERSE_0.2.0_x64-setup.nsis.zip",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRENUJENEE1ODRBQ0QzQzMKUldURDA2eUVwZFJiVGJmWjduOFk4VTBnVTVLL2pDRWJLV3lySXlEeHlXRThZTEVCMGorQ0ZMTUcK"
+      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.1/OPEN-VERSE_0.2.1_x64-setup.exe",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFFsOStLSS9wWXZ2MWVyemxtblhHd2M2cVdkUHFkN09xQ1ppWnRQeDFnMHRObjkvZkkxU2FTbENYbklrcm5EYjloLy9ET0VXN3A4R0tKZWJFanlYVVFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0MzY2MjcyCWZpbGU6T1BFTi1WRVJTRV8wLjIuMV94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjEKSHJPc2x5cml3Vk13SnhMeFJzb3B3SW5lR1hkT3k4MEJaSUNPT0Z0Q3lTb2s3UitEYkpzMWtmM3dtNnFZVWNKdjBQQ3djS2FFM2lUZkhOaytDUGVJQ3c9PQo="
     },
     "android": {
       "version": "0.2.1",
       "versionCode": 3,
       "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      "sha256": "fc090cb04cb40bce8eefbe6a5392ee5c8715c9c7d2265328845acdb2a408317b",
+      "sha256": "faf90f86c3876ef33394468b1719e2a168c52caa6d27e8f8adbe7efd058b6adc",
       "minSdk": 26
     },
     "ios": {
