@@ -1,7 +1,7 @@
 {
   "userId": "ov-github-naresh-test",
   "email": "naresh-cn2@github.internal",
-  "lastSyncTimestamp": 1794416909927,
+  "lastSyncTimestamp": 1794417248677,
   "sessions": {
     "sess_github_1794362203079": {
       "id": "sess_github_1794362203079",
@@ -74,6 +74,15 @@
       "model": "gemini-2.5-flash",
       "startedAt": "2026-11-11T17:08:29.927Z",
       "lastActivityAt": "2026-11-11T17:08:29.927Z"
+    },
+    "sess_github_1794417248677": {
+      "id": "sess_github_1794417248677",
+      "sessionId": "sess_github_1794417248677",
+      "title": "Private GitHub Account Task",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
+      "startedAt": "2026-11-11T17:14:08.677Z",
+      "lastActivityAt": "2026-11-11T17:14:08.677Z"
     }
   },
   "messages": {},
