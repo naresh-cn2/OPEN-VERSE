@@ -43,9 +43,10 @@ export interface UpdateCheckResult {
 	releaseNotes: string;
 	downloadUrl?: string;
 	platform: "android" | "desktop-windows" | "desktop-mac" | "desktop-linux" | "ios" | "web";
+	manifest?: UnifiedReleaseInfo;
 }
 
-export const CURRENT_APP_VERSION = "0.2.0";
+export const CURRENT_APP_VERSION = "0.2.1";
 
 export function detectPlatform(): UpdateCheckResult["platform"] {
 	if (typeof window === "undefined") return "web";
@@ -133,18 +134,37 @@ export async function fetchReleaseManifest(): Promise<UnifiedReleaseInfo> {
 export async function checkForAppUpdate(): Promise<UpdateCheckResult> {
 	const platform = detectPlatform();
 	let currentVer = CURRENT_APP_VERSION;
+	let currentVersionCode: number | null = null;
 
-	// In Android, try reading native app version if available
+	// In Android, try reading live installed app version & versionCode from native PackageManager
 	if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
 		try {
 			const nativeVer = (window as any).AndroidInterface.getAppVersion();
 			if (nativeVer) currentVer = nativeVer;
 		} catch {}
 	}
+	if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersionCode) {
+		try {
+			const nativeCode = Number((window as any).AndroidInterface.getAppVersionCode());
+			if (Number.isFinite(nativeCode) && nativeCode > 0) currentVersionCode = nativeCode;
+		} catch {}
+	}
 
 	const manifest = await fetchReleaseManifest();
 	const latestVer = manifest.version;
-	const isHigher = compareVersions(currentVer, latestVer) > 0;
+	let isHigher = compareVersions(currentVer, latestVer) > 0;
+
+	// In Android, if manifest specifies versionCode and we have native versionCode, also verify code
+	if (platform === "android" && manifest.platforms.android?.versionCode && currentVersionCode !== null) {
+		if (currentVersionCode >= manifest.platforms.android.versionCode) {
+			isHigher = false;
+		}
+	}
+
+	// Prevent loop if current version matches or exceeds latest
+	if (compareVersions(currentVer, latestVer) <= 0 && isHigher === false) {
+		isHigher = false;
+	}
 
 	let downloadUrl: string | undefined;
 
@@ -183,6 +203,7 @@ export async function checkForAppUpdate(): Promise<UpdateCheckResult> {
 		releaseNotes: manifest.releaseNotes || "Performance improvements and bug fixes.",
 		downloadUrl,
 		platform,
+		manifest,
 	};
 }
 
@@ -196,12 +217,20 @@ export async function installAvailableUpdate(
 		throw new Error("No download URL available for this platform.");
 	}
 
-	// 1. Android: Trigger native DownloadManager + PackageInstaller bridge
+	// 1. Android: Trigger verified native PackageInstaller bridge with checksum & versionCode
 	if (
 		typeof window !== "undefined" &&
 		(window as any).AndroidInterface?.downloadAndInstallApk
 	) {
-		(window as any).AndroidInterface.downloadAndInstallApk(info.downloadUrl);
+		const androidPlatform = info.manifest?.platforms?.android;
+		const sha256 = androidPlatform?.sha256;
+		const versionCode = androidPlatform?.versionCode || 0;
+
+		if (sha256 && typeof (window as any).AndroidInterface.downloadAndInstallApkWithChecksum === "function") {
+			(window as any).AndroidInterface.downloadAndInstallApkWithChecksum(info.downloadUrl, sha256, versionCode);
+		} else {
+			(window as any).AndroidInterface.downloadAndInstallApk(info.downloadUrl);
+		}
 		return {
 			success: true,
 			message: "Downloading update. You will be prompted to confirm installation.",

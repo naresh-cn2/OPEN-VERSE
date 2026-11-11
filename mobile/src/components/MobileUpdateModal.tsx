@@ -16,7 +16,9 @@ export function MobileUpdateModal({
   if (!isOpen || !updateInfo || !updateInfo.available) return null;
 
   const handleUpdate = () => {
-    if (window.AndroidInterface && typeof window.AndroidInterface.downloadAndInstallApk === "function") {
+    if (window.AndroidInterface && typeof (window.AndroidInterface as any).downloadAndInstallApkWithChecksum === "function" && updateInfo.sha256) {
+      (window.AndroidInterface as any).downloadAndInstallApkWithChecksum(updateInfo.downloadUrl, updateInfo.sha256, updateInfo.versionCode || 0);
+    } else if (window.AndroidInterface && typeof window.AndroidInterface.downloadAndInstallApk === "function") {
       window.AndroidInterface.downloadAndInstallApk(updateInfo.downloadUrl);
     } else if (window.AndroidInterface && typeof window.AndroidInterface.openExternalUrl === "function") {
       window.AndroidInterface.openExternalUrl(updateInfo.downloadUrl);

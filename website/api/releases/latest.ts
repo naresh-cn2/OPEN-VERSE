@@ -50,7 +50,7 @@ export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
       version: "0.2.1",
       versionCode: 3,
       url: "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      sha256: "faf90f86c3876ef33394468b1719e2a168c52caa6d27e8f8adbe7efd058b6adc",
+      sha256: "b27de9be2787706b13a09364317322df6f6632b807a00d35fcae4a76f7e20519",
       minSdk: 26
     },
     ios: {

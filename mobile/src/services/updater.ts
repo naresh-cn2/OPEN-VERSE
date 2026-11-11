@@ -10,30 +10,58 @@ export interface MobileUpdateInfo {
   releaseNotes?: string;
   downloadUrl: string;
   publishedAt?: string;
+  sha256?: string;
+  versionCode?: number;
 }
 
-export const CURRENT_MOBILE_VERSION = "0.2.0";
-const UPDATE_FEED_URL = "https://raw.githubusercontent.com/naresh-cn2/OPEN-VERSE/main/desktop/latest.json";
+export const CURRENT_MOBILE_VERSION = "0.2.1";
+const UPDATE_FEED_URL = "https://open-verse-website.vercel.app/api/releases/latest";
 const GITHUB_RELEASE_API = "https://api.github.com/repos/naresh-cn2/OPEN-VERSE/releases/tags/desktop-latest";
 
 export async function checkMobileUpdate(): Promise<MobileUpdateInfo> {
+  let installedVersion = CURRENT_MOBILE_VERSION;
+  let installedVersionCode: number | null = null;
+
+  if (typeof window !== "undefined" && window.AndroidInterface?.getAppVersion) {
+    try {
+      const v = window.AndroidInterface.getAppVersion();
+      if (v) installedVersion = v;
+    } catch {}
+  }
+
+  if (typeof window !== "undefined" && (window.AndroidInterface as any)?.getAppVersionCode) {
+    try {
+      const code = Number((window.AndroidInterface as any).getAppVersionCode());
+      if (Number.isFinite(code) && code > 0) installedVersionCode = code;
+    } catch {}
+  }
+
   const result: MobileUpdateInfo = {
     available: false,
-    currentVersion: CURRENT_MOBILE_VERSION,
-    latestVersion: CURRENT_MOBILE_VERSION,
-    downloadUrl: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v${CURRENT_MOBILE_VERSION}/open-verse-mobile.apk`,
+    currentVersion: installedVersion,
+    latestVersion: installedVersion,
+    downloadUrl: `https://open-verse-website.vercel.app/open-verse-mobile.apk`,
   };
 
   try {
-    // 1. Try reading official feed
+    // 1. Try reading official unified release manifest
     const res = await fetch(UPDATE_FEED_URL, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data && data.version) {
         result.latestVersion = data.version.replace(/^v/, "");
-        result.releaseNotes = data.notes || "New performance improvements and features.";
-        result.downloadUrl = "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/open-verse-mobile.apk";
-        result.available = compareVersions(result.latestVersion, CURRENT_MOBILE_VERSION) > 0;
+        result.releaseNotes = data.releaseNotes || data.notes || "New performance improvements and features.";
+        result.downloadUrl = data.platforms?.android?.url || "https://open-verse-website.vercel.app/open-verse-mobile.apk";
+        result.sha256 = data.platforms?.android?.sha256;
+        result.versionCode = data.platforms?.android?.versionCode;
+
+        let hasNewerVersion = compareVersions(result.latestVersion, installedVersion) > 0;
+        if (result.versionCode && installedVersionCode !== null) {
+          if (installedVersionCode >= result.versionCode) {
+            hasNewerVersion = false;
+          }
+        }
+        result.available = hasNewerVersion;
         return result;
       }
     }

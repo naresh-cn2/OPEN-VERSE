@@ -164,8 +164,31 @@ export async function restartToApplyUpdate(): Promise<boolean> {
 // already dismissed while the Rust side still reports it as "ready".
 let notifiedVersion: string | null = null;
 
-function showUpdateReadyToast(version: string) {
+function showUpdateReadyToast(version: string, platform?: string) {
 	notifiedVersion = version;
+	const isAndroid = platform === "android" || (typeof window !== "undefined" && Boolean((window as any).AndroidInterface));
+
+	if (isAndroid) {
+		toast({
+			title: `Update available: v${version}`,
+			description:
+				"A new version of OPEN-VERSE is available. Tap below to download and install.",
+			duration: 15_000,
+			className: "flex-col items-start gap-3 space-x-0",
+			action: (
+				<ToastAction
+					altText="Update now"
+					onClick={() => {
+						void restartToApplyUpdate();
+					}}
+				>
+					Update now
+				</ToastAction>
+			),
+		});
+		return;
+	}
+
 	toast({
 		title: `Update ready: v${version}`,
 		description:
@@ -209,7 +232,7 @@ export async function checkForUpdateAndNotify(): Promise<void> {
 	switch (status.state) {
 		case "ready":
 			if (status.version) {
-				showUpdateReadyToast(status.version);
+				showUpdateReadyToast(status.version, status.details?.platform);
 			}
 			return;
 		case "error":
@@ -253,7 +276,7 @@ export function useAppUpdate() {
 				setUpdateStatus(status);
 				if (status.state !== "ready" || !status.version) return;
 				if (notifiedVersion === status.version) return;
-				showUpdateReadyToast(status.version);
+				showUpdateReadyToast(status.version, "desktop");
 				return;
 			}
 
@@ -269,7 +292,7 @@ export function useAppUpdate() {
 					};
 					setUpdateStatus(status);
 					if (notifiedVersion !== result.latestVersion) {
-						showUpdateReadyToast(result.latestVersion);
+						showUpdateReadyToast(result.latestVersion, result.platform);
 					}
 				}
 			} catch {

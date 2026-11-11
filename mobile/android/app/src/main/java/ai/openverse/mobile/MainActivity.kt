@@ -21,6 +21,7 @@ import java.io.InputStream
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var webAppInterface: OpenVerseWebAppInterface
 
     companion object {
         private const val TAG = "OPEN-VERSE-Native"
@@ -50,6 +51,20 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(ASSET_URL)
     }
 
+    fun getInstalledVersionName(): String {
+        return try {
+            val pInfo = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0)
+            }
+            pInfo.versionName ?: "0.2.1"
+        } catch (_: Exception) {
+            "0.2.1"
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebViewSettings() {
         val settings = webView.settings
@@ -69,12 +84,13 @@ class MainActivity : AppCompatActivity() {
         settings.loadWithOverviewMode = true
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-        // Enhance User Agent with OPEN-VERSE signature
+        // Enhance User Agent with OPEN-VERSE signature & live installed version
         val defaultUserAgent = settings.userAgentString
-        settings.userAgentString = "$defaultUserAgent OPEN-VERSE-Mobile/0.2.0"
+        settings.userAgentString = "$defaultUserAgent OPEN-VERSE-Mobile/${getInstalledVersionName()}"
 
         // Register Native JavaScript Bridge before loading URL
-        webView.addJavascriptInterface(OpenVerseWebAppInterface(this), "AndroidInterface")
+        webAppInterface = OpenVerseWebAppInterface(this)
+        webView.addJavascriptInterface(webAppInterface, "AndroidInterface")
     }
 
     private fun setupWebViewClients() {
@@ -262,6 +278,22 @@ class MainActivity : AppCompatActivity() {
             }
         """.trimIndent()
         webView.evaluateJavascript(js, null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // If an update was downloaded and user returned from Unknown Sources settings, resume install
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && packageManager.canRequestPackageInstalls()) {
+            val prefs = getSharedPreferences(OpenVerseWebAppInterface.UPDATE_PREFS, MODE_PRIVATE)
+            val pendingPath = prefs.getString(OpenVerseWebAppInterface.KEY_PENDING_APK, null)
+            if (!pendingPath.isNullOrEmpty()) {
+                val apkFile = java.io.File(pendingPath)
+                if (apkFile.exists() && ::webAppInterface.isInitialized) {
+                    Log.i(TAG, "Resuming pending update install after permission granted")
+                    webAppInterface.launchApkInstaller(apkFile)
+                }
+            }
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
