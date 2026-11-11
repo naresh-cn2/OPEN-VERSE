@@ -33,7 +33,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   // Release versions — updated via release automation
-  const DESKTOP_VERSION = "0.2.0";
+  const DESKTOP_VERSION = "0.2.2";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
   // Direct download assets hosted on GitHub Releases (backend binary host only)
@@ -47,7 +47,7 @@ export const DownloadCenter: React.FC = () => {
     linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm.sig`,
     androidApk: "/open-verse-mobile.apk",
-    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v0.2.0.zip`,
+    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
   };
 
   // File metadata (size + checksum) — updated via release automation
@@ -79,7 +79,7 @@ export const DownloadCenter: React.FC = () => {
     android: {
       name: `open-verse-mobile.apk`,
       size: "10.4 MB",
-      sha256: "fc090cb04cb40bce8eefbe6a5392ee5c8715c9c7d2265328845acdb2a408317b",
+      sha256: "355eb75b60ace20c1e605fe4f4e19d570a777d03e6b907bddda601252e1222a8",
       available: true,
     },
     ios: {
@@ -230,7 +230,7 @@ export const DownloadCenter: React.FC = () => {
                 <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>1. Download OPEN-VERSE_0.2.0_x64-setup.exe</span>
+                <span>1. Download {FILE_META.windows.name}</span>
                 <span>2. Run the installer and follow the prompts</span>
                 <span>3. Launch OPEN-VERSE from your Start menu</span>
                 <span>4. The app will auto-check for updates on future launches</span>
@@ -292,7 +292,7 @@ export const DownloadCenter: React.FC = () => {
                 <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>1. Download OPEN-VERSE_0.2.0_aarch64.dmg</span>
+                <span>1. Download {FILE_META.mac.name}</span>
                 <span>2. Open the disk image and drag OPEN-VERSE to your Applications folder</span>
                 <span>3. Ad-hoc build: If prompted by macOS Gatekeeper, run:</span>
                 <span>   sudo xattr -cr /Applications/OPEN-VERSE.app</span>
@@ -392,8 +392,8 @@ export const DownloadCenter: React.FC = () => {
                 <span>Installation Instructions</span>
               </div>
               <div className="code-box">
-                <span>Debian/Ubuntu: sudo dpkg -i OPEN-VERSE_0.2.0_amd64.deb</span>
-                <span>Fedora/RHEL: sudo rpm -i OPEN-VERSE-0.2.0-1.x86_64.rpm</span>
+                <span>Debian/Ubuntu: sudo dpkg -i {FILE_META.linuxDeb.name}</span>
+                <span>Fedora/RHEL: sudo rpm -i {FILE_META.linuxRpm.name}</span>
                 <span>Launch: cline-app (or select OPEN-VERSE in application launcher)</span>
               </div>
             </div>
@@ -465,7 +465,7 @@ export const DownloadCenter: React.FC = () => {
                   </a>
                   <a
                     href={ASSETS.androidZip}
-                    download="open-verse-mobile-v0.2.0.zip"
+                    download={`open-verse-mobile-v${DESKTOP_VERSION}.zip`}
                     style={{
                       display: "flex",
                       alignItems: "center",

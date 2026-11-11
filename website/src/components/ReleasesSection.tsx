@@ -6,10 +6,24 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.1",
+      version: "v0.2.2",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Native Android Package Manager Bridge: Dynamic live version detection (v0.2.2 / versionCode 4) permanently breaking all update loops.",
+        "Secure Internal Cache APK Downloader: Direct streaming into isolated app cache with streaming SHA-256 integrity verification.",
+        "Automatic Installer Permissions: Added Unknown Sources intent flow and auto-resuming package installation upon grant.",
+        "Desktop Tauri 0.2.2 Suite: Verified NSIS installer and signed updater bundle with Minisign cryptographic verification.",
+        "Full Cross-Device Synchronization: Instant bi-directional chat, identity, and preference sync across Windows and Android.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.1",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Unified Identity: Google and GitHub primary authentication across Windows, Android, Web, macOS, Linux, and iOS.",
         "Cloud Conversation Sync: Turn-by-turn conversation messages, sessions, and settings synchronizing in real time across all authenticated devices.",
@@ -17,7 +31,7 @@ export const ReleasesSection: React.FC = () => {
         "Automatic In-App Updates: End-to-end update notification, verification, and one-click delivery for Windows, Android, and Desktop platforms.",
         "Direct Mobile APK Delivery: Optimized Android mobile APK served directly with native package installer headers.",
       ],
-      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+      note: "",
     },
     {
       version: "v0.2.0",

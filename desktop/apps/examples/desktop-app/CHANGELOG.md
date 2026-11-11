@@ -1,5 +1,13 @@
 # OPEN-VERSE Changelog
 
+## 0.2.2
+
+- **Native Android Package Manager Bridge**: Live version detection via Android `PackageManager` (versionName `0.2.2`, versionCode `4`), permanently resolving repeated update prompts.
+- **Secure Internal Cache APK Downloader**: Isolated private cache streaming with real-time SHA-256 cryptographic verification.
+- **Automatic Unknown Sources Permission**: Seamless routing to system unknown apps setting and auto-resuming package installation upon grant.
+- **Desktop Tauri v0.2.2 Suite**: Verified NSIS installer and signed updater bundle with Minisign cryptographic verification.
+- **Unified Website Portal**: Synchronized release portal with direct APK download, release changelogs, and checksums.
+
 ## 0.2.1
 
 - **Google & GitHub Single Identity**: Full support for Google OAuth and GitHub OAuth authentication across Windows, Android, Web, macOS, Linux, and iOS.

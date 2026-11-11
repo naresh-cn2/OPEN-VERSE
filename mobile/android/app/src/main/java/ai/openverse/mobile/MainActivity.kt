@@ -59,9 +59,9 @@ class MainActivity : AppCompatActivity() {
                 @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(packageName, 0)
             }
-            pInfo.versionName ?: "0.2.1"
+            pInfo.versionName ?: "0.2.2"
         } catch (_: Exception) {
-            "0.2.1"
+            "0.2.2"
         }
     }
 

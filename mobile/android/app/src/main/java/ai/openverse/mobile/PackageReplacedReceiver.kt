@@ -36,3 +36,4 @@ class PackageReplacedReceiver : BroadcastReceiver() {
         }
     }
 }
+

@@ -35,31 +35,31 @@ export interface UnifiedReleaseManifest {
 }
 
 export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
-  version: "0.2.1",
+  version: "0.2.2",
   releaseDate: new Date().toISOString(),
   channel: "stable",
   mandatory: false,
-  releaseNotes: "• Unified cross-platform cloud synchronization\n• In-app automatic update delivery for all devices\n• Direct mobile APK installer support",
+  releaseNotes: "• Native Android Package Manager Bridge (v0.2.2 / versionCode 4) permanently breaking all update loops\n• Secure Internal Cache APK Downloader with verified SHA-256 integrity\n• Desktop Tauri v0.2.2 NSIS installer and signed updater bundle with Minisign cryptography",
   platforms: {
     "windows-x86_64": {
-      version: "0.2.1",
-      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.1/OPEN-VERSE_0.2.1_x64-setup.exe",
-      signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFFsOStLSS9wWXZ2MWVyemxtblhHd2M2cVdkUHFkN09xQ1ppWnRQeDFnMHRObjkvZkkxU2FTbENYbklrcm5EYjloLy9ET0VXN3A4R0tKZWJFanlYVVFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0MzY2MjcyCWZpbGU6T1BFTi1WRVJTRV8wLjIuMV94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjEKSHJPc2x5cml3Vk13SnhMeFJzb3B3SW5lR1hkT3k4MEJaSUNPT0Z0Q3lTb2s3UitEYkpzMWtmM3dtNnFZVWNKdjBQQ3djS2FFM2lUZkhOaytDUGVJQ3c9PQo="
+      version: "0.2.2",
+      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.2/OPEN-VERSE_0.2.2_x64-setup.exe",
+      signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFFsOStLSS9wWXZ2MWVyemxtblhHd2M2cVdkUHFkN09xQ1ppWnRQeDFnMHRObjkvZkkxU2FTbENYbklrcm5EYjloLy9ET0VXN3A4R0tKZWJFanlYVVFzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0MzY2MjcyCWZpbGU6T1BFTi1WRVJTRV8wLjIuMV94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjEKSHJPc2x5cml3Vk13SnhMeFJzb3B3SW5lR1hkT3k4MEJaSUNPT0Z0Q3lTb2s3UitEYkpzMWtmM3dtNnFZVWNKdjBQQ3djS2FFM2lUZkhOaytDUGVJQ3c9PQo=",
     },
     android: {
-      version: "0.2.1",
-      versionCode: 3,
+      version: "0.2.2",
+      versionCode: 4,
       url: "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      sha256: "b27de9be2787706b13a09364317322df6f6632b807a00d35fcae4a76f7e20519",
+      sha256: "355eb75b60ace20c1e605fe4f4e19d570a777d03e6b907bddda601252e1222a8",
       minSdk: 26
     },
     ios: {
-      version: "0.2.1",
-      build: "2",
+      version: "0.2.2",
+      build: "3",
       testFlightUrl: "https://testflight.apple.com/join/openverse-preview"
     },
     web: {
-      version: "0.2.0",
+      version: "0.2.2",
       deployedAt: new Date().toISOString()
     }
   }

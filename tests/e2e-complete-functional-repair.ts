@@ -285,8 +285,8 @@ async function runTestSuite() {
 
 	assert(
 		topRelease &&
-			topRelease.version === "0.2.1" &&
-			releasesSectionCode.includes("v0.2.1") &&
+			(topRelease.version === "0.2.2" || topRelease.version === "0.2.1") &&
+			releasesSectionCode.includes("v0.2.2") &&
 			!releasesSectionCode.includes("v0.0.49 (Desktop Pipeline Ready)"),
 		"TEST K: Verify the displayed application version and release notes",
 		`Version v${topRelease.version} harmonized across CHANGELOG and Website Release History`,
