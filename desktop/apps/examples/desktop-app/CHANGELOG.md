@@ -1,5 +1,13 @@
 # OPEN-VERSE Changelog
 
+## 0.2.1
+
+- **Google & GitHub Single Identity**: Full support for Google OAuth and GitHub OAuth authentication across Windows, Android, Web, macOS, Linux, and iOS.
+- **Account-Isolated Cloud Storage**: Turn-by-turn conversation messages, sessions, and preferences isolated strictly per account. Logging out wipes local session cache; reconnecting restores complete history.
+- **Real-Time Cross-Device Synchronization**: Instant bidirectional synchronization between Windows laptop and Android companion.
+- **Automated In-App Updates**: End-to-end update notification, cryptographic signature verification, and one-click update application across all devices.
+- **Direct Mobile Delivery**: Optimized Android APK served directly with native package installer headers.
+
 ## 0.2.0
 
 - **Unified Cross-Platform Experience**: Seamless, real-time continuity across Windows, Android, iOS, and Web.

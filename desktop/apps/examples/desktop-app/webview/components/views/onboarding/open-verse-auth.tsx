@@ -233,7 +233,7 @@ export function OpenVerseAuth({
 							variant="outline"
 							className="border-violet-500/30 bg-violet-500/10 text-violet-300 text-[10px] uppercase font-mono px-1.5 py-0.5"
 						>
-							v0.2.0
+							v0.2.1
 						</Badge>
 					</div>
 

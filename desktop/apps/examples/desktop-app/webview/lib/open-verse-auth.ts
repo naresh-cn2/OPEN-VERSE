@@ -89,13 +89,44 @@ export function getStoredSession(): OpenVerseSession | null {
 }
 
 export function setStoredSession(session: OpenVerseSession | null): void {
+	const prevSession = currentSession;
 	currentSession = session;
 	if (typeof window === "undefined") return;
 	try {
 		if (session) {
+			const prevUserId = prevSession?.user?.id;
+			const newUserId = session.user?.id;
+			// Strict account isolation: wipe prior account's local cache on account switch
+			if (prevUserId && newUserId && prevUserId !== newUserId) {
+				window.localStorage.removeItem("openverse_sessions_v1");
+				const keysToRemove: string[] = [];
+				for (let i = 0; i < window.localStorage.length; i++) {
+					const key = window.localStorage.key(i);
+					if (key && (key.startsWith("openverse_msg_") || key.startsWith("openverse_session_"))) {
+						keysToRemove.push(key);
+					}
+				}
+				for (const k of keysToRemove) {
+					window.localStorage.removeItem(k);
+				}
+				window.dispatchEvent(new CustomEvent("openverse:sessions-updated"));
+			}
 			window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 		} else {
 			window.localStorage.removeItem(AUTH_STORAGE_KEY);
+			// Strict logout hygiene: wipe local cached private conversations (cloud storage remains intact)
+			window.localStorage.removeItem("openverse_sessions_v1");
+			const keysToRemove: string[] = [];
+			for (let i = 0; i < window.localStorage.length; i++) {
+				const key = window.localStorage.key(i);
+				if (key && (key.startsWith("openverse_msg_") || key.startsWith("openverse_session_"))) {
+					keysToRemove.push(key);
+				}
+			}
+			for (const k of keysToRemove) {
+				window.localStorage.removeItem(k);
+			}
+			window.dispatchEvent(new CustomEvent("openverse:sessions-updated"));
 		}
 	} catch {
 		// Session will persist in memory for the running instance
