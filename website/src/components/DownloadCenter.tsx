@@ -54,8 +54,8 @@ export const DownloadCenter: React.FC = () => {
   const FILE_META = {
     windows: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-      size: "128 MB",
-      sha256: "935da9840a0316e62bd1f569b4494250a3a0edc8a93b23974b932538af528f8f",
+      size: "134.3 MB",
+      sha256: "168aa910489128f43817d686f5a8129258c9f174be79e9ed833bd7e34e7fc3ac",
       available: true,
     },
     mac: {
