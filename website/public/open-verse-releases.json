@@ -14,7 +14,7 @@
       "version": "0.2.1",
       "versionCode": 3,
       "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      "sha256": "dc30194b50327fd1dd8bc651b67b9921cbb14899e2214560c7dd0e77ba0e3bd0",
+      "sha256": "fc090cb04cb40bce8eefbe6a5392ee5c8715c9c7d2265328845acdb2a408317b",
       "minSdk": 26
     },
     "ios": {
