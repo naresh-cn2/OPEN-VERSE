@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1794487839497,
+  "lastSyncTimestamp": 1794487842795,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -585,6 +585,13 @@
         "role": "user",
         "content": "Windows simultaneous command execution",
         "createdAt": 1794487839597
+      },
+      {
+        "id": "msg_droid_turn_5",
+        "sessionId": "sess_parity_1794487828546",
+        "role": "assistant",
+        "content": "Android acknowledged simultaneous action",
+        "createdAt": 1794487839697
       }
     ]
   },
