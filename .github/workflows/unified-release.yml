@@ -55,11 +55,15 @@ jobs:
           echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
           echo "Preparing release v$VERSION on channel $CHANNEL"
 
-      - name: Run Unit Tests
+      - name: Run Quality Gate & Regression Tests
         run: |
+          bun install
           cd desktop/apps/examples/desktop-app
           bun install
           bunx vitest run webview/lib/open-verse-updater.test.ts webview/lib/open-verse-auth.test.ts --config vitest.config.ts
+          cd ../../..
+          bun run tests/e2e-cross-device-updater-repair.ts
+          bun run tests/e2e-resilience-and-recovery.ts
 
   build-android:
     name: 2. Build Android APK & AAB
@@ -107,6 +111,7 @@ jobs:
         with:
           name: android-release-artifacts
           path: dist/android/*
+          if-no-files-found: error
 
   build-windows:
     name: 3. Build Windows Desktop Bundle
@@ -153,7 +158,7 @@ jobs:
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.sig
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   publish-unified-release:
     name: 4. Generate Unified Manifest & Publish Release
@@ -174,6 +179,23 @@ jobs:
         with:
           name: windows-release-artifacts
           path: release-deliverables/windows
+
+      - name: Verify All Critical Deliverables Present & Non-Empty
+        run: |
+          if [ ! -f "release-deliverables/android/open-verse-mobile.apk" ] || [ ! -s "release-deliverables/android/open-verse-mobile.apk" ]; then
+            echo "❌ CRITICAL: Android APK missing or empty. Blocking publication."
+            exit 1
+          fi
+          SETUP_EXE=$(find release-deliverables/windows -name "*setup.exe" | head -n 1)
+          if [ -z "$SETUP_EXE" ] || [ ! -s "$SETUP_EXE" ]; then
+            echo "❌ CRITICAL: Windows Setup Installer missing or empty. Blocking publication."
+            exit 1
+          fi
+          if [ ! -f "release-deliverables/windows/latest.json" ]; then
+            echo "❌ CRITICAL: Windows updater manifest (latest.json) missing. Blocking publication."
+            exit 1
+          fi
+          echo "✅ All platform release deliverables verified and non-empty."
 
       - name: Generate Central Release Manifest
         run: |

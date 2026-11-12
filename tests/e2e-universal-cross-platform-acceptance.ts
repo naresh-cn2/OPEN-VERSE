@@ -253,6 +253,11 @@ async function runUniversalSuite() {
 
 	// ── TEST H: Install and upgrade Android automatically ──
 	console.log("\n--- TEST H: Android Automatic Package Installation & Upgrade ---");
+	const releasesJsonPath = resolve(ROOT, "website/public/open-verse-releases.json");
+	const releasesJson = JSON.parse(readFileSync(releasesJsonPath, "utf8"));
+	const targetVersion = releasesJson.version;
+	const targetCode = releasesJson.platforms.android.versionCode;
+
 	let emulatorResult = "";
 	try {
 		emulatorResult = execSync("adb -s emulator-5554 shell dumpsys package ai.openverse.mobile", {
@@ -262,10 +267,10 @@ async function runUniversalSuite() {
 		emulatorResult = "";
 	}
 	assert(
-		emulatorResult.includes("versionName=0.2.2") && emulatorResult.includes("versionCode=4"),
+		emulatorResult.includes(`versionName=${targetVersion}`) && emulatorResult.includes(`versionCode=${targetCode}`),
 		"TEST H (Live Device)",
 		"Android package installed on emulator at target version",
-		"ai.openverse.mobile is running v0.2.2 (versionCode 4)",
+		`ai.openverse.mobile is running v${targetVersion} (versionCode ${targetCode})`,
 	);
 
 	const interfacePath = resolve(
@@ -302,17 +307,15 @@ async function runUniversalSuite() {
 
 	// ── TEST J: Verify website, release assets, version numbers and release notes match ──
 	console.log("\n--- TEST J: Website, Releases & Manifest Agreement ---");
-	const releasesJsonPath = resolve(ROOT, "website/public/open-verse-releases.json");
-	const releasesJson = JSON.parse(readFileSync(releasesJsonPath, "utf8"));
 	const downloadCenterPath = resolve(ROOT, "website/src/components/DownloadCenter.tsx");
 	const downloadCenterText = readFileSync(downloadCenterPath, "utf8");
 	assert(
-		releasesJson.version === "0.2.2" &&
+		releasesJson.version === "0.2.3" &&
 			downloadCenterText.includes(releasesJson.platforms.android.sha256) &&
-			releasesJson.platforms.android.versionCode === 4,
+			releasesJson.platforms.android.versionCode === 5,
 		"TEST J",
 		"Verify website, release assets, version numbers and release notes match",
-		`Manifest v0.2.2 matches website DownloadCenter SHA-256 (${releasesJson.platforms.android.sha256})`,
+		`Manifest v0.2.3 matches website DownloadCenter SHA-256 (${releasesJson.platforms.android.sha256})`,
 	);
 
 	// ── TEST K: Restart every application and verify data persistence ──
