@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1794482893680,
+  "lastSyncTimestamp": 1794482896092,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -535,32 +535,16 @@
     ]
   },
   "settings": {
-    "providers": [
-      {
-        "id": "gemini",
-        "name": "Google Gemini",
-        "enabled": true,
-        "defaultModelId": "gemini-2.5-flash"
-      },
-      {
-        "id": "openai",
-        "name": "OpenAI",
-        "enabled": true,
-        "defaultModelId": "gpt-4o"
-      },
-      {
-        "id": "anthropic",
-        "name": "Anthropic Claude",
-        "enabled": true,
-        "defaultModelId": "claude-3-7-sonnet"
-      },
-      {
-        "id": "ollama",
-        "name": "Ollama (Local)",
-        "enabled": true,
-        "defaultModelId": "llama3.2"
-      }
-    ],
-    "defaultModelId": "gemini-2.5-flash"
+    "theme": "dark",
+    "accent": "violet",
+    "fontSize": 14,
+    "soundVolume": 0.8,
+    "hapticFeedback": true,
+    "autoUpdateEnabled": true,
+    "activeProvider": "gemini",
+    "activeModel": "gemini-2.5-flash",
+    "customEndpoint": "",
+    "selectedProvider": "gemini",
+    "selectedModel": "gemini-2.5-flash"
   }
 }
