@@ -7,8 +7,9 @@ export interface ModelProviderKeys {
   anthropicApiKey?: string;
   openaiApiKey?: string;
   openrouterApiKey?: string;
+  deepseekApiKey?: string;
   ollamaBaseUrl?: string;
-  selectedProvider: "gemini" | "anthropic" | "openai" | "ollama" | "openrouter";
+  selectedProvider: "gemini" | "anthropic" | "openai" | "ollama" | "openrouter" | "deepseek" | "cline" | "opencode";
   selectedModel: string;
 }
 

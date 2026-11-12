@@ -33,6 +33,9 @@ export async function streamDirectAI(
       case "openrouter":
         await streamOpenRouter(messages, config, callbacks, signal);
         break;
+      case "deepseek":
+        await streamDeepSeek(messages, config, callbacks, signal);
+        break;
       case "ollama":
         await streamOllama(messages, config, callbacks, signal);
         break;
@@ -350,6 +353,43 @@ async function streamOllama(
   }
 
   callbacks.onComplete(fullText);
+}
+
+// 6. DeepSeek Streaming
+async function streamDeepSeek(
+  messages: ChatMessage[],
+  config: ModelProviderKeys,
+  callbacks: StreamCallbacks,
+  signal?: AbortSignal
+) {
+  const apiKey = config.deepseekApiKey?.trim();
+  if (!apiKey) {
+    throw new Error("DeepSeek API Key is missing. Please configure it in Settings.");
+  }
+
+  const model = config.selectedModel || "deepseek-chat";
+  const url = "https://api.deepseek.com/chat/completions";
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      stream: true,
+    }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`DeepSeek error (${response.status}): ${errorText}`);
+  }
+
+  await parseOpenAICompatibleSSE(response, callbacks);
 }
 
 async function parseOpenAICompatibleSSE(

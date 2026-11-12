@@ -1231,6 +1231,34 @@ class DesktopClient {
 				capabilities: ["streaming", "tools"],
 				authDescription: "Local or LAN Ollama endpoint without an API key",
 			},
+			{
+				id: "cline",
+				name: "Cline (Coding Engine)",
+				models: 3,
+				color: "#2563EB",
+				letter: "C",
+				enabled: true,
+				configured: false,
+				defaultModelId: "claude-3-7-sonnet-latest",
+				capabilities: ["streaming", "tools"],
+				docUrl: "https://cline.bot",
+				docLabel: "Cline Integration",
+				authDescription: "Optional local CLI & coding engine integration",
+			},
+			{
+				id: "opencode",
+				name: "OpenCode (Semantic AST)",
+				models: 2,
+				color: "#7C3AED",
+				letter: "P",
+				enabled: true,
+				configured: false,
+				defaultModelId: "opencode-zen",
+				capabilities: ["streaming", "tools"],
+				docUrl: "https://opencode.ai",
+				docLabel: "OpenCode Integration",
+				authDescription: "Optional semantic AST & repository intelligence engine",
+			},
 		];
 
 		try {
@@ -1303,6 +1331,15 @@ class DesktopClient {
 			ollama: [
 				{ id: "llama3.2", name: "Llama 3.2 (Local)", contextWindow: 128000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
 				{ id: "deepseek-r1:8b", name: "DeepSeek-R1 8B (Local)", contextWindow: 64000, supportsVision: false, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			cline: [
+				{ id: "claude-3-7-sonnet-latest", name: "Claude 3.7 Sonnet (Hybrid Reasoning)", contextWindow: 200000, supportsVision: true, supportsReasoning: true, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "claude-3-5-sonnet-latest", name: "Claude 3.5 Sonnet", contextWindow: 200000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "gpt-4o", name: "GPT-4o (Omni)", contextWindow: 128000, supportsVision: true, supportsReasoning: false, inputModalities: ["text", "image"], outputModalities: ["text"], operationModes: ["streaming"] },
+			],
+			opencode: [
+				{ id: "opencode-zen", name: "OpenCode Zen (AST Intelligence)", contextWindow: 128000, supportsVision: false, supportsReasoning: true, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
+				{ id: "opencode-go", name: "OpenCode Go (Fast)", contextWindow: 64000, supportsVision: false, supportsReasoning: false, inputModalities: ["text"], outputModalities: ["text"], operationModes: ["streaming"] },
 			],
 		};
 		return (

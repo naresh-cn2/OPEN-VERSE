@@ -170,6 +170,9 @@ export function MobileSettings({
                     if (prov === "openai") defaultModel = "gpt-4o";
                     if (prov === "ollama") defaultModel = "llama3.2";
                     if (prov === "openrouter") defaultModel = "anthropic/claude-3.5-sonnet";
+                    if (prov === "deepseek") defaultModel = "deepseek-chat";
+                    if (prov === "cline") defaultModel = "claude-3-7-sonnet-latest";
+                    if (prov === "opencode") defaultModel = "opencode-zen";
                     setProviderKeys({ ...providerKeys, selectedProvider: prov, selectedModel: defaultModel });
                   }}
                   className="mt-1 w-full rounded-xl border border-zinc-800 bg-background px-3 py-2 text-xs text-zinc-100 font-medium focus:border-violet-500 focus:outline-none capitalize"
@@ -178,7 +181,10 @@ export function MobileSettings({
                   <option value="anthropic">Anthropic Claude</option>
                   <option value="openai">OpenAI</option>
                   <option value="openrouter">OpenRouter</option>
+                  <option value="deepseek">DeepSeek</option>
                   <option value="ollama">Ollama (Local / LAN)</option>
+                  <option value="cline">Cline (Code Engine)</option>
+                  <option value="opencode">OpenCode (AST Engine)</option>
                 </select>
               </div>
 
@@ -224,6 +230,17 @@ export function MobileSettings({
                   value={providerKeys.openaiApiKey || ""}
                   onChange={(e) => setProviderKeys({ ...providerKeys, openaiApiKey: e.target.value })}
                   placeholder="sk-proj-..."
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-background px-3 py-2 text-xs text-zinc-100 font-mono focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-zinc-400">DeepSeek API Key</label>
+                <input
+                  type="password"
+                  value={providerKeys.deepseekApiKey || ""}
+                  onChange={(e) => setProviderKeys({ ...providerKeys, deepseekApiKey: e.target.value })}
+                  placeholder="sk-..."
                   className="mt-1 w-full rounded-xl border border-zinc-800 bg-background px-3 py-2 text-xs text-zinc-100 font-mono focus:border-violet-500 focus:outline-none"
                 />
               </div>
