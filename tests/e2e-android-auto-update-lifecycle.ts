@@ -89,7 +89,12 @@ async function runAndroidUpdateLifecycle() {
 
 	// PHASE 1: Baseline Published v0.2.0 Inspection
 	console.log("\n--- PHASE 1: Baseline Published v0.2.0 Inspection ---");
-	const v020Apk = resolve(process.cwd(), "test-apk-v0.2.0/open-verse-mobile.apk");
+	const v020Dir = resolve(process.cwd(), "test-apk-v0.2.0");
+	const v020Apk = resolve(v020Dir, "open-verse-mobile.apk");
+	if (!existsSync(v020Apk)) {
+		console.log("  Fetching published v0.2.0 APK from GitHub release...");
+		execSync(`gh release download v0.2.0 -p "open-verse-mobile.apk" --dir "${v020Dir}" --clobber`, { stdio: "pipe" });
+	}
 	assert(existsSync(v020Apk), "v0.2.0 APK File", `Found published test APK at ${v020Apk}`);
 
 	execSync(`adb install -r -d "${v020Apk}"`, { stdio: "pipe" });
@@ -115,7 +120,7 @@ async function runAndroidUpdateLifecycle() {
 	const updateCheckRes0 = await evaluateInWebView(ws0, `
 		(async function() {
 			try {
-				const res = await fetch("http://10.0.2.2:3456/api/releases/latest", { cache: "no-store" });
+				const res = await fetch("https://open-verse-website.vercel.app/api/releases/latest", { cache: "no-store" });
 				const data = await res.json();
 				const current = window.AndroidInterface?.getAppVersion ? window.AndroidInterface.getAppVersion() : "0.2.0";
 				const clean = (v) => v.replace(/^v/, "").trim();
@@ -142,7 +147,12 @@ async function runAndroidUpdateLifecycle() {
 
 	// PHASE 2: Upgrading from Currently Published v0.2.2 to v0.2.3 via PackageInstaller
 	console.log("\n--- PHASE 2: Upgrading from Published v0.2.2 via Native PackageInstaller ---");
-	const v022Apk = resolve(process.cwd(), "test-apk-v0.2.2/open-verse-mobile.apk");
+	const v022Dir = resolve(process.cwd(), "test-apk-v0.2.2");
+	const v022Apk = resolve(v022Dir, "open-verse-mobile.apk");
+	if (!existsSync(v022Apk)) {
+		console.log("  Fetching published v0.2.2 APK from GitHub release...");
+		execSync(`gh release download v0.2.2 -p "open-verse-mobile.apk" --dir "${v022Dir}" --clobber`, { stdio: "pipe" });
+	}
 	assert(existsSync(v022Apk), "v0.2.2 APK File", `Found published v0.2.2 APK at ${v022Apk}`);
 
 	execSync(`adb install -r -d "${v022Apk}"`, { stdio: "pipe" });
@@ -173,7 +183,7 @@ async function runAndroidUpdateLifecycle() {
 
 	// Step: In-app update trigger initiated by the application itself
 	console.log("\n  -> Triggering in-app update via native bridge from within the webview...");
-	const targetApkUrl = "http://10.0.2.2:3456/open-verse-mobile.apk";
+	const targetApkUrl = "https://open-verse-website.vercel.app/open-verse-mobile.apk";
 	const expectedSha256 = "950aba4b9e02d059e53415996c65a70f13ebf4da9780078b5759242ccfe675a7";
 	const expectedVersionCode = 5;
 
@@ -282,7 +292,7 @@ async function runAndroidUpdateLifecycle() {
 	const checkAgainRes = await evaluateInWebView(ws2, `
 		(async function() {
 			try {
-				const res = await fetch("http://10.0.2.2:3456/api/releases/latest", { cache: "no-store" });
+				const res = await fetch("https://open-verse-website.vercel.app/api/releases/latest", { cache: "no-store" });
 				const data = await res.json();
 				const current = window.AndroidInterface?.getAppVersion ? window.AndroidInterface.getAppVersion() : "0.2.3";
 				const currentCode = window.AndroidInterface?.getAppVersionCode ? Number(window.AndroidInterface.getAppVersionCode()) : 5;
