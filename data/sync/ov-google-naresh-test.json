@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1794503271640,
+  "lastSyncTimestamp": 1794503481181,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -192,6 +192,16 @@
       "status": "idle",
       "startedAt": "2026-11-12T17:07:26.755Z",
       "lastActivityAt": "2026-11-12T17:07:35.876Z"
+    },
+    "sess_parity_1794503480129": {
+      "id": "sess_parity_1794503480129",
+      "sessionId": "sess_parity_1794503480129",
+      "title": "Cross-Platform Synchronized Task",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
+      "status": "idle",
+      "startedAt": "2026-11-12T17:11:14.130Z",
+      "lastActivityAt": "2026-11-12T17:11:14.130Z"
     }
   },
   "messages": {
@@ -672,6 +682,22 @@
         "role": "assistant",
         "content": "Android acknowledged simultaneous action",
         "createdAt": 1794503267155
+      }
+    ],
+    "sess_parity_1794503480129": [
+      {
+        "id": "msg_win_initial",
+        "sessionId": "sess_parity_1794503480129",
+        "role": "user",
+        "content": "Please analyze the cross-device architecture from Windows",
+        "createdAt": 1794503475130
+      },
+      {
+        "id": "msg_win_assistant",
+        "sessionId": "sess_parity_1794503480129",
+        "role": "assistant",
+        "content": "Cross-device architecture active. All systems synchronized.",
+        "createdAt": 1794503476130
       }
     ]
   },
