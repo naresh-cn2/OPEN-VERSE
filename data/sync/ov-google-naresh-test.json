@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1794503481181,
+  "lastSyncTimestamp": 1794503482485,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -201,7 +201,7 @@
       "model": "gemini-2.5-flash",
       "status": "idle",
       "startedAt": "2026-11-12T17:11:14.130Z",
-      "lastActivityAt": "2026-11-12T17:11:14.130Z"
+      "lastActivityAt": "2026-11-12T17:11:22.485Z"
     }
   },
   "messages": {
@@ -698,6 +698,13 @@
         "role": "assistant",
         "content": "Cross-device architecture active. All systems synchronized.",
         "createdAt": 1794503476130
+      },
+      {
+        "id": "msg_droid_reply",
+        "sessionId": "sess_parity_1794503480129",
+        "role": "user",
+        "content": "Confirmed from Android mobile device: sync is bidirectional",
+        "createdAt": 1794503480485
       }
     ]
   },
