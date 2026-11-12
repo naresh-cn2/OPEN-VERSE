@@ -27,14 +27,16 @@ async function sleep(ms: number) {
 }
 
 async function getDevToolsWebSocket(maxRetries = 15): Promise<{ ws: WebSocket; pageTab: any }> {
+	const forwardPort = 9225;
 	for (let i = 0; i < maxRetries; i++) {
 		try {
 			const out = execSync("adb shell cat /proc/net/unix", { encoding: "utf8" });
 			const match = out.match(/@webview_devtools_remote_(\d+)/);
 			if (match) {
 				const pid = match[1];
-				execSync(`adb forward tcp:9222 localabstract:webview_devtools_remote_${pid}`);
-				const tabsRes = await fetch("http://localhost:9222/json");
+				try { execSync(`adb forward --remove tcp:${forwardPort}`, { stdio: "pipe" }); } catch {}
+				execSync(`adb forward tcp:${forwardPort} localabstract:webview_devtools_remote_${pid}`, { stdio: "pipe" });
+				const tabsRes = await fetch(`http://localhost:${forwardPort}/json`);
 				const tabs = await tabsRes.json();
 				const pageTab = tabs.find((t: any) => t.type === "page");
 				if (pageTab) {
@@ -87,6 +89,10 @@ async function runAndroidUpdateLifecycle() {
 	// Step 1: Install published v0.2.0 APK
 	console.log("\n--- STEP 1: Install published v0.2.0 APK ---");
 	const v020Apk = resolve(process.cwd(), "test-apk-v0.2.0/open-verse-mobile.apk");
+	if (!existsSync(v020Apk)) {
+		console.log("  Fetching published v0.2.0 APK from GitHub release...");
+		execSync("gh release download v0.2.0 -p \"open-verse-mobile.apk\" --dir ./test-apk-v0.2.0 --clobber", { stdio: "pipe" });
+	}
 	assert(existsSync(v020Apk), "v0.2.0 APK File", `Found published test APK at ${v020Apk}`);
 
 	execSync(`adb install -r -d "${v020Apk}"`, { stdio: "pipe" });
