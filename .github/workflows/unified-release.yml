@@ -124,24 +124,40 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Build Windows Desktop
+      - name: Build Windows Desktop & Updater Artifacts
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          cd desktop/apps/examples/desktop-app
           bun install
           bun run build:runtime
           bun run build:web
-          # Build Tauri desktop installer
+          bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.release.conf.json
+
+      - name: Generate latest.json Update Manifest
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        run: |
+          $ver = "${{ needs.validate.outputs.version }}"
+          $tag = "${{ needs.validate.outputs.tag }}"
+          bun run scripts/generate-update-manifest.ts $ver $tag "OPEN-VERSE v$ver release with synchronized cross-platform support."
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-release-artifacts
-          path: desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*
+          path: |
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.sig
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
           if-no-files-found: ignore
 
   publish-unified-release:
     name: 4. Generate Unified Manifest & Publish Release
-    needs: [validate, build-android]
+    needs: [validate, build-android, build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -153,12 +169,24 @@ jobs:
           name: android-release-artifacts
           path: release-deliverables/android
 
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release-artifacts
+          path: release-deliverables/windows
+
       - name: Generate Central Release Manifest
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           TAG="${{ needs.validate.outputs.tag }}"
           CHANNEL="${{ needs.validate.outputs.channel }}"
           SHA=$(sha256sum release-deliverables/android/open-verse-mobile.apk | cut -d ' ' -f 1)
+          
+          # Read Windows signature and filename from latest.json if available
+          SIG=""
+          if [ -f "release-deliverables/windows/latest.json" ]; then
+            SIG=$(jq -r '.platforms["windows-x86_64"].signature // empty' release-deliverables/windows/latest.json)
+          fi
           
           mkdir -p release-deliverables/manifests
           cat <<EOF > release-deliverables/manifests/open-verse-releases.json
@@ -167,17 +195,24 @@ jobs:
             "releaseDate": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
             "channel": "$CHANNEL",
             "mandatory": false,
-            "releaseNotes": "OPEN-VERSE v$VERSION update with synchronized cross-platform support.",
+            "releaseNotes": "• Native Android PackageInstaller Intent Bridge (v$VERSION / versionCode 5) with seamless in-app upgrade\n• In-app update check state fixes for instant detection across Android and Desktop\n• Desktop Tauri v$VERSION NSIS installer and signed updater bundle with Minisign cryptography",
             "platforms": {
               "android": {
                 "version": "$VERSION",
-                "versionCode": 2,
-                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/open-verse-mobile.apk",
-                "sha256": "$SHA"
+                "versionCode": 5,
+                "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
+                "sha256": "$SHA",
+                "minSdk": 24
               },
               "windows-x86_64": {
                 "version": "$VERSION",
-                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/OPEN-VERSE_${VERSION}_x64-setup.nsis.zip"
+                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/OPEN-VERSE_${VERSION}_x64-setup.exe",
+                "signature": "$SIG"
+              },
+              "ios": {
+                "version": "$VERSION",
+                "build": "4",
+                "testFlightUrl": "https://testflight.apple.com/join/openverse-preview"
               },
               "web": {
                 "version": "$VERSION",
@@ -194,7 +229,17 @@ jobs:
           name: "OPEN-VERSE v${{ needs.validate.outputs.version }}"
           files: |
             release-deliverables/android/*
+            release-deliverables/windows/*
             release-deliverables/manifests/*
           prerelease: ${{ needs.validate.outputs.channel == 'beta' }}
           generate_release_notes: true
+
+      - name: Update Rolling desktop-latest Release Feed
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-latest
+          name: OPEN-VERSE Latest Desktop Feed
+          body: "Rolling update feed and latest installer for OPEN-VERSE desktop applications."
+          files: |
+            release-deliverables/windows/*
 
