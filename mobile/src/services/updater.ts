@@ -14,7 +14,7 @@ export interface MobileUpdateInfo {
   versionCode?: number;
 }
 
-export const CURRENT_MOBILE_VERSION = "0.2.2";
+export const CURRENT_MOBILE_VERSION = "0.2.3";
 const UPDATE_FEED_URL = "https://open-verse-website.vercel.app/api/releases/latest";
 const GITHUB_RELEASE_API = "https://api.github.com/repos/naresh-cn2/OPEN-VERSE/releases/tags/desktop-latest";
 

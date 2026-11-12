@@ -6,10 +6,24 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.2",
+      version: "v0.2.3",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Native Android PackageInstaller Intent Bridge: Instant in-app APK installation via Android PackageInstaller activity (v0.2.3 / versionCode 5).",
+        "Reactive In-App Update Lifecycle: Fixed update-check resolution state in About view so updates immediately display with action buttons.",
+        "Secure Internal Cache APK Downloader: Direct streaming into isolated app cache with streaming SHA-256 integrity verification.",
+        "Desktop Tauri 0.2.3 Suite: Verified NSIS installer and signed updater bundle with Minisign cryptographic verification.",
+        "Full Cross-Device Synchronization: Instant bi-directional chat, identity, and preference sync across Windows and Android.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.2",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Native Android Package Manager Bridge: Dynamic live version detection (v0.2.2 / versionCode 4) permanently breaking all update loops.",
         "Secure Internal Cache APK Downloader: Direct streaming into isolated app cache with streaming SHA-256 integrity verification.",
@@ -17,7 +31,7 @@ export const ReleasesSection: React.FC = () => {
         "Desktop Tauri 0.2.2 Suite: Verified NSIS installer and signed updater bundle with Minisign cryptographic verification.",
         "Full Cross-Device Synchronization: Instant bi-directional chat, identity, and preference sync across Windows and Android.",
       ],
-      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+      note: "",
     },
     {
       version: "v0.2.1",

@@ -46,7 +46,7 @@ export interface UpdateCheckResult {
 	manifest?: UnifiedReleaseInfo;
 }
 
-export const CURRENT_APP_VERSION = "0.2.2";
+export const CURRENT_APP_VERSION = "0.2.3";
 
 export function detectPlatform(): UpdateCheckResult["platform"] {
 	if (typeof window === "undefined") return "web";

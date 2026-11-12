@@ -11,6 +11,8 @@ target/
 desktop/apps/examples/desktop-app/src-tauri/bin/
 website/saved_preview.html
 
+test-apk-*/
+
 # Local OS files
 .DS_Store
 Thumbs.db

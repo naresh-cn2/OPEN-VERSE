@@ -44,10 +44,10 @@ class OpenVerseWebAppInterface(private val context: Context) {
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            pInfo.versionName ?: "0.2.2"
+            pInfo.versionName ?: "0.2.3"
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read installed package versionName", e)
-            "0.2.2"
+            "0.2.3"
         }
     }
 
@@ -68,7 +68,7 @@ class OpenVerseWebAppInterface(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read installed package versionCode", e)
-            4L
+            5L
         }
     }
 

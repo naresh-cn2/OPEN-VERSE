@@ -1364,7 +1364,7 @@ class DesktopClient {
 	): Promise<T> {
 		switch (command) {
 			case "get_process_context": {
-				let dynamicVer = "0.2.2";
+				let dynamicVer = "0.2.3";
 				if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
 					try {
 						const v = (window as any).AndroidInterface.getAppVersion();
@@ -1632,7 +1632,7 @@ class DesktopClient {
 						details: res,
 					} as T;
 				} catch {
-					let dynamicVer = "0.2.2";
+					let dynamicVer = "0.2.3";
 					if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
 						try {
 							const v = (window as any).AndroidInterface.getAppVersion();

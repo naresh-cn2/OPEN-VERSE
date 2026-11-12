@@ -35,31 +35,31 @@ export interface UnifiedReleaseManifest {
 }
 
 export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
-  version: "0.2.2",
+  version: "0.2.3",
   releaseDate: new Date().toISOString(),
   channel: "stable",
   mandatory: false,
-  releaseNotes: "• Native Android Package Manager Bridge (v0.2.2 / versionCode 4) permanently breaking all update loops\n• Secure Internal Cache APK Downloader with verified SHA-256 integrity\n• Desktop Tauri v0.2.2 NSIS installer and signed updater bundle with Minisign cryptography",
+  releaseNotes: "• Native Android PackageInstaller Intent Bridge (v0.2.3 / versionCode 5) with seamless in-app upgrade\n• In-app update check state fixes for instant detection across Android and Desktop\n• Desktop Tauri v0.2.3 NSIS installer and signed updater bundle",
   platforms: {
     "windows-x86_64": {
-      version: "0.2.2",
-      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.2/OPEN-VERSE_0.2.2_x64-setup.exe",
+      version: "0.2.3",
+      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.3/OPEN-VERSE_0.2.3_x64-setup.exe",
       signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFN3UFFFUDdwNnkxM2hWM3c1aVVLM0sxNEEyWnNCOFNzbUVFRzdXZU5mTkZFbEF4RUxtNVNkUUkzR29xb2xFNTYzcEZUaVRrNDJob28rTC9xcTNTVXcwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NDEzNjkwCWZpbGU6T1BFTi1WRVJTRV8wLjIuMl94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjIKWEE2aWYzQ1ZwWFRaWS9Db3hRTUNWZVB5NDZrZEJCdGJlT3JXdmhVZmx4d3habGY0aGJYaldCOW9ITnRtektveUpSVnhqRFJDbTBHRTJ0TndBaGpxQkE9PQo=",
     },
     android: {
-      version: "0.2.2",
-      versionCode: 4,
+      version: "0.2.3",
+      versionCode: 5,
       url: "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      sha256: "063d689b5ed1affef45d075d5bc43e423179a6845c251ccd6c76a8b7be47f37d",
-      minSdk: 26
+      sha256: "950aba4b9e02d059e53415996c65a70f13ebf4da9780078b5759242ccfe675a7",
+      minSdk: 24
     },
     ios: {
-      version: "0.2.2",
-      build: "3",
+      version: "0.2.3",
+      build: "4",
       testFlightUrl: "https://testflight.apple.com/join/openverse-preview"
     },
     web: {
-      version: "0.2.2",
+      version: "0.2.3",
       deployedAt: new Date().toISOString()
     }
   }
