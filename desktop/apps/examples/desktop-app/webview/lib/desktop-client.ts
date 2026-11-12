@@ -1610,20 +1610,43 @@ class DesktopClient {
 			}
 			case "get_update_status":
 			case "check_for_update_now": {
-				let dynamicVer = "0.2.2";
-				if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
-					try {
-						const v = (window as any).AndroidInterface.getAppVersion();
-						if (v) dynamicVer = v;
-					} catch {}
+				try {
+					const { checkForAppUpdate } = await import("./open-verse-updater");
+					const res = await checkForAppUpdate();
+					if (res.updateAvailable) {
+						return {
+							state: "ready",
+							isChecking: false,
+							isAvailable: true,
+							available: true,
+							version: res.latestVersion,
+							details: res,
+						} as T;
+					}
+					return {
+						state: "idle",
+						isChecking: false,
+						isAvailable: false,
+						available: false,
+						version: res.currentVersion,
+						details: res,
+					} as T;
+				} catch {
+					let dynamicVer = "0.2.2";
+					if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
+						try {
+							const v = (window as any).AndroidInterface.getAppVersion();
+							if (v) dynamicVer = v;
+						} catch {}
+					}
+					return {
+						state: "idle",
+						isChecking: false,
+						isAvailable: false,
+						available: false,
+						version: dynamicVer,
+					} as T;
 				}
-				return {
-					state: "idle",
-					isChecking: false,
-					isAvailable: false,
-					available: false,
-					version: dynamicVer,
-				} as T;
 			}
 			case "restart_to_apply_update": {
 				if (typeof window !== "undefined" && "AndroidInterface" in window) {
@@ -1634,7 +1657,7 @@ class DesktopClient {
 						};
 					}).AndroidInterface;
 					const apkUrl = "https://open-verse-website.vercel.app/open-verse-mobile.apk";
-					const sha256 = "8cce5d94bfa3066daac5ae0361e125a8294fac1f3dd390f7cef0c47366d0308c";
+					const sha256 = "063d689b5ed1affef45d075d5bc43e423179a6845c251ccd6c76a8b7be47f37d";
 					if (typeof android.downloadAndInstallApkWithChecksum === "function") {
 						android.downloadAndInstallApkWithChecksum(apkUrl, sha256, 4);
 						return true as T;

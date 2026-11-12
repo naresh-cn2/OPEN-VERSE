@@ -101,7 +101,15 @@ function UpdateAction() {
 						setChecking(true);
 						void checkForUpdateNow().then((result) => {
 							setChecking(false);
-							setCheckResult(result ? "up-to-date" : "unavailable");
+							if (!result) {
+								setCheckResult("unavailable");
+							} else if (result.state === "ready") {
+								setCheckResult(null);
+							} else if (result.state === "idle") {
+								setCheckResult("up-to-date");
+							} else if (result.state === "error") {
+								setCheckResult("unavailable");
+							}
 						});
 					}}
 					size="sm"
