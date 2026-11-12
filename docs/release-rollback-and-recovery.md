@@ -84,3 +84,4 @@ gh release edit v0.X.Y --prerelease --notes "⚠️ DEPRECATED: Please remain on
 1. Clear the scoped download cache:
    Settings -> Apps -> OPEN-VERSE -> Storage -> Clear Cache.
 2. If signature mismatch occurs due to an untrusted experimental APK, uninstall the test package and reinstall the official release APK.
+

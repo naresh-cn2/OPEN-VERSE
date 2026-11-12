@@ -38,3 +38,4 @@ All permanent regression test suites must pass without modification or weakening
 - In-place auto-update feeds (`latest.json` and `open-verse-releases.json`) are updated.
 - Public checksums (SHA-256) match the compiled production assets.
 - Download links and live website endpoints deliver the genuine release binary.
+
