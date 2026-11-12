@@ -83,3 +83,4 @@ To ensure privacy and avoid collisions with other tools on the host system, OPEN
 1. **Webview <-> Sidecar**: Uses JSON-RPC over WebSocket on dynamic loopback ports (`127.0.0.1:3125` or fallback).
 2. **Sidecar <-> Model Providers**: Direct HTTPS API calls to Anthropic, OpenAI, Google Gemini, OpenRouter, or local Ollama endpoints.
 3. **Desktop <-> Update Feed**: HTTPS GET queries against the release feed manifest (`desktop-latest/latest.json`) with Minisign Ed25519 signature verification.
+

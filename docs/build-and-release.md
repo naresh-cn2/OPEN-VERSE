@@ -115,3 +115,4 @@ Located at `website/public/open-verse-releases.json` and served live at `https:/
 7. [ ] Verify GitHub Actions workflows complete.
 8. [ ] Verify rolling `desktop-latest/latest.json` reflects the new version.
 9. [ ] Verify Vercel website deployment and download center hashes.
+

@@ -72,3 +72,4 @@ You do **not** need to return to the browser for future releases:
 2. Open the `.dmg` disk image.
 3. Drag the `OPEN-VERSE` application icon into your `/Applications` folder.
 4. Launch OPEN-VERSE from Launchpad or Spotlight.
+

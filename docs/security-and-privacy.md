@@ -49,3 +49,4 @@ When installing self-updating Android APKs outside the Play Store, Google Play P
 If you identify a security vulnerability in OPEN-VERSE, please report it responsibly:
 - Email: `security@openverse.ai` (or via GitHub Security Advisories).
 - Please do not open public GitHub issues for sensitive vulnerability reports until a patch has been published.
+

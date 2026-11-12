@@ -108,3 +108,4 @@ bun run tests/e2e-cross-device-updater-repair.ts
 # Android package installer lifecycle test (requires running emulator)
 bun run tests/e2e-android-auto-update-lifecycle.ts
 ```
+

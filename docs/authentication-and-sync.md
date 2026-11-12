@@ -42,3 +42,4 @@ For cross-device continuity across Windows, Android, and Web:
    - Provider API keys are **never** transmitted through telemetry feeds.
    - All client-to-cloud transports require TLS 1.3 encryption.
    - Sessions can be fully exported or wiped at any time directly through the Settings interface.
+

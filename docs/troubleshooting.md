@@ -72,3 +72,4 @@ cline-cli doctor fix
 - **Resolution**:
   1. Force refresh the about screen by tapping **Check for Updates**.
   2. Ensure your device has an active internet connection to reach `https://open-verse-website.vercel.app`.
+

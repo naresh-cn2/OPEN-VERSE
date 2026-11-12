@@ -73,3 +73,4 @@ Two dedicated automated test suites ensure no regressions in update behavior:
 
 - **`tests/e2e-cross-device-updater-repair.ts`**: Verifies NSIS pre-install file checks, manifest structure, and checksum agreement across API, public JSON, and UI.
 - **`tests/e2e-android-auto-update-lifecycle.ts`**: Simulates the end-to-end upgrade lifecycle on a real emulator, checking `PackageManager` states before, during, and after native PackageInstaller interactions.
+

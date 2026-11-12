@@ -54,3 +54,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial multi-platform release baseline for Windows, Android, macOS, Linux, and Web.
 - Core local AI assistant runtime engine.
 - Profile and session isolation directory structure (`~/.openverse`).
+
