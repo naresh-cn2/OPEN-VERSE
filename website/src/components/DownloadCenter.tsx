@@ -55,7 +55,7 @@ export const DownloadCenter: React.FC = () => {
     windows: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
       size: "134.3 MB",
-      sha256: "168aa910489128f43817d686f5a8129258c9f174be79e9ed833bd7e34e7fc3ac",
+      sha256: "7d32a4ba94e3b25152356f46e34a439839e6055cc8b4130d0a5fe4065a0e53bc",
       available: true,
     },
     mac: {
@@ -79,7 +79,7 @@ export const DownloadCenter: React.FC = () => {
     android: {
       name: `open-verse-mobile.apk`,
       size: "10.4 MB",
-      sha256: "063d689b5ed1affef45d075d5bc43e423179a6845c251ccd6c76a8b7be47f37d",
+      sha256: "950aba4b9e02d059e53415996c65a70f13ebf4da9780078b5759242ccfe675a7",
       available: true,
     },
     ios: {
