@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Laptop, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,14 @@ import { markOnboardingCompleted } from "@/lib/onboarding";
 import {
 	type OpenVerseUser,
 	completeOAuthCallback,
+	continueInOfflineMode,
 	initiateOAuthSignIn,
 } from "@/lib/open-verse-auth";
+import {
+	checkForUpdateNow,
+	restartToApplyUpdate,
+	useAppUpdateStatus,
+} from "@/hooks/use-app-update";
 import { FirstTimeOnboarding } from "./first-time-onboarding";
 
 const PRIVACY_URL = "https://open-verse-website.vercel.app/privacy";
@@ -50,6 +56,15 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [successNotice, setSuccessNotice] = useState<string | null>(null);
 	const [pendingOnboardingUser, setPendingOnboardingUser] = useState<OpenVerseUser | null>(null);
+	const updateStatus = useAppUpdateStatus();
+	const [checkingUpdate, setCheckingUpdate] = useState(false);
+	const [updateNotice, setUpdateNotice] = useState<string | null>(null);
+
+	const handleContinueAsGuest = () => {
+		const session = continueInOfflineMode();
+		markOnboardingCompleted();
+		onAuthenticated(session.user);
+	};
 
 	// Deep link and OAuth callback handler
 	useEffect(() => {
@@ -220,7 +235,32 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 					</div>
 				)}
 
-				{/* Main Action Area: Google Only */}
+				{/* Update Available Banner on Welcome/Login Screen */}
+				{updateStatus?.state === "ready" && (
+					<div className="mt-5 flex flex-col gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-3.5 text-xs text-emerald-200 backdrop-blur-md">
+						<div className="flex items-center justify-between gap-2">
+							<div className="flex items-center gap-2">
+								<Sparkles className="size-4 text-emerald-400 shrink-0" />
+								<span className="font-semibold text-emerald-100">
+									v{updateStatus.version || "0.2.5"} ready!
+								</span>
+							</div>
+							<Button
+								className="h-7 px-3 text-xs bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold rounded-lg shadow-sm"
+								onClick={() => void restartToApplyUpdate()}
+								size="sm"
+								type="button"
+							>
+								Restart to Update
+							</Button>
+						</div>
+						<p className="text-[11px] text-emerald-300/80">
+							An update has been downloaded. Restart to apply automatically.
+						</p>
+					</div>
+				)}
+
+				{/* Main Action Area */}
 				<div className="mt-7 flex flex-col gap-3">
 					{/* Primary Continue with Google Button */}
 					<Button
@@ -236,6 +276,43 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 						)}
 						<span>Continue with Google</span>
 					</Button>
+
+					{/* Secondary Continue as Guest (Offline / Local Mode) Button */}
+					<Button
+						className="w-full h-11 border border-zinc-800/90 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-300 hover:text-white font-medium text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all active:scale-[0.99]"
+						disabled={loading}
+						onClick={handleContinueAsGuest}
+						type="button"
+						variant="outline"
+					>
+						<Laptop className="size-4 text-zinc-400" />
+						<span>Continue as Guest</span>
+					</Button>
+				</div>
+
+				{/* Check for Updates Action */}
+				<div className="mt-4 flex items-center justify-center">
+					<button
+						className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
+						disabled={checkingUpdate}
+						onClick={async () => {
+							setCheckingUpdate(true);
+							setUpdateNotice(null);
+							try {
+								const res = await checkForUpdateNow();
+								if (!res || res.state === "idle") {
+									setUpdateNotice("App is up to date");
+									setTimeout(() => setUpdateNotice(null), 3500);
+								}
+							} finally {
+								setCheckingUpdate(false);
+							}
+						}}
+						type="button"
+					>
+						<RefreshCw className={`size-3.5 ${checkingUpdate ? "animate-spin text-violet-400" : ""}`} />
+						<span>{checkingUpdate ? "Checking for updates..." : updateNotice || "Check for Updates"}</span>
+					</button>
 				</div>
 
 				{/* Footer links */}

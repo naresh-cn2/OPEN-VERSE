@@ -381,6 +381,9 @@ export default function Home() {
 		return getStoredSession();
 	});
 
+	// Always listen and poll for app updates across all platforms, even before signing in
+	useAppUpdate();
+
 	useEffect(() => {
 		const mobile = isMobileEnvironment();
 		const standalone = mobile || desktopClient.isStandaloneMode();

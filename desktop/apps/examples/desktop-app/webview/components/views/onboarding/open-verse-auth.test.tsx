@@ -150,4 +150,23 @@ describe("OpenVerseAuth UI Component", () => {
 		const emailInput = container.querySelector('input[disabled]') as HTMLInputElement;
 		expect(emailInput?.value).toBe("newuser@gmail.com");
 	});
+
+	it("enters workspace in guest offline mode when clicking Continue as Guest", async () => {
+		const onAuth = vi.fn();
+		await act(async () => {
+			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
+		});
+
+		const guestBtn = buttonByText("Continue as Guest");
+		await act(async () => {
+			guestBtn.click();
+		});
+
+		expect(onAuth).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayName: "Local Developer",
+				isOfflineMode: true,
+			}),
+		);
+	});
 });
