@@ -137,9 +137,7 @@ export function getGoogleClientId(): string {
 		process.env.GOOGLE_CLIENT_ID ||
 		""
 	).trim();
-	if (envId) return envId;
-
-	return DEFAULT_GOOGLE_CLIENT_ID;
+	return envId;
 }
 
 export function setGoogleClientId(clientId: string): void {
@@ -550,7 +548,7 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 	}
 
 	const baseUrl = (config.authUrl || "https://open-verse-website.vercel.app/api/auth").replace(/\/$/, "");
-	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&redirect_to=${encodeURIComponent(redirectUrl)}`;
+	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&scope=openid+email+profile&redirect_to=${encodeURIComponent(redirectUrl)}`;
 }
 
 /**

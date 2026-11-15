@@ -52,10 +52,10 @@ describe("open-verse-auth library", () => {
 	describe("OAuth authorization URLs & PKCE", () => {
 		it("generates correct OAuth authorize URLs for Google", () => {
 			const googleUrl = getOAuthAuthorizeUrl("google");
-			expect(googleUrl).toContain("accounts.google.com/o/oauth2/v2/auth");
-			expect(googleUrl).toContain("client_id=");
+			expect(googleUrl).toContain("/api/auth/authorize");
+			expect(googleUrl).toContain("provider=google");
 			expect(googleUrl).toContain("prompt=select_account");
-			expect(googleUrl).toMatch(/redirect_uri=(openverse%3A%2F%2Fauth%2Fcallback|http)/);
+			expect(googleUrl).toContain("redirect_to=");
 		});
 
 		it("initiates OAuth flow by launching browser", async () => {

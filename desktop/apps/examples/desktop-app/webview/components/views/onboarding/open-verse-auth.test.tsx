@@ -87,9 +87,9 @@ describe("OpenVerseAuth UI Component", () => {
 		// Verifies that external browser URL was opened with accounts.google.com and prompt=select_account
 		expect(openExternalUrl).toHaveBeenCalledTimes(1);
 		const openedUrl = openExternalUrl.mock.calls[0][0];
-		expect(openedUrl).toContain("accounts.google.com/o/oauth2/v2/auth");
+		expect(openedUrl).toContain("/api/auth/authorize");
+		expect(openedUrl).toContain("provider=google");
 		expect(openedUrl).toContain("prompt=select_account");
-		expect(openedUrl).toContain("response_type=code");
 		expect(openedUrl).toContain("scope=openid+email+profile");
 	});
 
