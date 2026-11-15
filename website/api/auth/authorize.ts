@@ -15,6 +15,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID;
   const isGoogleConfigured = Boolean(clientId);
+  const isGithubConfigured = Boolean(process.env.GITHUB_CLIENT_ID);
 
   // 1. Real Google OAuth redirect if credentials are configured
   if (provider === "google" && isGoogleConfigured) {
