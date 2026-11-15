@@ -60,7 +60,7 @@ jobs:
           cd desktop/apps/examples/desktop-app
           bun install
           bunx vitest run webview/lib/open-verse-updater.test.ts webview/lib/open-verse-auth.test.ts --config vitest.config.ts
-          cd ../../..
+          cd "$GITHUB_WORKSPACE"
           bun tests/e2e-cross-device-updater-repair.ts
           bun tests/e2e-resilience-and-recovery.ts
 
