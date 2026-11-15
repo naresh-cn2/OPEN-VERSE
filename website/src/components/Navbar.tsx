@@ -73,7 +73,7 @@ export const Navbar: React.FC = () => {
             Security
           </a>
           <a href="#releases" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}>
-            v0.1.0
+            v0.2.5
           </a>
         </div>
 
