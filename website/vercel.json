@@ -5,6 +5,48 @@
   "installCommand": "bun install",
   "devCommand": "bun run dev",
   "regions": ["iad1"],
+  "redirects": [
+    {
+      "source": "/api/download/windows",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.5/OPEN-VERSE_0.2.5_x64-setup.exe",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/windows-zip",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.5/OPEN-VERSE_0.2.5_x64-windows.zip",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/android",
+      "destination": "/open-verse-mobile.apk",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/android-apk",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.5/open-verse-v0.2.5-android.apk",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/android-zip",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.5/open-verse-mobile-v0.2.5.zip",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/mac",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/linux-deb",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb",
+      "permanent": false
+    },
+    {
+      "source": "/api/download/linux-rpm",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/auth/authorize",
@@ -17,10 +59,6 @@
     {
       "source": "/api/releases/latest",
       "destination": "/api/releases/latest"
-    },
-    {
-      "source": "/api/download",
-      "destination": "/api/download"
     },
     {
       "source": "/api/devices/:path*",

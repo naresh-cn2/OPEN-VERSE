@@ -6,12 +6,11 @@
  * MIME types, redirect chains, and cryptographic checksum agreements.
  */
 
-import { DOWNLOAD_MAP } from "../website/api/download";
+const ROOT_DIR = join(__dirname, "..");
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { createHash } from "crypto";
 
-const ROOT_DIR = join(__dirname, "..");
 let passedTests = 0;
 let totalTests = 0;
 
@@ -31,25 +30,39 @@ async function runDownloadSimulation() {
   console.log("   OPEN-VERSE UNIVERSAL CROSS-DEVICE DOWNLOAD SIMULATION");
   console.log("==================================================================\n");
 
-  // 1. Validate API Download Map & Routing
-  console.log("--- 1. Download Route & Mapping Integrity ---");
-  assert(Boolean(DOWNLOAD_MAP.windows), "DOWNLOAD_MAP defines windows executable target");
-  assert(DOWNLOAD_MAP.windows.filename.endsWith(".exe"), "Windows target delivers .exe binary");
-  assert(Boolean(DOWNLOAD_MAP["windows-zip"]), "DOWNLOAD_MAP defines windows zip target for SmartScreen bypass");
-  assert(DOWNLOAD_MAP["windows-zip"].filename.endsWith(".zip"), "Windows zip target delivers .zip archive");
-  assert(Boolean(DOWNLOAD_MAP.android), "DOWNLOAD_MAP defines android apk target");
-  assert(DOWNLOAD_MAP.android.filename === "open-verse-mobile.apk", "Android target delivers open-verse-mobile.apk");
-  assert(Boolean(DOWNLOAD_MAP["android-zip"]), "DOWNLOAD_MAP defines android zip target");
-  assert(Boolean(DOWNLOAD_MAP.mac), "DOWNLOAD_MAP defines mac target");
-  assert(Boolean(DOWNLOAD_MAP["linux-deb"]), "DOWNLOAD_MAP defines linux deb target");
-  assert(Boolean(DOWNLOAD_MAP["linux-rpm"]), "DOWNLOAD_MAP defines linux rpm target");
-
-  // 2. Validate Vercel Headers Configuration for Android APK Delivery
-  console.log("\n--- 2. Vercel Header Configuration (Android PackageInstaller Fix) ---");
+  // 1. Validate Edge Redirects & Function Count (< 12 for Hobby plan)
+  console.log("--- 1. Download Route & Edge Redirect Integrity ---");
   const vercelJsonPath = join(ROOT_DIR, "website", "vercel.json");
   assert(existsSync(vercelJsonPath), "website/vercel.json exists");
   const vercelConfig = JSON.parse(readFileSync(vercelJsonPath, "utf-8"));
 
+  const redirects = vercelConfig.redirects || [];
+  const winRedirect = redirects.find((r: any) => r.source === "/api/download/windows");
+  assert(Boolean(winRedirect), "Redirect defines windows executable target");
+  assert(winRedirect.destination.endsWith(".exe"), "Windows target delivers .exe binary");
+
+  const winZipRedirect = redirects.find((r: any) => r.source === "/api/download/windows-zip");
+  assert(Boolean(winZipRedirect), "Redirect defines windows zip target for SmartScreen bypass");
+  assert(winZipRedirect.destination.endsWith(".zip"), "Windows zip target delivers .zip archive");
+
+  const androidRedirect = redirects.find((r: any) => r.source === "/api/download/android");
+  assert(Boolean(androidRedirect), "Redirect defines android apk target");
+  assert(androidRedirect.destination.includes("open-verse-mobile.apk"), "Android target delivers open-verse-mobile.apk");
+
+  const androidZipRedirect = redirects.find((r: any) => r.source === "/api/download/android-zip");
+  assert(Boolean(androidZipRedirect), "Redirect defines android zip target");
+
+  const macRedirect = redirects.find((r: any) => r.source === "/api/download/mac");
+  assert(Boolean(macRedirect), "Redirect defines mac target");
+
+  const linuxDebRedirect = redirects.find((r: any) => r.source === "/api/download/linux-deb");
+  assert(Boolean(linuxDebRedirect), "Redirect defines linux deb target");
+
+  const linuxRpmRedirect = redirects.find((r: any) => r.source === "/api/download/linux-rpm");
+  assert(Boolean(linuxRpmRedirect), "Redirect defines linux rpm target");
+
+  // 2. Validate Vercel Headers Configuration for Android APK Delivery
+  console.log("\n--- 2. Vercel Header Configuration (Android PackageInstaller Fix) ---");
   const apkHeaderRule = vercelConfig.headers?.find(
     (h: any) => h.source === "/open-verse-mobile.apk"
   );
@@ -79,8 +92,9 @@ async function runDownloadSimulation() {
   const apkBytes = readFileSync(publicApkPath);
   assert(apkBytes.length > 5 * 1024 * 1024, `APK artifact is substantial (${(apkBytes.length / (1024 * 1024)).toFixed(1)} MB)`);
 
-  assert(DOWNLOAD_MAP["android-apk"].url.includes("github.com"), "Versioned APK is hosted on high-capacity GitHub Releases");
-  assert(DOWNLOAD_MAP["android-zip"].url.includes("github.com"), "Mobile zip package is hosted on high-capacity GitHub Releases");
+  const androidApkRedirect = redirects.find((r: any) => r.source === "/api/download/android-apk");
+  assert(Boolean(androidApkRedirect?.destination.includes("github.com")), "Versioned APK is hosted on high-capacity GitHub Releases");
+  assert(Boolean(androidZipRedirect?.destination.includes("github.com")), "Mobile zip package is hosted on high-capacity GitHub Releases");
 
   // 4. Validate Website UI Component Links & Warnings
   console.log("\n--- 4. Website DownloadCenter UI Checks ---");
