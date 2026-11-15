@@ -71,27 +71,16 @@ async function runDownloadSimulation() {
     "APK Content-Disposition explicitly set to attachment (Prevents browser inline render / corrupt package error)"
   );
 
-  const zipHeaderRule = vercelConfig.headers?.find(
-    (h: any) => h.source === "/open-verse-mobile-v0.2.5.zip"
-  );
-  assert(Boolean(zipHeaderRule), "vercel.json defines explicit header rule for mobile zip package");
-
   // 3. Validate Public Download Artifacts on Website
   console.log("\n--- 3. Static Download Artifact Integrity ---");
   const publicApkPath = join(ROOT_DIR, "website", "public", "open-verse-mobile.apk");
   assert(existsSync(publicApkPath), "website/public/open-verse-mobile.apk exists");
 
   const apkBytes = readFileSync(publicApkPath);
-  const calculatedApkSha = createHash("sha256").update(apkBytes).digest("hex");
   assert(apkBytes.length > 5 * 1024 * 1024, `APK artifact is substantial (${(apkBytes.length / (1024 * 1024)).toFixed(1)} MB)`);
 
-  const publicVersionedApkPath = join(ROOT_DIR, "website", "public", "open-verse-v0.2.5-android.apk");
-  assert(existsSync(publicVersionedApkPath), "website/public/open-verse-v0.2.5-android.apk mirror exists");
-
-  const publicZipPath = join(ROOT_DIR, "website", "public", "open-verse-mobile-v0.2.5.zip");
-  assert(existsSync(publicZipPath), "website/public/open-verse-mobile-v0.2.5.zip package exists");
-  const zipBytes = readFileSync(publicZipPath);
-  assert(zipBytes.length > 5 * 1024 * 1024, `Mobile zip artifact is substantial (${(zipBytes.length / (1024 * 1024)).toFixed(1)} MB)`);
+  assert(DOWNLOAD_MAP["android-apk"].url.includes("github.com"), "Versioned APK is hosted on high-capacity GitHub Releases");
+  assert(DOWNLOAD_MAP["android-zip"].url.includes("github.com"), "Mobile zip package is hosted on high-capacity GitHub Releases");
 
   // 4. Validate Website UI Component Links & Warnings
   console.log("\n--- 4. Website DownloadCenter UI Checks ---");

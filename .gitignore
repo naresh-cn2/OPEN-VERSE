@@ -20,3 +20,6 @@ Thumbs.db
 
 # Engine repository (original source preserved independently)
 cline/
+
+.vercel
+.env*

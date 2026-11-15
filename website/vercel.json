@@ -1,7 +1,7 @@
 {
-  "framework": "vite",
   "buildCommand": "bun run build",
   "outputDirectory": "dist",
+  "framework": null,
   "installCommand": "bun install",
   "devCommand": "bun run dev",
   "regions": ["iad1"],
@@ -46,48 +46,6 @@
         {
           "key": "Content-Disposition",
           "value": "attachment; filename=\"open-verse-mobile.apk\""
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    },
-    {
-      "source": "/open-verse-v0.2.5-android.apk",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/vnd.android.package-archive"
-        },
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"open-verse-v0.2.5-android.apk\""
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    },
-    {
-      "source": "/open-verse-mobile-v0.2.5.zip",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/zip"
-        },
-        {
-          "key": "Content-Disposition",
-          "value": "attachment; filename=\"open-verse-mobile-v0.2.5.zip\""
         },
         {
           "key": "Cache-Control",

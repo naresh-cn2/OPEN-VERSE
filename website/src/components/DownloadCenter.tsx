@@ -48,8 +48,8 @@ export const DownloadCenter: React.FC = () => {
     linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm.sig`,
     androidApk: "/open-verse-mobile.apk",
-    androidVersionedApk: `/open-verse-v${DESKTOP_VERSION}-android.apk`,
-    androidZip: `/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
+    androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
+    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
     androidApi: "/api/download?platform=android",
   };
 

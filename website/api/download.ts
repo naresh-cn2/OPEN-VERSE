@@ -22,12 +22,12 @@ export const DOWNLOAD_MAP: Record<string, { filename: string; contentType: strin
   "android-apk": {
     filename: `open-verse-v${VERSION}-android.apk`,
     contentType: "application/vnd.android.package-archive",
-    url: `https://open-verse-website.vercel.app/open-verse-v${VERSION}-android.apk`,
+    url: `https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/open-verse-v${VERSION}-android.apk`,
   },
   "android-zip": {
     filename: `open-verse-mobile-v${VERSION}.zip`,
     contentType: "application/zip",
-    url: `https://open-verse-website.vercel.app/open-verse-mobile-v${VERSION}.zip`,
+    url: `https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/open-verse-mobile-v${VERSION}.zip`,
   },
   mac: {
     filename: `OPEN-VERSE_${VERSION}_aarch64.dmg`,
