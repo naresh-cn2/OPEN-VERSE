@@ -1,7 +1,7 @@
 {
+  "framework": "vite",
   "buildCommand": "bun run build",
   "outputDirectory": "dist",
-  "framework": null,
   "installCommand": "bun install",
   "devCommand": "bun run dev",
   "regions": ["iad1"],
@@ -31,7 +31,7 @@
       "destination": "/api/sync/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/|.*\\.[^/]+$).*)",
       "destination": "/index.html"
     }
   ],
