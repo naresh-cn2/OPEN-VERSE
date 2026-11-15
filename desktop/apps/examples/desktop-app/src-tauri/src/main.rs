@@ -1024,8 +1024,10 @@ fn open_external_url(url: String) -> Result<(), String> {
     }
     #[cfg(target_os = "windows")]
     {
-        std::process::Command::new("rundll32")
-            .args(&["url.dll,FileProtocolHandler", trimmed])
+        // Use PowerShell Start-Process to ensure URL query parameters containing '&' are never truncated
+        let escaped = trimmed.replace('\'', "''");
+        std::process::Command::new("powershell")
+            .args(&["-NoProfile", "-NonInteractive", "-Command", &format!("Start-Process '{}'", escaped)])
             .spawn()
             .map_err(|e| format!("Failed to open URL in browser: {e}"))?;
     }

@@ -534,19 +534,8 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 		}
 	}
 
-	// Route directly to Google's official accounts.google.com OAuth with loopback redirect URI
-	if (provider === "google" && googleClientId) {
-		const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-		googleAuthUrl.searchParams.set("client_id", googleClientId);
-		googleAuthUrl.searchParams.set("redirect_uri", redirectUrl);
-		googleAuthUrl.searchParams.set("response_type", "code");
-		googleAuthUrl.searchParams.set("access_type", "offline");
-		googleAuthUrl.searchParams.set("scope", "openid email profile");
-		googleAuthUrl.searchParams.set("prompt", "select_account");
-		googleAuthUrl.searchParams.set("state", `st_${Date.now()}`);
-		return googleAuthUrl.toString();
-	}
-
+	// Always route via OPEN-VERSE Universal Identity Gateway
+	// Ensures all accounts, clients, and custom domains authenticate seamlessly without Google Error 400
 	const baseUrl = (config.authUrl || "https://open-verse-website.vercel.app/api/auth").replace(/\/$/, "");
 	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&scope=openid+email+profile&redirect_to=${encodeURIComponent(redirectUrl)}`;
 }

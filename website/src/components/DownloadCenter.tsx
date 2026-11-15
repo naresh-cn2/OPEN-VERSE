@@ -85,7 +85,7 @@ export const DownloadCenter: React.FC = () => {
       versionedName: `open-verse-v${DESKTOP_VERSION}-android.apk`,
       zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
       size: "10.0 MB",
-      sha256: "72489e188e5afe99a298f640905f121d2d9f185138adc82cdd05134d2ed1761c",
+      sha256: "6116907125041942eeaeffc77844ae9392b0a8ee78cbbaa47d29ae439e962483",
       available: true,
     },
     ios: {

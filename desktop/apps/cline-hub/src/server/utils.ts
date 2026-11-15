@@ -143,14 +143,20 @@ export function chunkText(chunk: unknown): string {
 
 export function openExternalUrl(url: string): void {
 	const platform = process.platform;
-	const command =
-		platform === "darwin" ? "open" : platform === "win32" ? "cmd" : "xdg-open";
-	const args = platform === "win32" ? ["/c", "start", "", url] : [url];
-	const child = spawn(command, args, {
+	if (platform === "win32") {
+		const escaped = url.replace(/'/g, "''");
+		const child = spawn("powershell", ["-NoProfile", "-NonInteractive", "-Command", `Start-Process '${escaped}'`], {
+			stdio: "ignore",
+			detached: true,
+			windowsHide: true,
+		});
+		child.unref();
+		return;
+	}
+	const command = platform === "darwin" ? "open" : "xdg-open";
+	const child = spawn(command, [url], {
 		stdio: "ignore",
 		detached: true,
-		// Prevent a console window from flashing on Windows; the launched
-		// browser/app still opens normally.
 		windowsHide: true,
 	});
 	child.unref();
