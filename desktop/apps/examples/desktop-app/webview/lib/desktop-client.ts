@@ -1566,7 +1566,7 @@ class DesktopClient {
 	): Promise<T> {
 		switch (command) {
 			case "get_process_context": {
-				let dynamicVer = "0.2.3";
+				let dynamicVer = "0.2.5";
 				if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
 					try {
 						const v = (window as any).AndroidInterface.getAppVersion();
@@ -1834,7 +1834,7 @@ class DesktopClient {
 						details: res,
 					} as T;
 				} catch {
-					let dynamicVer = "0.2.3";
+					let dynamicVer = "0.2.5";
 					if (typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion) {
 						try {
 							const v = (window as any).AndroidInterface.getAppVersion();
@@ -1852,21 +1852,17 @@ class DesktopClient {
 			}
 			case "restart_to_apply_update": {
 				if (typeof window !== "undefined" && "AndroidInterface" in window) {
-					const android = (window as unknown as {
-						AndroidInterface: {
-							downloadAndInstallApkWithChecksum?: (u: string, s: string, v: number) => void;
-							downloadAndInstallApk: (u: string) => void;
-						};
-					}).AndroidInterface;
-					const apkUrl = "https://open-verse-website.vercel.app/open-verse-mobile.apk";
-					const sha256 = "063d689b5ed1affef45d075d5bc43e423179a6845c251ccd6c76a8b7be47f37d";
-					if (typeof android.downloadAndInstallApkWithChecksum === "function") {
-						android.downloadAndInstallApkWithChecksum(apkUrl, sha256, 4);
-						return true as T;
-					} else if (typeof android.downloadAndInstallApk === "function") {
-						android.downloadAndInstallApk(apkUrl);
-						return true as T;
+					try {
+						const { checkForAppUpdate, installAvailableUpdate } = await import("./open-verse-updater");
+						const check = await checkForAppUpdate();
+						if (check.updateAvailable) {
+							await installAvailableUpdate(check);
+							return true as T;
+						}
+					} catch (e) {
+						console.error("[desktop-client] dynamic update installation error:", e);
 					}
+					return true as T;
 				}
 				if (typeof window !== "undefined") {
 					window.location.reload();

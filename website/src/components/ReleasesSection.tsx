@@ -6,10 +6,24 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.4",
+      version: "v0.2.5",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Seamless Auto-Updater Repair: Eliminated Android restart and update loop with dynamic SHA-256 and monotonic versionCode 7 upgrade.",
+        "Dynamic Update Delivery: Fixed standalone client updater bridge to fetch live release metadata instead of legacy cached hashes.",
+        "Google-First Native Authentication: Official Google Account Chooser with dynamic multi-account selection (prompt=select_account).",
+        "Authoritative Google Account Profile: Real-time display of verified Google account name and profile picture with no-referrer CDN security bypass.",
+        "Strict Multi-Account Privacy: Isolated local workspace sessions and clean state separation per Google account.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.4",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Google-First Native Authentication: Official Google Account Chooser with dynamic multi-account selection (prompt=select_account).",
         "Authoritative Google Account Profile: Real-time display of verified Google account name and profile picture with no-referrer CDN security bypass.",

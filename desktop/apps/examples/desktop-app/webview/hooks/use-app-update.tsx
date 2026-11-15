@@ -139,22 +139,23 @@ export async function restartToApplyUpdate(): Promise<boolean> {
 		}
 	}
 
-	if (currentStatus.details) {
-		try {
-			const res = await installAvailableUpdate(currentStatus.details);
+	try {
+		const target = currentStatus.details || (await checkForAppUpdate());
+		if (target && target.updateAvailable) {
+			const res = await installAvailableUpdate(target);
 			toast({
 				title: "Update",
 				description: res.message,
 			});
 			return true;
-		} catch (err) {
-			toast({
-				variant: "destructive",
-				title: "Update failed",
-				description: err instanceof Error ? err.message : String(err),
-			});
-			return false;
 		}
+	} catch (err) {
+		toast({
+			variant: "destructive",
+			title: "Update failed",
+			description: err instanceof Error ? err.message : String(err),
+		});
+		return false;
 	}
 
 	return false;
@@ -165,6 +166,9 @@ export async function restartToApplyUpdate(): Promise<boolean> {
 let notifiedVersion: string | null = null;
 
 function showUpdateReadyToast(version: string, platform?: string) {
+	if (notifiedVersion === version) {
+		return;
+	}
 	notifiedVersion = version;
 	const isAndroid = platform === "android" || (typeof window !== "undefined" && Boolean((window as any).AndroidInterface));
 

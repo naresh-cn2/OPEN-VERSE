@@ -209,6 +209,9 @@ jobs:
             SIG=$(jq -r '.platforms["windows-x86_64"].signature // empty' release-deliverables/windows/latest.json)
           fi
           
+          # Extract dynamic versionCode from mobile/android/app/build.gradle
+          VCODE=$(grep -oP 'versionCode\s+\K[0-9]+' mobile/android/app/build.gradle || echo "7")
+          
           mkdir -p release-deliverables/manifests
           cat <<EOF > release-deliverables/manifests/open-verse-releases.json
           {
@@ -216,11 +219,11 @@ jobs:
             "releaseDate": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
             "channel": "$CHANNEL",
             "mandatory": false,
-            "releaseNotes": "• Native Android PackageInstaller Intent Bridge (v$VERSION / versionCode 5) with seamless in-app upgrade\n• In-app update check state fixes for instant detection across Android and Desktop\n• Desktop Tauri v$VERSION NSIS installer and signed updater bundle with Minisign cryptography",
+            "releaseNotes": "• Google-First Native Authentication: Official Google Account Chooser with dynamic multi-account selection\n• Authentic Google Profile Sync: Real-time display of verified Google Account name and profile photo with no-referrer CDN security bypass\n• Multi-Account Privacy & Isolation: Strict per-account workspace isolation and state partitioning\n• Seamless Auto-Updater Repair: Dynamic checksum verification, monotonic versionCode upgrade, and elimination of restart loop",
             "platforms": {
               "android": {
                 "version": "$VERSION",
-                "versionCode": 5,
+                "versionCode": $VCODE,
                 "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
                 "sha256": "$SHA",
                 "minSdk": 24

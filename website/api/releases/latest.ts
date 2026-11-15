@@ -35,32 +35,32 @@ export interface UnifiedReleaseManifest {
 }
 
 export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
-  version: "0.2.4",
+  version: "0.2.5",
   releaseDate: new Date().toISOString(),
   channel: "stable",
   mandatory: false,
-  releaseNotes: "• Google-First Native Authentication: Official Google Account Chooser with multi-account selection (prompt=select_account)\n• Authentic Google Profile Sync: Real-time display of verified Google Account name and profile photo with no-referrer CDN security bypass\n• Multi-Account Privacy & Isolation: Strict per-account workspace isolation and state partitioning\n• Unified Update System: Automatic detection and seamless release updates across all connected devices",
+  releaseNotes: "• Google-First Native Authentication: Official Google Account Chooser with dynamic multi-account selection\n• Authentic Google Profile Sync: Real-time display of verified Google Account name and profile photo with no-referrer CDN security bypass\n• Multi-Account Privacy & Isolation: Strict per-account workspace isolation and state partitioning\n• Seamless Auto-Updater Repair: Dynamic checksum verification, monotonic versionCode upgrade, and elimination of restart loop",
   platforms: {
     "windows-x86_64": {
-      version: "0.2.4",
-      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.4/OPEN-VERSE_0.2.4_x64-setup.exe",
+      version: "0.2.5",
+      url: "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.5/OPEN-VERSE_0.2.5_x64-setup.exe",
       sha256: "7d32a4ba94e3b25152356f46e34a439839e6055cc8b4130d0a5fe4065a0e53bc",
-      signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFhyUnM1SWs2RExydm1XYk5oVDhVTThIOXB4T2ZFZ2RLcGc4dVAzZlVMT3dBNkVpQ3hmcW1jRk1IRWR0RGY5MURIYjh0VnRkVXUzUlI1MU5JYVZhd0FJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NTAxMjM2CWZpbGU6T1BFTi1WRVJTRV8wLjIuM194NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjMKaGRUZGpINFZLS3FkTWpWMHJDL0h6NmErZkNSNi8wOVUvcUtleGhvYTAwa0srL1ZZVHJyd05lOEozemFpc1dFZ2RNT3BvT3FmUE5GcmZDT2lVMlNmRGc9PQo=",
+      signature: "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFpqYnlIUUEwUkNvaHVYUi95bjFLUVBVK3ZFbko0SWxqdzJiMS90K3NHNmFEc0dmUzMzOEpTNWljQ1EzZVpWenE4L0d6Z2NqWXd1QXNCbEdidkZZckFVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NzIzNzQwCWZpbGU6T1BFTi1WRVJTRV8wLjIuNF94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjQKem5IU2Z2UW1qeUUzMlNxczdZZjQ4WVZwb3hpRlpKN01iOGQ1QURTVnh1VU5JS1pxMTM4aXVWS0pKSmJ3aThndEFWUkVHOHh3V2VKTTdMZVlGNThHQVE9PQo=",
     },
     android: {
-      version: "0.2.4",
-      versionCode: 6,
+      version: "0.2.5",
+      versionCode: 7,
       url: "https://open-verse-website.vercel.app/open-verse-mobile.apk",
       sha256: "950aba4b9e02d059e53415996c65a70f13ebf4da9780078b5759242ccfe675a7",
       minSdk: 24
     },
     ios: {
-      version: "0.2.4",
-      build: "5",
+      version: "0.2.5",
+      build: "6",
       testFlightUrl: "https://testflight.apple.com/join/openverse-preview"
     },
     web: {
-      version: "0.2.4",
+      version: "0.2.5",
       deployedAt: new Date().toISOString()
     }
   }
