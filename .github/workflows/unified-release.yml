@@ -57,13 +57,12 @@ jobs:
 
       - name: Run Quality Gate & Regression Tests
         run: |
-          bun install
           cd desktop/apps/examples/desktop-app
           bun install
           bunx vitest run webview/lib/open-verse-updater.test.ts webview/lib/open-verse-auth.test.ts --config vitest.config.ts
           cd ../../..
-          bun run tests/e2e-cross-device-updater-repair.ts
-          bun run tests/e2e-resilience-and-recovery.ts
+          bun tests/e2e-cross-device-updater-repair.ts
+          bun tests/e2e-resilience-and-recovery.ts
 
   build-android:
     name: 2. Build Android APK & AAB
