@@ -36,48 +36,54 @@ export const DownloadCenter: React.FC = () => {
   const DESKTOP_VERSION = "0.2.5";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
-  // Direct download assets hosted on GitHub Releases (backend binary host only)
-  // Tag format: vX.Y.Z (set by desktop-release.yml workflow)
+  // Direct download assets hosted on GitHub Releases & Vercel CDN
   const ASSETS = {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+    windowsZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_aarch64.dmg`,
-    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
-    linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb.sig`,
-    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
-    linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm.sig`,
+    windowsApi: `/api/download?platform=windows`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
+    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
+    linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb.sig`,
+    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
+    linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm.sig`,
     androidApk: "/open-verse-mobile.apk",
-    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
+    androidVersionedApk: `/open-verse-v${DESKTOP_VERSION}-android.apk`,
+    androidZip: `/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
+    androidApi: "/api/download?platform=android",
   };
 
   // File metadata (size + checksum) — updated via release automation
   const FILE_META = {
     windows: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-      size: "134.3 MB",
+      zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
+      size: "167.6 MB",
       sha256: "7d32a4ba94e3b25152356f46e34a439839e6055cc8b4130d0a5fe4065a0e53bc",
       available: true,
     },
     mac: {
-      name: `OPEN-VERSE_${DESKTOP_VERSION}_aarch64.dmg`,
+      name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
       size: "165 MB",
       sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
       available: true,
     },
     linuxDeb: {
-      name: `OPEN-VERSE_${DESKTOP_VERSION}_amd64.deb`,
+      name: `OPEN-VERSE_0.2.0_amd64.deb`,
       size: "228 MB",
       sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
       available: true,
     },
     linuxRpm: {
-      name: `OPEN-VERSE-${DESKTOP_VERSION}-1.x86_64.rpm`,
+      name: `OPEN-VERSE-0.2.0-1.x86_64.rpm`,
       size: "228 MB",
       sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
       available: true,
     },
     android: {
       name: `open-verse-mobile.apk`,
+      versionedName: `open-verse-v${DESKTOP_VERSION}-android.apk`,
+      zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
       size: "10.4 MB",
       sha256: "98ece02fc51e627ba54e20d72553d241f75aebaefec111992a447df295a3fd69",
       available: true,
@@ -192,12 +198,41 @@ export const DownloadCenter: React.FC = () => {
                 <a
                   href={ASSETS.windows}
                   className="btn-primary"
-                  style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
+                  style={{ padding: "12px 24px", fontSize: "0.95rem", gap: 8 }}
                   download={FILE_META.windows.name}
                 >
                   <Download size={18} />
                   <span>Download for Windows (.exe)</span>
                 </a>
+                <a
+                  href={ASSETS.windowsZip}
+                  className="btn-secondary"
+                  style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
+                  download={FILE_META.windows.zipName}
+                >
+                  <Download size={18} />
+                  <span>Download ZIP (.zip)</span>
+                </a>
+              </div>
+            </div>
+
+            {/* SmartScreen & Browser Warning Clarification */}
+            <div style={{ background: "rgba(14, 165, 233, 0.08)", border: "1px solid rgba(14, 165, 233, 0.25)", borderRadius: 10, padding: "14px 18px", marginBottom: 20, fontSize: "0.84rem", color: "#e2e8f0", lineHeight: 1.6 }}>
+              <div style={{ fontWeight: 600, color: "var(--sky)", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                <ShieldCheck size={16} />
+                <span>Windows Defender SmartScreen & Chrome Note:</span>
+              </div>
+              <div>
+                Because OPEN-VERSE is open-source and newly released, Windows SmartScreen or Chrome may prompt <em>&ldquo;Unrecognized app&rdquo;</em> or <em>&ldquo;File not commonly downloaded&rdquo;</em>.
+              </div>
+              <div style={{ marginTop: 6 }}>
+                • <strong>In Chrome / Edge:</strong> In your browser downloads bar/tray, click <strong>&ldquo;Keep&rdquo; → &ldquo;Keep anyway&rdquo;</strong> to allow the download.
+              </div>
+              <div>
+                • <strong>When Opening Installer:</strong> If Windows SmartScreen appears, click <strong>&ldquo;More info&rdquo;</strong> and then click <strong>&ldquo;Run anyway&rdquo;</strong>.
+              </div>
+              <div>
+                • <strong>Alternative:</strong> Download the <strong>ZIP archive</strong> above, extract it, and run the installer directly.
               </div>
             </div>
 
@@ -443,8 +478,8 @@ export const DownloadCenter: React.FC = () => {
                     <span>Download Android APK (v{DESKTOP_VERSION})</span>
                   </a>
                   <a
-                    href="/open-verse-mobile.apk"
-                    download="open-verse-mobile.apk"
+                    href={ASSETS.androidVersionedApk}
+                    download={FILE_META.android.versionedName}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -461,11 +496,11 @@ export const DownloadCenter: React.FC = () => {
                       textDecoration: "none",
                     }}
                   >
-                    <span>Alternative Direct APK Mirror (Local)</span>
+                    <span>Direct APK Mirror ({FILE_META.android.versionedName})</span>
                   </a>
                   <a
                     href={ASSETS.androidZip}
-                    download={`open-verse-mobile-v${DESKTOP_VERSION}.zip`}
+                    download={FILE_META.android.zipName}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -482,7 +517,7 @@ export const DownloadCenter: React.FC = () => {
                       textDecoration: "none",
                     }}
                   >
-                    <span>Download ZIP Package (Bypasses Chrome APK Scan Hang)</span>
+                    <span>Download ZIP Package (.zip Archive)</span>
                   </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
                     <span>Size: {FILE_META.android.size}</span>
@@ -505,8 +540,11 @@ export const DownloadCenter: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div style={{ background: "rgba(14, 165, 233, 0.08)", border: "1px solid rgba(14, 165, 233, 0.25)", borderRadius: 8, padding: "10px 14px", fontSize: "0.78rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
-                  <strong style={{ color: "var(--sky)" }}>Android Chrome Tip:</strong> If Chrome displays <em>&ldquo;File might be harmful&rdquo;</em>, tap <strong>&ldquo;Download anyway&rdquo;</strong> to complete the download, then tap <strong>&ldquo;Open&rdquo;</strong> to install.
+                <div style={{ background: "rgba(14, 165, 233, 0.08)", border: "1px solid rgba(14, 165, 233, 0.25)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
+                  <strong style={{ color: "var(--sky)" }}>Android Download & Install Guidance:</strong>
+                  <div style={{ marginTop: 4 }}>• If Chrome displays <em>&ldquo;File might be harmful&rdquo;</em>, tap <strong>&ldquo;Download anyway&rdquo;</strong>.</div>
+                  <div>• When download completes, tap <strong>&ldquo;Open&rdquo;</strong> to install.</div>
+                  <div>• If tapping the browser notification says <em>&ldquo;Can&apos;t open file&rdquo;</em>, open your phone&apos;s <strong>Files</strong> or <strong>My Files</strong> app, go to the <strong>Downloads</strong> folder, and tap <code>open-verse-mobile.apk</code> to launch Android Package Installer.</div>
                 </div>
                 <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
                   <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Installation Instructions:</div>
