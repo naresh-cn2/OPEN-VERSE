@@ -528,14 +528,16 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 	const config = getAuthConfig();
 	const googleClientId = getGoogleClientId();
 
-	// Check if running in a standard local browser (e.g. localhost:3125)
-	const isLocalBrowser =
-		typeof window !== "undefined" &&
-		window.location.protocol.startsWith("http") &&
-		(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+	// Default loopback redirect URI for Google OAuth (RFC 8252 standard for desktop/mobile)
+	let redirectUrl = "http://localhost:3125";
+	if (typeof window !== "undefined") {
+		if (window.location.protocol.startsWith("http") && window.location.origin) {
+			redirectUrl = window.location.origin;
+		}
+	}
 
-	if (isLocalBrowser && provider === "google" && googleClientId) {
-		const redirectUrl = window.location.origin;
+	// Route directly to Google's official accounts.google.com OAuth with loopback redirect URI
+	if (provider === "google" && googleClientId) {
 		const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 		googleAuthUrl.searchParams.set("client_id", googleClientId);
 		googleAuthUrl.searchParams.set("redirect_uri", redirectUrl);
@@ -547,10 +549,8 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 		return googleAuthUrl.toString();
 	}
 
-	// For native apps (Android, Desktop Tauri, iOS), route through authorized Vercel OAuth gateway
 	const baseUrl = (config.authUrl || "https://open-verse-website.vercel.app/api/auth").replace(/\/$/, "");
-	const redirectTarget = "openverse://auth/callback";
-	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&redirect_to=${encodeURIComponent(redirectTarget)}`;
+	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&redirect_to=${encodeURIComponent(redirectUrl)}`;
 }
 
 /**
