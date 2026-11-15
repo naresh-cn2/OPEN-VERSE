@@ -1,5 +1,27 @@
 # OPEN-VERSE Changelog
 
+## 0.2.5
+
+- **Seamless Auto-Updater Repair**: Completely eliminated repeated update loops across Android and Desktop. Fixed native in-app package installation so updates apply right inside the app without redirecting to the website.
+- **Monotonic Android VersionCode 7**: Bumped binary versionCode to 7, allowing immediate, automatic installation over previous builds without checksum or downgrade aborts.
+- **Dynamic In-App Update Delivery**: Integrated real-time release queries with live SHA-256 integrity verification (`98ece02f...`), replacing legacy hardcoded hashes.
+- **Google-First Native Authentication**: Official Google Account Chooser with dynamic multi-account selection (`prompt=select_account`).
+- **Authentic Google Profile Display**: Real-time display of verified Google account name and profile avatar with strict `no-referrer` CDN security bypass.
+- **Account Isolation & Privacy**: Separate local workspace sessions and clean state separation per Google account.
+
+## 0.2.4
+
+- **Google-First Authentication Experience**: Seamless login via Google's official account chooser with one-click multi-account switching.
+- **Account Settings & Profile Sync**: Direct sync of user's Google display name and high-resolution profile picture across sidebar and account view.
+- **Unified Cross-Platform Releases**: Synchronized release channel delivering simultaneous updates to Windows, Android, and Web.
+
+## 0.2.3
+
+- **Native Android PackageInstaller Intent Bridge**: Instant in-app APK installation via Android PackageInstaller activity (`v0.2.3` / `versionCode 5`).
+- **Reactive In-App Update Lifecycle**: Fixed update-check resolution state in About view so updates immediately display with action buttons.
+- **Secure Internal Cache APK Downloader**: Direct streaming into isolated app cache with streaming SHA-256 integrity verification.
+- **Desktop Tauri 0.2.3 Suite**: Verified NSIS installer and signed updater bundle with Minisign cryptographic verification.
+
 ## 0.2.2
 
 - **Native Android Package Manager Bridge**: Live version detection via Android `PackageManager` (versionName `0.2.2`, versionCode `4`), permanently resolving repeated update prompts.

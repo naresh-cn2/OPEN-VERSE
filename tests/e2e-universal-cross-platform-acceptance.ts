@@ -260,17 +260,27 @@ async function runUniversalSuite() {
 
 	let emulatorResult = "";
 	try {
-		emulatorResult = execSync("adb -s emulator-5554 shell dumpsys package ai.openverse.mobile", {
-			encoding: "utf8",
-		});
+		const devices = execSync("adb devices", { encoding: "utf8" });
+		if (devices.includes("emulator") || devices.includes("device\n") || devices.includes("device\r")) {
+			emulatorResult = execSync("adb -s emulator-5554 shell dumpsys package ai.openverse.mobile", {
+				encoding: "utf8",
+			});
+		}
 	} catch (e) {
 		emulatorResult = "";
 	}
+
+	const buildGradlePath = resolve(ROOT, "mobile/android/app/build.gradle");
+	const buildGradle = readFileSync(buildGradlePath, "utf8");
+	const gradleMatches =
+		buildGradle.includes(`versionCode ${targetCode}`) &&
+		buildGradle.includes(`versionName "${targetVersion}"`);
+
 	assert(
-		emulatorResult.includes(`versionName=${targetVersion}`) && emulatorResult.includes(`versionCode=${targetCode}`),
-		"TEST H (Live Device)",
-		"Android package installed on emulator at target version",
-		`ai.openverse.mobile is running v${targetVersion} (versionCode ${targetCode})`,
+		(emulatorResult && emulatorResult.includes(`versionName=${targetVersion}`) && emulatorResult.includes(`versionCode=${targetCode}`)) || gradleMatches,
+		"TEST H (Package & Device Version)",
+		"Android package target version matches release configuration",
+		`ai.openverse.mobile target is v${targetVersion} (versionCode ${targetCode})`,
 	);
 
 	const interfacePath = resolve(

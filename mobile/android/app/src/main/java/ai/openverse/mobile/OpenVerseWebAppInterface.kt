@@ -224,15 +224,39 @@ class OpenVerseWebAppInterface(private val context: Context) {
 
                 if (tempFile.exists()) tempFile.delete()
 
-                val connection = URL(url).openConnection() as HttpURLConnection
-                connection.instanceFollowRedirects = true
-                connection.connectTimeout = 30_000
-                connection.readTimeout = 60_000
-                connection.setRequestProperty("User-Agent", "OPEN-VERSE-Mobile-Updater/${getAppVersion()}")
-                connection.connect()
+                var downloadUrl = url
+                var connection: HttpURLConnection? = null
+                var responseCode = -1
+                var redirectCount = 0
+                val maxRedirects = 6
 
-                val responseCode = connection.responseCode
-                if (responseCode !in 200..299) {
+                while (redirectCount < maxRedirects) {
+                    val u = URL(downloadUrl)
+                    connection = u.openConnection() as HttpURLConnection
+                    connection.instanceFollowRedirects = true
+                    connection.connectTimeout = 30_000
+                    connection.readTimeout = 60_000
+                    connection.setRequestProperty("User-Agent", "OPEN-VERSE-Mobile-Updater/${getAppVersion()}")
+                    connection.connect()
+
+                    responseCode = connection.responseCode
+                    if (responseCode in 300..399) {
+                        val location = connection.getHeaderField("Location")
+                        if (!location.isNullOrBlank()) {
+                            downloadUrl = if (location.startsWith("http://") || location.startsWith("https://")) {
+                                location
+                            } else {
+                                URL(u, location).toString()
+                            }
+                            connection.disconnect()
+                            redirectCount++
+                            continue
+                        }
+                    }
+                    break
+                }
+
+                if (connection == null || responseCode !in 200..299) {
                     throw IllegalStateException("Download failed with HTTP response code: $responseCode")
                 }
 

@@ -99,6 +99,34 @@ export const DEFAULT_GOOGLE_CLIENT_ID =
 	"764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
 export const DEFAULT_GOOGLE_CLIENT_SECRET = "d-FL95Q19q7MQmFpd7hHD0Ty";
 
+/**
+ * Universal safe JWT payload parser supporting base64url and UTF-8 encoding across browser and Node runtimes
+ */
+export function parseJwtPayload(token: string): Record<string, any> | null {
+	try {
+		const parts = token.split(".");
+		if (parts.length < 2) return null;
+		let base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+		while (base64.length % 4 !== 0) {
+			base64 += "=";
+		}
+		if (typeof atob === "function") {
+			const binary = atob(base64);
+			const bytes = new Uint8Array(binary.length);
+			for (let i = 0; i < binary.length; i++) {
+				bytes[i] = binary.charCodeAt(i);
+			}
+			const json = new TextDecoder("utf-8").decode(bytes);
+			return JSON.parse(json);
+		} else if (typeof Buffer !== "undefined") {
+			return JSON.parse(Buffer.from(base64, "base64").toString("utf-8"));
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
 export function getGoogleClientId(): string {
 	if (typeof window !== "undefined") {
 		const stored = window.localStorage.getItem(GOOGLE_CLIENT_ID_STORAGE_KEY);
@@ -309,8 +337,11 @@ export function parseStoredSession(raw: string | null): OpenVerseSession | null 
 		if (parsed.user.googleIdentity?.name && parsed.user.displayName !== parsed.user.googleIdentity.name) {
 			parsed.user.displayName = parsed.user.googleIdentity.name;
 		}
-		if (parsed.user.googleIdentity?.picture && parsed.user.avatarUrl !== parsed.user.googleIdentity.picture) {
-			parsed.user.avatarUrl = parsed.user.googleIdentity.picture;
+		const googlePic = parsed.user.googleIdentity?.picture;
+		if (googlePic && !googlePic.includes("dicebear.com") && parsed.user.avatarUrl !== googlePic) {
+			parsed.user.avatarUrl = googlePic;
+		} else if (parsed.user.avatarUrl?.includes("dicebear.com")) {
+			parsed.user.avatarUrl = googlePic && !googlePic.includes("dicebear.com") ? googlePic : undefined;
 		}
 		return parsed;
 	} catch {
@@ -563,9 +594,9 @@ export async function loginWithGoogleOidc(
 	const sub = payload.sub.trim();
 	const email = payload.email.trim().toLowerCase();
 	const name = payload.name?.trim() || email.split("@")[0] || "Google User";
-	const picture =
-		payload.picture?.trim() ||
-		`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
+	const isDicebear = (url?: string) => Boolean(url && url.includes("dicebear.com"));
+	const rawPicture = payload.picture?.trim() || "";
+	const picture = !isDicebear(rawPicture) ? rawPicture : "";
 
 	const googleIdentity: GoogleIdentityInfo = {
 		sub,
@@ -585,12 +616,14 @@ export async function loginWithGoogleOidc(
 
 	if (existingUser) {
 		// RETURNING USER: Restore existing profile & preferences; Google OAuth is authoritative for name, picture, and email
+		const existingAvatar = !isDicebear(existingUser.avatarUrl) ? existingUser.avatarUrl : "";
+		const resolvedAvatar = picture || existingAvatar || "";
 		user = {
 			...existingUser,
 			googleSub: sub,
 			googleIdentity,
 			displayName: name || existingUser.displayName || email.split("@")[0],
-			avatarUrl: picture || existingUser.avatarUrl,
+			avatarUrl: resolvedAvatar || undefined,
 			lastLoginAt: now,
 			isOfflineMode: false,
 			provider: "google",
@@ -614,7 +647,7 @@ export async function loginWithGoogleOidc(
 			id: newUserId,
 			email,
 			displayName: name,
-			avatarUrl: picture,
+			avatarUrl: picture || undefined,
 			isOfflineMode: false,
 			provider: "google",
 			googleSub: sub,
@@ -798,22 +831,31 @@ export async function exchangeGoogleAuthorizationCode(
 				email = profile.email || "";
 				name = profile.name || profile.given_name || "";
 				sub = profile.sub || "";
-				picture = profile.picture || "";
+				if (profile.picture && !profile.picture.includes("dicebear.com")) {
+					picture = profile.picture;
+				}
 			}
 		} catch {
 			// userinfo fallback to idToken
 		}
 
-		if ((!email || !sub) && idToken && idToken.includes(".")) {
+		// Always decode idToken if available to ensure picture and claims are populated
+		if (idToken && idToken.includes(".")) {
 			try {
-				const payloadBase64 = idToken.split(".")[1];
-				const decoded = JSON.parse(
-					typeof atob === "function" ? atob(payloadBase64) : Buffer.from(payloadBase64, "base64").toString("utf-8")
-				);
-				if (decoded.email) email = decoded.email;
-				if (decoded.name) name = decoded.name;
-				if (decoded.sub) sub = decoded.sub;
-				if (decoded.picture) picture = decoded.picture;
+				const decoded = parseJwtPayload(idToken);
+				if (decoded) {
+					if (!email && decoded.email) email = decoded.email;
+					if (!name && (decoded.name || decoded.user_metadata?.full_name)) {
+						name = decoded.name || decoded.user_metadata?.full_name;
+					}
+					if (!sub && decoded.sub) sub = decoded.sub;
+					if (!picture && (decoded.picture || decoded.avatar_url)) {
+						const candidate = decoded.picture || decoded.avatar_url;
+						if (candidate && !candidate.includes("dicebear.com")) {
+							picture = candidate;
+						}
+					}
+				}
 			} catch {
 				// ignore
 			}
@@ -851,40 +893,69 @@ export async function refreshGoogleUserProfile(
 	session?: OpenVerseSession,
 ): Promise<OpenVerseUser | null> {
 	const activeSession = session || getCurrentSession();
-	if (!activeSession || activeSession.user.provider !== "google" || !activeSession.accessToken) {
+	if (!activeSession || activeSession.user.provider !== "google") {
 		return null;
 	}
 
-	try {
-		const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-			headers: {
-				Authorization: `Bearer ${activeSession.accessToken}`,
-			},
-		});
-		if (!res.ok) return null;
-		const profile = await res.json();
-		if (profile.name || profile.picture) {
-			const updatedUser: OpenVerseUser = {
-				...activeSession.user,
-				displayName: profile.name || activeSession.user.displayName,
-				avatarUrl: profile.picture || activeSession.user.avatarUrl,
-				googleIdentity: {
-					sub: profile.sub || activeSession.user.googleSub || "",
-					email: profile.email || activeSession.user.email,
-					emailVerified: profile.email_verified ?? true,
-					name: profile.name || "",
-					picture: profile.picture || "",
-				},
-			};
-			saveUserToRegistry(updatedUser);
-			setStoredSession({
-				...activeSession,
-				user: updatedUser,
-			});
-			return updatedUser;
+	let profilePicture = "";
+	let profileName = "";
+	let profileEmail = "";
+	let profileSub = "";
+
+	// 1. Check ID token first
+	if (activeSession.idToken) {
+		const decoded = parseJwtPayload(activeSession.idToken);
+		if (decoded) {
+			if (decoded.picture && !decoded.picture.includes("dicebear.com")) {
+				profilePicture = decoded.picture;
+			}
+			if (decoded.name) profileName = decoded.name;
+			if (decoded.email) profileEmail = decoded.email;
+			if (decoded.sub) profileSub = decoded.sub;
 		}
-	} catch {
-		// Silent catch if offline or token expired
+	}
+
+	// 2. Fetch live Google userinfo API
+	if (activeSession.accessToken) {
+		try {
+			const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+				headers: {
+					Authorization: `Bearer ${activeSession.accessToken}`,
+				},
+			});
+			if (res.ok) {
+				const profile = await res.json();
+				if (profile.picture && !profile.picture.includes("dicebear.com")) {
+					profilePicture = profile.picture;
+				}
+				if (profile.name) profileName = profile.name;
+				if (profile.email) profileEmail = profile.email;
+				if (profile.sub) profileSub = profile.sub;
+			}
+		} catch {
+			// Silent catch if offline or token expired
+		}
+	}
+
+	if (profileName || profilePicture) {
+		const updatedUser: OpenVerseUser = {
+			...activeSession.user,
+			displayName: profileName || activeSession.user.displayName,
+			avatarUrl: profilePicture || activeSession.user.avatarUrl,
+			googleIdentity: {
+				sub: profileSub || activeSession.user.googleSub || "",
+				email: profileEmail || activeSession.user.email,
+				emailVerified: true,
+				name: profileName || activeSession.user.displayName,
+				picture: profilePicture || activeSession.user.googleIdentity?.picture || "",
+			},
+		};
+		saveUserToRegistry(updatedUser);
+		setStoredSession({
+			...activeSession,
+			user: updatedUser,
+		});
+		return updatedUser;
 	}
 	return null;
 }
@@ -998,24 +1069,26 @@ export async function completeOAuthCallback(
 
 	// If email or sub wasn't directly in URL, try extracting from JWT if valid JWT
 	const tokenToDecode = idToken || accessToken;
-	if ((!email || !sub) && tokenToDecode.includes(".")) {
+	if (tokenToDecode.includes(".")) {
 		try {
-			const payloadBase64 = tokenToDecode.split(".")[1];
-			const decoded = JSON.parse(
-				Buffer.from(payloadBase64, "base64").toString("utf-8"),
-			);
-			if (decoded.email) email = decoded.email;
-			if (decoded.sub) sub = decoded.sub;
-			if (decoded.user_metadata?.full_name || decoded.name) {
-				displayName = decoded.user_metadata?.full_name || decoded.name;
-			}
-			if (decoded.picture || decoded.avatar_url) {
-				picture = decoded.picture || decoded.avatar_url;
-			}
-			if (decoded.app_metadata?.provider === "github") {
-				provider = "github";
-			} else if (decoded.app_metadata?.provider === "google") {
-				provider = "google";
+			const decoded = parseJwtPayload(tokenToDecode);
+			if (decoded) {
+				if (!email && decoded.email) email = decoded.email;
+				if (!sub && decoded.sub) sub = decoded.sub;
+				if (!displayName && (decoded.user_metadata?.full_name || decoded.name)) {
+					displayName = decoded.user_metadata?.full_name || decoded.name;
+				}
+				if (!picture && (decoded.picture || decoded.avatar_url)) {
+					const candidate = decoded.picture || decoded.avatar_url;
+					if (candidate && !candidate.includes("dicebear.com")) {
+						picture = candidate;
+					}
+				}
+				if (decoded.app_metadata?.provider === "github") {
+					provider = "github";
+				} else if (decoded.app_metadata?.provider === "google") {
+					provider = "google";
+				}
 			}
 		} catch {
 			// Non-JWT token, proceed with defaults

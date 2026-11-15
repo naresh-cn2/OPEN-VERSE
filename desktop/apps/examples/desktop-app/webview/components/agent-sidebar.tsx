@@ -383,7 +383,9 @@ export function AgentSidebar({
 			: user
 				? (activeOrganization?.name ?? "Personal")
 				: undefined;
-	const avatarUrl = ovUser?.avatarUrl || ovUser?.googleIdentity?.picture;
+	const isDicebear = (url?: string | null) => Boolean(url && url.includes("dicebear.com"));
+	const rawSidebarAvatar = ovUser?.googleIdentity?.picture || ovUser?.avatarUrl;
+	const avatarUrl = !isDicebear(rawSidebarAvatar) ? rawSidebarAvatar : null;
 	const accountInitial = (accountName || "O").charAt(0).toUpperCase();
 	const {
 		deleteThread: deleteHistoryThread,
@@ -1331,7 +1333,6 @@ export function AgentSidebar({
 										src={avatarUrl}
 										alt=""
 										referrerPolicy="no-referrer"
-										crossOrigin="anonymous"
 										onError={() => setSidebarAvatarError(true)}
 										className="size-full rounded-full object-cover"
 									/>
@@ -1375,7 +1376,6 @@ export function AgentSidebar({
 											src={avatarUrl}
 											alt=""
 											referrerPolicy="no-referrer"
-											crossOrigin="anonymous"
 											onError={() => setSidebarAvatarError(true)}
 											className="size-full rounded-full object-cover"
 										/>

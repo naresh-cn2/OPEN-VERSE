@@ -73,7 +73,9 @@ export function OpenVerseAccountView({
 		activeUser.email?.split("@")[0] ||
 		(activeUser.isOfflineMode ? "Local Developer" : "OPEN-VERSE User");
 
-	const avatarUrl = activeUser.avatarUrl || activeUser.googleIdentity?.picture;
+	const isDicebear = (url?: string | null) => Boolean(url && url.includes("dicebear.com"));
+	const rawAvatar = activeUser.googleIdentity?.picture || activeUser.avatarUrl;
+	const avatarUrl = !isDicebear(rawAvatar) ? rawAvatar : null;
 	const email = activeUser.email || "local@openverse.internal";
 	const provider = activeUser.provider ?? (activeUser.isOfflineMode ? "local" : "email");
 	const initial = displayName.charAt(0).toUpperCase() || "O";
@@ -147,9 +149,8 @@ export function OpenVerseAccountView({
 								{avatarUrl && !avatarError ? (
 									<img
 										src={avatarUrl}
-										alt=""
+										alt={displayName}
 										referrerPolicy="no-referrer"
-										crossOrigin="anonymous"
 										onError={() => setAvatarError(true)}
 										className="size-full rounded-full object-cover"
 									/>

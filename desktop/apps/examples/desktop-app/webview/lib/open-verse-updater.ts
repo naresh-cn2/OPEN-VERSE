@@ -254,19 +254,20 @@ export async function installAvailableUpdate(
 				success: true,
 				message: "Update download initiated via desktop updater.",
 			};
-		} catch {
-			// Fallback: open browser release download
-			window.open(info.downloadUrl, "_blank");
+		} catch (err) {
+			const errMsg = err instanceof Error ? err.message : String(err);
 			return {
-				success: true,
-				message: "Opening browser to download the latest desktop installer.",
+				success: false,
+				message: `Desktop update in progress: ${errMsg}`,
 			};
 		}
 	}
 
 	// 3. iOS: Open TestFlight or App Store
 	if (info.platform === "ios") {
-		window.open(info.downloadUrl, "_blank");
+		if (typeof window !== "undefined") {
+			window.open(info.downloadUrl, "_blank");
+		}
 		return {
 			success: true,
 			message: "Opening TestFlight / App Store to update OPEN-VERSE.",
@@ -284,13 +285,9 @@ export async function installAvailableUpdate(
 		};
 	}
 
-	// Fallback for any other environment
-	if (typeof window !== "undefined") {
-		window.open(info.downloadUrl, "_blank");
-	}
 	return {
 		success: true,
-		message: "Opening update package.",
+		message: "Update package ready.",
 	};
 }
 
