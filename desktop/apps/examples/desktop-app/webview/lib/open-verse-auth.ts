@@ -527,20 +527,15 @@ export function deriveSubFromEmail(email: string): string {
 export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 	const config = getAuthConfig();
 	const googleClientId = getGoogleClientId();
-	let redirectUrl = "openverse://auth/callback";
-	if (typeof window !== "undefined") {
-		const isNative = Boolean(
-			(window as any).__TAURI_INTERNALS__ ||
-			(window as any).AndroidInterface ||
-			(window as any).webkit?.messageHandlers
-		);
-		if (!isNative) {
-			redirectUrl = window.location.origin;
-		}
-	}
 
-	// Always route directly to Google's official accounts.google.com OAuth!
-	if (provider === "google" && googleClientId) {
+	// Check if running in a standard local browser (e.g. localhost:3125)
+	const isLocalBrowser =
+		typeof window !== "undefined" &&
+		window.location.protocol.startsWith("http") &&
+		(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+	if (isLocalBrowser && provider === "google" && googleClientId) {
+		const redirectUrl = window.location.origin;
 		const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 		googleAuthUrl.searchParams.set("client_id", googleClientId);
 		googleAuthUrl.searchParams.set("redirect_uri", redirectUrl);
@@ -552,8 +547,10 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 		return googleAuthUrl.toString();
 	}
 
+	// For native apps (Android, Desktop Tauri, iOS), route through authorized Vercel OAuth gateway
 	const baseUrl = (config.authUrl || "https://open-verse-website.vercel.app/api/auth").replace(/\/$/, "");
-	return `${baseUrl}/authorize?provider=google&prompt=select_account&redirect_to=${encodeURIComponent(redirectUrl)}`;
+	const redirectTarget = "openverse://auth/callback";
+	return `${baseUrl}/authorize?provider=google&client_id=${encodeURIComponent(googleClientId)}&prompt=select_account&redirect_to=${encodeURIComponent(redirectTarget)}`;
 }
 
 /**

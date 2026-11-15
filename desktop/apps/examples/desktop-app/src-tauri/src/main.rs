@@ -1024,8 +1024,8 @@ fn open_external_url(url: String) -> Result<(), String> {
     }
     #[cfg(target_os = "windows")]
     {
-        std::process::Command::new("cmd")
-            .args(&["/c", "start", "", trimmed])
+        std::process::Command::new("rundll32")
+            .args(&["url.dll,FileProtocolHandler", trimmed])
             .spawn()
             .map_err(|e| format!("Failed to open URL in browser: {e}"))?;
     }
@@ -1640,8 +1640,14 @@ fn main() {
         // of showing this one. Must be the first plugin so the duplicate exits
         // before setup creates the tray icon or spawns the sidecar. Keyed on
         // the bundle identifier, so Cline and Cline Beta still run side by side.
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             show_main_window(app);
+            for arg in &argv {
+                if arg.starts_with("openverse://") {
+                    let _ = app.emit("openverse_deeplink", arg.clone());
+                    let _ = app.emit("desktop-action-pending", arg.clone());
+                }
+            }
         }))
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())

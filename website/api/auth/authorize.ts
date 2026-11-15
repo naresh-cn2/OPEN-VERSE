@@ -7,26 +7,45 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * - If configured: redirects user directly to real Google / GitHub OAuth authorization endpoint.
  * - If unconfigured (preview/sandbox mode): provides clear sandbox authorization UI.
  */
+
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
+const CANONICAL_CALLBACK_URL =
+  "https://open-verse-website.vercel.app/api/auth/callback";
+
 export default function handler(req: VercelRequest, res: VercelResponse) {
   const provider = (req.query.provider as string) || "google";
   const redirectTo = (req.query.redirect_to as string) || "openverse://auth/callback";
-  const host = req.headers.host || "open-verse-website.vercel.app";
-  const callbackUrl = `https://${host}/api/auth/callback?provider=${provider}`;
 
-  const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID;
+  // Google OAuth redirect_uri MUST strictly match registered URIs verbatim without extra query params
+  const callbackUrl = CANONICAL_CALLBACK_URL;
+
+  const clientId =
+    (req.query.client_id as string) ||
+    (process.env.GOOGLE_CLIENT_ID || "").trim() ||
+    DEFAULT_GOOGLE_CLIENT_ID;
   const isGoogleConfigured = Boolean(clientId);
   const isGithubConfigured = Boolean(process.env.GITHUB_CLIENT_ID);
+
+  // Encode provider and redirect target safely in state
+  const statePayload = Buffer.from(
+    JSON.stringify({
+      provider,
+      redirectTo,
+      nonce: `nonce_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    })
+  ).toString("base64url");
 
   // 1. Real Google OAuth redirect if credentials are configured
   if (provider === "google" && isGoogleConfigured) {
     const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-    googleAuthUrl.searchParams.set("client_id", clientId!);
+    googleAuthUrl.searchParams.set("client_id", clientId);
     googleAuthUrl.searchParams.set("redirect_uri", callbackUrl);
     googleAuthUrl.searchParams.set("response_type", "code");
     googleAuthUrl.searchParams.set("scope", "openid email profile");
     googleAuthUrl.searchParams.set("access_type", "offline");
     googleAuthUrl.searchParams.set("prompt", "select_account");
-    googleAuthUrl.searchParams.set("state", `goog_${Date.now()}`);
+    googleAuthUrl.searchParams.set("state", statePayload);
 
     res.setHeader("Location", googleAuthUrl.toString());
     return res.status(302).end();
@@ -38,7 +57,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     githubAuthUrl.searchParams.set("client_id", process.env.GITHUB_CLIENT_ID!);
     githubAuthUrl.searchParams.set("redirect_uri", callbackUrl);
     githubAuthUrl.searchParams.set("scope", "read:user user:email");
-    githubAuthUrl.searchParams.set("state", `gh_${Date.now()}`);
+    githubAuthUrl.searchParams.set("state", statePayload);
 
     res.setHeader("Location", githubAuthUrl.toString());
     return res.status(302).end();
@@ -98,129 +117,69 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       padding: 4px 12px;
       border-radius: 9999px;
       font-size: 12px;
-      font-weight: 600;
-      background: rgba(139, 92, 246, 0.2);
-      color: #c4b5fd;
-      margin-bottom: 16px;
-      border: 1px solid rgba(139, 92, 246, 0.3);
-    }
-    .notice {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fbbf24;
-      font-size: 11px;
-      border-radius: 8px;
-      padding: 8px 12px;
+      font-weight: 500;
+      background: rgba(234, 179, 8, 0.15);
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.3);
       margin-bottom: 20px;
-      text-align: left;
-      line-height: 1.4;
     }
-    .user-pill {
-      background: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-align: left;
-    }
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #7c3aed;
-      color: #fff;
-      display: flex;
+    .btn {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-weight: 600;
-    }
-    .user-info .name { font-size: 14px; font-weight: 600; color: #fff; }
-    .user-info .email { font-size: 12px; color: #71717a; }
-    .btn {
-      display: block;
       width: 100%;
-      padding: 14px;
-      border-radius: 10px;
+      padding: 14px 20px;
+      border-radius: 12px;
       font-size: 15px;
       font-weight: 600;
       text-decoration: none;
+      transition: all 0.2s ease;
       cursor: pointer;
       border: none;
-      transition: all 0.2s;
     }
     .btn-primary {
       background: #7c3aed;
       color: #ffffff;
       margin-bottom: 12px;
     }
-    .btn-primary:hover { background: #6d28d9; }
-    .btn-secondary {
-      background: #18181b;
-      color: #a1a1aa;
-      border: 1px solid #27272a;
+    .btn-primary:hover {
+      background: #6d28d9;
+      transform: translateY(-1px);
     }
-    .btn-secondary:hover { background: #27272a; color: #fff; }
-    .token-box {
-      margin-top: 20px;
-      font-size: 11px;
+    .footnote {
+      font-size: 12px;
       color: #71717a;
-      word-break: break-all;
+      margin-top: 16px;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="icon">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
     </div>
-    <span class="badge">${providerName} Authorization</span>
-    <h1>Connect to OPEN-VERSE</h1>
-    <p>Authorize OPEN-VERSE Mobile to access your account securely.</p>
+    <div class="badge">Development / Sandbox Gateway</div>
+    <h1>Connect with ${providerName}</h1>
+    <p>You are authorizing OPEN-VERSE access to authenticate your profile with safe sandboxed credentials.</p>
+    
+    <a href="${deepLinkCallback}" class="btn btn-primary" id="launch-btn">Authorize & Launch OPEN-VERSE</a>
 
-    <div class="notice">
-      ℹ️ Note: Live OAuth Client secrets are pending configuration in Vercel. Operating in preview authorization mode.
-    </div>
-
-    <div class="user-pill">
-      <div class="avatar">${safeName.charAt(0)}</div>
-      <div class="user-info">
-        <div class="name">${safeName}</div>
-        <div class="email">${safeEmail}</div>
-      </div>
-    </div>
-
-    <a href="${deepLinkCallback}" class="btn btn-primary" id="returnBtn">Authorize &amp; Open App</a>
-    <a href="http://localhost:3125/#access_token=${token}&email=${encodeURIComponent(safeEmail)}&name=${encodeURIComponent(safeName)}&provider=google" class="btn btn-secondary" style="margin-bottom: 12px; display: block; text-decoration: none;">Continue on Localhost (localhost:3125)</a>
-    <button class="btn btn-secondary" onclick="copyToken()">Copy Token to Clipboard</button>
-
-    <div class="token-box" id="tokenNotice">
-      Redirecting back to OPEN-VERSE app...
+    <div class="footnote">
+      If OPEN-VERSE doesn't open automatically, click the button above.
     </div>
   </div>
 
   <script>
-    const callbackUrl = ${JSON.stringify(deepLinkCallback)};
-    const token = ${JSON.stringify(token)};
-
-    function copyToken() {
-      navigator.clipboard.writeText(callbackUrl).then(() => {
-        document.getElementById('tokenNotice').innerText = "Callback URL copied! Paste it into OPEN-VERSE app.";
-      });
-    }
-
-    setTimeout(() => {
-      window.location.href = callbackUrl;
-    }, 600);
+    // Auto-launch deep link on page load
+    setTimeout(function() {
+      window.location.href = ${JSON.stringify(deepLinkCallback)};
+    }, 400);
   </script>
 </body>
 </html>`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store, max-age=0");
   return res.status(200).send(html);
 }

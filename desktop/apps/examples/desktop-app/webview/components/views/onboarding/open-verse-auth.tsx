@@ -126,9 +126,25 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 		checkForCallback();
 		window.addEventListener("hashchange", checkForCallback);
 
+		let unlistenDeeplink: (() => void) | undefined;
+		if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+			import("@tauri-apps/api/event")
+				.then(({ listen }) => {
+					listen<string>("openverse_deeplink", (event) => {
+						if (event.payload) void handleDeepLink(event.payload);
+					})
+						.then((fn) => {
+							unlistenDeeplink = fn;
+						})
+						.catch(() => {});
+				})
+				.catch(() => {});
+		}
+
 		return () => {
 			delete (window as any).__dispatchOpenVerseDeepLink;
 			window.removeEventListener("hashchange", checkForCallback);
+			if (unlistenDeeplink) unlistenDeeplink();
 		};
 	}, [onAuthenticated]);
 

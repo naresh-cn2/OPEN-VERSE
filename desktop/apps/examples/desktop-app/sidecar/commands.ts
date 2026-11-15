@@ -459,7 +459,7 @@ function openUrlInDefaultBrowser(url: string): Promise<void> {
 		platform === "darwin"
 			? spawn("open", [url], { stdio: "ignore", detached: true })
 			: platform === "win32"
-				? spawn("cmd.exe", ["/c", "start", "", url], {
+				? spawn("rundll32.exe", ["url.dll,FileProtocolHandler", url], {
 						stdio: "ignore",
 						detached: true,
 						windowsHide: true,
