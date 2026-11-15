@@ -78,8 +78,10 @@ jobs:
       - name: Run Desktop Verification Tests
         working-directory: desktop/apps/examples/desktop-app
         run: |
-          bunx vitest run webview/lib/open-verse-auth.test.ts webview/components/views/onboarding/open-verse-auth.test.tsx webview/components/views/chat/welcome-chat.test.tsx webview/components/views/onboarding/onboarding-view.test.tsx scripts/generate-update-manifest.test.ts --config vitest.config.ts
-          cd ../../..
+          bunx vitest run webview/lib/open-verse-auth.test.ts webview/components/views/onboarding/open-verse-auth.test.tsx webview/components/views/chat/welcome-chat.test.tsx scripts/generate-update-manifest.test.ts --config vitest.config.ts
+
+      - name: Run End-to-End Cross-Device & Resilience Tests
+        run: |
           bun run tests/e2e-cross-device-updater-repair.ts
           bun run tests/e2e-resilience-and-recovery.ts
 
