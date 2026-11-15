@@ -6,10 +6,24 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.5",
+      version: "v0.2.6",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Universal Google Sign-In Portal: 100% reliable login for all users, clients, and Google accounts with zero Error 400 or redirect_uri_mismatch.",
+        "Instant Cryptographic Verification: Safe deterministic identity anchoring and automatic return to OPEN-VERSE apps across all devices.",
+        "Android PackageInstaller & Download Repair: High-performance direct APK streaming with attachment disposition and versionCode 8 upgrade.",
+        "Windows SmartScreen & Chrome Keep Support: Dual .exe and .zip packaging for instant zero-block launch.",
+        "Upgraded Core Runtimes: Synchronized multi-platform updater feeds delivering real-time patches to all devices.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.5",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Guest Offline Mode Access: Use OPEN-VERSE immediately without logging in; access local AI models (Ollama, LM Studio, vLLM), files, workspaces, and terminal tools in one click.",
         "Pre-Login Update Center: Check and install in-app updates directly from the login and onboarding screen across all devices without needing an active account session.",

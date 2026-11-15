@@ -111,7 +111,7 @@ async function runDownloadSimulation() {
   const heroPath = join(ROOT_DIR, "website", "src", "components", "Hero.tsx");
   assert(existsSync(heroPath), "Hero.tsx exists");
   const heroCode = readFileSync(heroPath, "utf-8");
-  assert(heroCode.includes("v0.2.5"), "Hero component displays v0.2.5 release badge");
+  assert(heroCode.includes("v0.2.6"), "Hero component displays v0.2.6 release badge");
   assert(!heroCode.includes("v0.1.0"), "No legacy v0.1.0 references remain in Hero");
 
   // Summary

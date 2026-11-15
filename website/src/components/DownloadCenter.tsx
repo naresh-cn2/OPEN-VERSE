@@ -33,7 +33,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   // Release versions — updated via release automation
-  const DESKTOP_VERSION = "0.2.5";
+  const DESKTOP_VERSION = "0.2.6";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
   // Direct download assets hosted on GitHub Releases & Vercel CDN
@@ -84,8 +84,8 @@ export const DownloadCenter: React.FC = () => {
       name: `open-verse-mobile.apk`,
       versionedName: `open-verse-v${DESKTOP_VERSION}-android.apk`,
       zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-      size: "10.4 MB",
-      sha256: "98ece02fc51e627ba54e20d72553d241f75aebaefec111992a447df295a3fd69",
+      size: "10.0 MB",
+      sha256: "72489e188e5afe99a298f640905f121d2d9f185138adc82cdd05134d2ed1761c",
       available: true,
     },
     ios: {

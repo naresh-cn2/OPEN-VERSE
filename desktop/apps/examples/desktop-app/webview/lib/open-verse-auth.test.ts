@@ -32,7 +32,7 @@ const { openExternalUrl } = vi.hoisted(() => ({
 
 vi.mock("./desktop-client", () => ({
 	openExternalUrl,
-	desktopClient: { invoke: vi.fn(), subscribe: vi.fn(() => () => {}) },
+	desktopClient: { invoke: vi.fn(), subscribe: vi.fn(() => () => { }) },
 }));
 
 describe("open-verse-auth library", () => {
