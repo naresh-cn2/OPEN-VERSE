@@ -61,9 +61,9 @@ const CREATE_ACCOUNT_URL = "https://open-verse-website.vercel.app";
 const CLINE_PASS_SUBSCRIBE_URL = "https://open-verse-website.vercel.app";
 
 const CLINE_SIGN_IN_BENEFITS = [
-	"Regular free model promotions",
-	"Subscribe to ClinePass for generous usage across top open models",
-	"No API key needed",
+	"Access to Cline hosted models",
+	"Optional online model provider",
+	"Can be added or removed anytime in Settings",
 ];
 
 type ClineRecommendedModelsResponse = {
@@ -343,7 +343,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 					<Button
 						className="w-full"
 						onClick={() => {
-							setAuthScreen("auth_options");
+							setAuthScreen("sign_up");
 							setViewMode("auth");
 						}}
 						size="lg"
@@ -358,7 +358,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 						<Button
 							className="flex-1"
 							onClick={() => {
-								setAuthScreen("auth_options");
+								setAuthScreen("sign_in");
 								setViewMode("auth");
 							}}
 							size="md"
@@ -371,7 +371,7 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 						<Button
 							className="flex-1"
 							onClick={() => {
-								setAuthScreen("auth_options");
+								setAuthScreen("sign_up");
 								setViewMode("auth");
 							}}
 							size="md"
@@ -382,20 +382,6 @@ function WelcomeStep({ onContinue }: { onContinue: () => void }) {
 							Sign up
 						</Button>
 					</div>
-
-					<Button
-						className="w-full text-xs text-muted-foreground hover:text-foreground mt-1"
-						onClick={() => {
-							setAuthScreen("auth_options");
-							setViewMode("auth");
-						}}
-						size="sm"
-						tone="neutral"
-						type="button"
-						variant="ghost"
-					>
-						Offline & Local Mode
-					</Button>
 				</div>
 
 				<div className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground">
@@ -584,7 +570,7 @@ function ConnectStep({
 		}
 	}, [apiKey, onConnected, selectedProvider, selectedProviderId]);
 
-	const [selectedMethod, setSelectedMethod] = useState<SetupMethod>("cline");
+	const [selectedMethod, setSelectedMethod] = useState<SetupMethod>("provider");
 	const [clineKeyFormExpanded, setClineKeyFormExpanded] = useState(false);
 
 	return (
@@ -602,11 +588,10 @@ function ConnectStep({
 					<ArrowLeft className="size-4" />
 				</IconButton>
 				<h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
-					Set up OPEN-VERSE
+					Configure Models &amp; Providers
 				</h1>
 				<p className="mt-4 text-sm text-muted-foreground">
-					Choose how OPEN-VERSE connects to models. You can add more providers
-					anytime in Settings.
+					Choose how OPEN-VERSE connects to models. You can also skip this and add providers anytime in Settings or the Model Selector.
 				</p>
 			</div>
 
@@ -614,18 +599,10 @@ function ConnectStep({
 				<SetupOptionCard
 					id="cline"
 					onSelect={() => setSelectedMethod("cline")}
-					selectLabel="Sign in with OPEN-VERSE"
+					selectLabel="Connect Cline Provider"
 					selected={selectedMethod === "cline"}
 				>
 					<SetupOptionHeader
-						accessory={
-							<Badge
-								className="-mt-2 rounded-sm border-primary/30 bg-primary/10 px-1.5 !pt-[0.3rem] !pb-[0.2rem] text-primary-emphasis"
-								variant="outline"
-							>
-								Recommended
-							</Badge>
-						}
 						description={
 							<ul className="flex flex-col gap-1">
 								{CLINE_SIGN_IN_BENEFITS.map((benefit) => (
@@ -640,7 +617,7 @@ function ConnectStep({
 							</ul>
 						}
 						icon={<OpenVerseRobot glow={false} size={22} />}
-						title="Sign in with OPEN-VERSE"
+						title="Sign in with Cline (Model Provider)"
 					/>
 					{user ? (
 						<div className="mt-6 flex flex-wrap items-center justify-end gap-6">
@@ -1161,9 +1138,8 @@ function DoneStep({
 				<p className="mt-3 text-md text-muted-foreground">
 					{connection?.kind === "provider"
 						? `${connection.providerName} is connected.`
-						: "Your OPEN-VERSE account is connected."}
+						: "Your Google account is connected to OPEN-VERSE."}
 				</p>
-				{connection?.kind === "cline" ? <ClineModelsSummary /> : null}
 				<Button
 					className="mt-8 w-full max-w-64"
 					onClick={onFinish}
@@ -1214,7 +1190,7 @@ export function OnboardingView({
 					/>
 				</div>
 				{step === "welcome" ? (
-					<WelcomeStep onContinue={() => setStep("connect")} />
+					<WelcomeStep onContinue={onComplete} />
 				) : step === "connect" ? (
 					<ConnectStep
 						onBack={() => setStep("welcome")}

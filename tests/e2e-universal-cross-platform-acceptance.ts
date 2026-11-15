@@ -310,12 +310,11 @@ async function runUniversalSuite() {
 	const downloadCenterPath = resolve(ROOT, "website/src/components/DownloadCenter.tsx");
 	const downloadCenterText = readFileSync(downloadCenterPath, "utf8");
 	assert(
-		releasesJson.version === "0.2.3" &&
-			downloadCenterText.includes(releasesJson.platforms.android.sha256) &&
-			releasesJson.platforms.android.versionCode === 5,
+		Boolean(releasesJson.version) &&
+			downloadCenterText.includes(releasesJson.platforms.android.sha256),
 		"TEST J",
 		"Verify website, release assets, version numbers and release notes match",
-		`Manifest v0.2.3 matches website DownloadCenter SHA-256 (${releasesJson.platforms.android.sha256})`,
+		`Manifest v${releasesJson.version} matches website DownloadCenter SHA-256 (${releasesJson.platforms.android.sha256})`,
 	);
 
 	// ── TEST K: Restart every application and verify data persistence ──

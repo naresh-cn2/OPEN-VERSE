@@ -77,6 +77,12 @@ import {
 	humanizeCloudSessionError,
 	parseCloudSessionError,
 } from "@/lib/cloud-session-error";
+import { OpenVerseAuth } from "@/components/views/onboarding/open-verse-auth";
+import {
+	getStoredSession,
+	subscribeAuthChange,
+	type OpenVerseSession,
+} from "@/lib/open-verse-auth";
 import {
 	createDesktopAppState,
 	type DesktopAppLocation,
@@ -370,6 +376,10 @@ export default function Home() {
 		return isMobileEnvironment() || desktopClient.isStandaloneMode();
 	});
 	const [loaded, setLoaded] = useState(false);
+	const [session, setSession] = useState<OpenVerseSession | null>(() => {
+		if (typeof window === "undefined") return null;
+		return getStoredSession();
+	});
 
 	useEffect(() => {
 		const mobile = isMobileEnvironment();
@@ -386,6 +396,10 @@ export default function Home() {
 			});
 		}
 		setLoaded(true);
+
+		return subscribeAuthChange((s) => {
+			setSession(s);
+		});
 	}, []);
 
 	const hubReady =
@@ -395,6 +409,17 @@ export default function Home() {
 
 	if (!loaded) {
 		return <div className="fixed inset-0 bg-[#09090b]" />;
+	}
+
+	if (!session?.user) {
+		return (
+			<OpenVerseAuth
+				onAuthenticated={() => {
+					markOnboardingCompleted();
+					setSession(getStoredSession());
+				}}
+			/>
+		);
 	}
 
 	return (
@@ -533,6 +558,13 @@ function App() {
 	useAppUpdate();
 
 	useEffect(() => {
+		const currentSession = getStoredSession();
+		if (currentSession?.user) {
+			markOnboardingCompleted();
+			setShowOnboarding(false);
+			setWhatsNew(pendingWhatsNew());
+			return;
+		}
 		const onboarded = hasCompletedOnboarding();
 		setShowOnboarding(!onboarded);
 		// Returning users get the catch-up once; first-run users see onboarding
@@ -3056,3 +3088,6 @@ function ChatThreadPane({
 		</WorkspaceProvider>
 	);
 }
+
+
+

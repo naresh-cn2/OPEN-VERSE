@@ -1,38 +1,25 @@
 "use client";
 
-import {
-	AlertCircle,
-	ArrowLeft,
-	CheckCircle2,
-	ExternalLink,
-	KeyRound,
-	Laptop,
-	Loader2,
-	RotateCw,
-	ShieldCheck,
-} from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { OpenVerseRobot } from "@/components/open-verse-robot";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { openExternalUrl } from "@/lib/desktop-client";
+import { markOnboardingCompleted } from "@/lib/onboarding";
 import {
-	type AuthScreenState,
 	type OpenVerseUser,
 	completeOAuthCallback,
-	continueInOfflineMode,
 	initiateOAuthSignIn,
-	isAuthConfigured,
 } from "@/lib/open-verse-auth";
+import { FirstTimeOnboarding } from "./first-time-onboarding";
 
 const PRIVACY_URL = "https://open-verse-website.vercel.app/privacy";
 const TERMS_URL = "https://open-verse-website.vercel.app/terms";
 
-// Google G logo SVG
-function GoogleIcon({ className }: { className?: string }) {
+// Official Google G SVG
+export function GoogleIcon({ className = "size-5" }: { className?: string }) {
 	return (
-		<svg className={className} viewBox="0 0 24 24" width="18" height="18">
+		<svg className={className} viewBox="0 0 24 24" width="20" height="20">
 			<path
 				d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
 				fill="#4285F4"
@@ -53,48 +40,27 @@ function GoogleIcon({ className }: { className?: string }) {
 	);
 }
 
-// GitHub icon SVG
-function GitHubIcon({ className }: { className?: string }) {
-	return (
-		<svg
-			aria-hidden="true"
-			className={className}
-			fill="currentColor"
-			height="18"
-			viewBox="0 0 24 24"
-			width="18"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-		</svg>
-	);
-}
-
 interface OpenVerseAuthProps {
+	initialScreen?: string;
 	onAuthenticated: (user: OpenVerseUser) => void;
-	initialScreen?: AuthScreenState;
 }
 
-export function OpenVerseAuth({
-	onAuthenticated,
-	initialScreen = "welcome",
-}: OpenVerseAuthProps) {
-	const [screen, setScreen] = useState<AuthScreenState>(initialScreen);
-	const [pendingProvider, setPendingProvider] = useState<"google" | "github" | null>(null);
-	const [manualToken, setManualToken] = useState("");
+export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [successNotice, setSuccessNotice] = useState<string | null>(null);
-	const pendingProviderRef = useRef<"google" | "github" | null>(pendingProvider);
-	pendingProviderRef.current = pendingProvider;
+	const [pendingOnboardingUser, setPendingOnboardingUser] = useState<OpenVerseUser | null>(null);
 
+	// Deep link and OAuth callback handler
 	useEffect(() => {
 		const handleDeepLink = async (rawUrl: string) => {
 			if (
 				!rawUrl ||
 				(!rawUrl.includes("openverse://") &&
 					!rawUrl.includes("access_token=") &&
-					!rawUrl.includes("code="))
+					!rawUrl.includes("code=") &&
+					!rawUrl.includes("id_token=") &&
+					!rawUrl.includes("auth=callback"))
 			) {
 				return;
 			}
@@ -102,12 +68,14 @@ export function OpenVerseAuth({
 			setErrorMessage(null);
 			setSuccessNotice(null);
 			try {
-				const session = await completeOAuthCallback(
-					rawUrl,
-					pendingProviderRef.current || "google",
-				);
-				setSuccessNotice("Authentication successful! Welcome to OPEN-VERSE.");
-				onAuthenticated(session.user);
+				const session = await completeOAuthCallback(rawUrl, "google");
+				if (!session.user.onboardingCompleted) {
+					setPendingOnboardingUser(session.user);
+				} else {
+					markOnboardingCompleted();
+					setSuccessNotice(`Welcome back, ${session.user.displayName || session.user.email}!`);
+					setTimeout(() => onAuthenticated(session.user), 400);
+				}
 			} catch (err) {
 				setErrorMessage(err instanceof Error ? err.message : String(err));
 			} finally {
@@ -115,321 +83,164 @@ export function OpenVerseAuth({
 			}
 		};
 
-		// 1. Android / Desktop bridge invokes window.__dispatchOpenVerseDeepLink
 		(window as any).__dispatchOpenVerseDeepLink = (url: string) => {
 			void handleDeepLink(url);
 		};
 
-		// 2. Fallback: hashchange listener
-		const onHashChange = () => {
+		const checkForCallback = () => {
+			if (typeof window === "undefined") return;
+
+			// Check query parameters (Google redirect returns ?code=...)
+			const search = window.location.search;
+			if (search && (search.includes("code=") || search.includes("access_token="))) {
+				const fullQuery = search.startsWith("?") ? search.slice(1) : search;
+				try {
+					window.history.replaceState({}, document.title, window.location.pathname);
+				} catch {
+					// ignore
+				}
+				void handleDeepLink(fullQuery);
+				return;
+			}
+
+			// Check hash
 			const hash = window.location.hash;
 			if (
 				hash &&
 				(hash.includes("openverse://") ||
 					hash.includes("access_token=") ||
-					hash.includes("code="))
+					hash.includes("code=") ||
+					hash.includes("id_token=") ||
+					hash.includes("auth=callback"))
 			) {
-				void handleDeepLink(hash.startsWith("#") ? hash.slice(1) : hash);
+				const cleanHash = hash.startsWith("#") ? hash.slice(1) : hash;
+				try {
+					window.history.replaceState({}, document.title, window.location.pathname);
+				} catch {
+					// ignore
+				}
+				void handleDeepLink(cleanHash);
 			}
 		};
-		window.addEventListener("hashchange", onHashChange);
 
-		// 3. Check existing hash on initial mount
-		if (window.location.hash) {
-			onHashChange();
-		}
+		checkForCallback();
+		window.addEventListener("hashchange", checkForCallback);
 
 		return () => {
 			delete (window as any).__dispatchOpenVerseDeepLink;
-			window.removeEventListener("hashchange", onHashChange);
+			window.removeEventListener("hashchange", checkForCallback);
 		};
 	}, [onAuthenticated]);
 
-	const clearErrors = () => {
+	// Continue with Google using Google's native account chooser
+	const handleContinueWithGoogle = async () => {
+		setLoading(true);
 		setErrorMessage(null);
-		setSuccessNotice(null);
-	};
-
-	const handleOAuthLogin = async (provider: "google" | "github") => {
-		clearErrors();
-		setLoading(true);
-		setPendingProvider(provider);
 		try {
-			const res = await initiateOAuthSignIn(provider);
-			setSuccessNotice(
-				`Browser opened for ${provider === "google" ? "Google" : "GitHub"} sign-in. Please authorize OPEN-VERSE to continue.`,
-			);
+			await initiateOAuthSignIn("google");
 		} catch (err) {
 			setErrorMessage(err instanceof Error ? err.message : String(err));
-			setPendingProvider(null);
-		} finally {
 			setLoading(false);
 		}
 	};
 
-	const handleCompleteWithToken = async (e?: React.FormEvent) => {
-		if (e) e.preventDefault();
-		if (!manualToken.trim()) {
-			setErrorMessage("Please enter or paste your authorization token or callback URL.");
-			return;
-		}
-		clearErrors();
-		setLoading(true);
-		try {
-			const session = await completeOAuthCallback(manualToken, pendingProvider || "google");
-			setSuccessNotice("Authentication successful! Welcome to OPEN-VERSE.");
-			onAuthenticated(session.user);
-		} catch (err) {
-			setErrorMessage(err instanceof Error ? err.message : String(err));
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleOfflineMode = () => {
-		clearErrors();
-		const session = continueInOfflineMode();
-		onAuthenticated(session.user);
-	};
+	// If pending first-time onboarding, display the 4-step wizard
+	if (pendingOnboardingUser) {
+		return (
+			<FirstTimeOnboarding
+				user={pendingOnboardingUser}
+				onFinished={(user) => {
+					onAuthenticated(user);
+				}}
+			/>
+		);
+	}
 
 	return (
-		<div
-			className="w-full max-w-md rounded-2xl border border-zinc-800 bg-[#0e0e13]/90 p-8 shadow-2xl backdrop-blur-xl"
-			data-openverse-auth-container
-		>
-			{/* Notifications */}
-			{errorMessage && (
-				<div
-					className="mb-5 flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-300"
-					role="alert"
-				>
-					<AlertCircle className="mt-0.5 size-4 shrink-0 text-red-400" />
-					<div className="flex-1 leading-relaxed">{errorMessage}</div>
-				</div>
-			)}
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-[#09090d]/95 p-4 backdrop-blur-2xl">
+			{/* Ambient Gradient Glow */}
+			<div className="pointer-events-none absolute inset-0 overflow-hidden">
+				<div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] rounded-full bg-violet-600/12 blur-[130px]" />
+				<div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 size-[350px] rounded-full bg-indigo-600/10 blur-[100px]" />
+			</div>
 
-			{successNotice && (
-				<div
-					className="mb-5 flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-300"
-					role="status"
-				>
-					<CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
-					<div className="flex-1 leading-relaxed">{successNotice}</div>
-				</div>
-			)}
-
-			{/* SCREEN: WELCOME */}
-			{screen === "welcome" && (
-				<div className="flex flex-col items-center text-center" data-openverse-auth-screen="welcome">
-					<div className="mb-6 flex justify-center">
-						<OpenVerseRobot size={110} />
+			<div
+				className="relative w-full max-w-sm rounded-3xl border border-zinc-800/80 bg-[#111116]/95 p-8 shadow-2xl backdrop-blur-xl"
+				data-openverse-auth-container
+			>
+				{/* Top Branding: simple and authentic */}
+				<div className="flex flex-col items-center text-center">
+					<div className="mb-5 flex justify-center">
+						<OpenVerseRobot size={96} />
 					</div>
 
-					<div className="flex items-center gap-2">
-						<span className="text-3xl font-bold tracking-tight text-white">
-							OPEN-VERSE
-						</span>
-						<Badge
-							variant="outline"
-							className="border-violet-500/30 bg-violet-500/10 text-violet-300 text-[10px] uppercase font-mono px-1.5 py-0.5"
-						>
-							v0.2.1
-						</Badge>
-					</div>
+					<h1 className="text-2xl font-bold tracking-tight text-white">
+						OPEN-VERSE
+					</h1>
 
-					<p className="mt-2 text-sm font-medium text-violet-300">
-						Your AI-powered development workspace
+					<p className="mt-2 text-sm text-zinc-400">
+						Your AI workspace, everywhere.
 					</p>
-
-					<p className="mt-4 text-xs leading-relaxed text-zinc-400 max-w-sm">
-						Build, understand, and improve software with autonomous AI agents
-						working alongside you locally on your machine.
-					</p>
-
-					<div className="mt-8 flex w-full flex-col gap-3">
-						<Button
-							className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-lg shadow-violet-900/30 transition-all h-10"
-							onClick={() => {
-								clearErrors();
-								setScreen("auth_options");
-							}}
-							type="button"
-						>
-							Get Started
-						</Button>
-
-						<Button
-							className="w-full border-zinc-700/80 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-200 h-10"
-							onClick={() => {
-								clearErrors();
-								setScreen("auth_options");
-							}}
-							type="button"
-							variant="outline"
-						>
-							Sign In
-						</Button>
-
-						<div className="relative my-2 flex items-center justify-center">
-							<div className="absolute inset-0 flex items-center">
-								<span className="w-full border-t border-zinc-800" />
-							</div>
-							<span className="relative bg-[#0e0e13] px-3 text-[11px] text-zinc-500 uppercase tracking-wider">
-								or
-							</span>
-						</div>
-
-						<Button
-							className="w-full border-zinc-800/80 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs h-9 flex items-center justify-center gap-2"
-							onClick={handleOfflineMode}
-							type="button"
-							variant="ghost"
-						>
-							<Laptop className="size-3.5" />
-							Continue in Offline / Local Mode
-						</Button>
-					</div>
-
-					<div className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-zinc-500">
-						<button
-							className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
-							onClick={() => void openExternalUrl(TERMS_URL)}
-							type="button"
-						>
-							Terms of Service
-						</button>
-						<span>•</span>
-						<button
-							className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
-							onClick={() => void openExternalUrl(PRIVACY_URL)}
-							type="button"
-						>
-							Privacy Policy
-						</button>
-					</div>
 				</div>
-			)}
 
-			{/* SCREEN: ACCOUNT OPTIONS (Continue with Google or GitHub) */}
-			{(screen === "auth_options" || screen === "sign_in" || screen === "sign_up") && (
-				<div className="flex flex-col" data-openverse-auth-screen="auth_options">
-					<button
-						aria-label="Back to welcome"
-						className="mb-4 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors self-start"
-						onClick={() => {
-							clearErrors();
-							setPendingProvider(null);
-							setScreen("welcome");
-						}}
-						type="button"
+				{/* Notifications */}
+				{errorMessage && (
+					<div
+						className="mt-5 flex items-start gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300"
+						role="alert"
 					>
-						<ArrowLeft className="size-3.5" />
-						Back
-					</button>
-
-					<div className="flex items-center gap-3 mb-1">
-						<OpenVerseRobot size={36} glow={false} />
-						<h2 className="text-xl font-bold tracking-tight text-white">
-							Welcome
-						</h2>
+						<AlertCircle className="mt-0.5 size-4 shrink-0 text-red-400" />
+						<div className="flex-1 leading-relaxed">{errorMessage}</div>
 					</div>
-					<p className="text-xs text-zinc-400 mb-6">
-						Create an account or sign in with your provider.
-					</p>
+				)}
 
-					{/* The two account options */}
-					<div className="flex flex-col gap-3">
-						<Button
-							className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700/80 flex items-center justify-center gap-3 font-medium transition-all shadow-sm"
-							disabled={loading}
-							onClick={() => handleOAuthLogin("google")}
-							type="button"
-						>
-							{loading && pendingProvider === "google" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<GoogleIcon className="size-4.5" />
-							)}
-							<span>Continue with Google</span>
-						</Button>
-
-						<Button
-							className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700/80 flex items-center justify-center gap-3 font-medium transition-all shadow-sm"
-							disabled={loading}
-							onClick={() => handleOAuthLogin("github")}
-							type="button"
-						>
-							{loading && pendingProvider === "github" ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<GitHubIcon className="size-4.5" />
-							)}
-							<span>Continue with GitHub</span>
-						</Button>
+				{successNotice && (
+					<div
+						className="mt-5 flex items-start gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300"
+						role="status"
+					>
+						<CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+						<div className="flex-1 leading-relaxed">{successNotice}</div>
 					</div>
+				)}
 
-					{/* Active OAuth State & Manual Callback input if browser redirected */}
-					{pendingProvider && (
-						<div className="mt-5 rounded-lg border border-violet-500/30 bg-violet-950/20 p-4">
-							<div className="flex items-center gap-2 text-xs font-medium text-violet-300">
-								<RotateCw className="size-3.5 animate-spin text-violet-400" />
-								Waiting for {pendingProvider === "google" ? "Google" : "GitHub"} authorization...
-							</div>
-							<p className="mt-1 text-[11px] text-zinc-400 leading-relaxed">
-								A browser tab was opened. If you were redirected to a code or token, paste it below to finish signing in:
-							</p>
-							<form onSubmit={handleCompleteWithToken} className="mt-3 flex gap-2">
-								<Input
-									className="h-8 text-xs bg-zinc-950 border-zinc-800 font-mono"
-									placeholder="Paste token or openverse:// URL"
-									value={manualToken}
-									onChange={(e) => setManualToken(e.target.value)}
-								/>
-								<Button size="sm" type="submit" disabled={loading} className="h-8 text-xs shrink-0">
-									Complete
-								</Button>
-							</form>
-						</div>
-					)}
-
-					<div className="relative my-6 flex items-center justify-center">
-						<div className="absolute inset-0 flex items-center">
-							<span className="w-full border-t border-zinc-800" />
-						</div>
-						<span className="relative bg-[#0e0e13] px-3 text-[11px] text-zinc-500 uppercase tracking-wider">
-							or
-						</span>
-					</div>
-
+				{/* Main Action Area: Google Only */}
+				<div className="mt-7 flex flex-col gap-3">
+					{/* Primary Continue with Google Button */}
 					<Button
-						className="w-full border-zinc-800/80 bg-zinc-950/40 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 text-xs h-9 flex items-center justify-center gap-2"
-						onClick={handleOfflineMode}
+						className="w-full h-12 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold text-sm rounded-xl flex items-center justify-center gap-3 shadow-md hover:shadow-lg transition-all active:scale-[0.99] disabled:opacity-70"
+						disabled={loading}
+						onClick={handleContinueWithGoogle}
 						type="button"
-						variant="ghost"
 					>
-						<Laptop className="size-3.5" />
-						Continue in Offline / Local Mode
+						{loading ? (
+							<Loader2 className="size-5 animate-spin text-zinc-900" />
+						) : (
+							<GoogleIcon className="size-5 shrink-0" />
+						)}
+						<span>Continue with Google</span>
 					</Button>
-
-					<div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-zinc-500">
-						<button
-							className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
-							onClick={() => void openExternalUrl(TERMS_URL)}
-							type="button"
-						>
-							Terms of Service
-						</button>
-						<span>•</span>
-						<button
-							className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
-							onClick={() => void openExternalUrl(PRIVACY_URL)}
-							type="button"
-						>
-							Privacy Policy
-						</button>
-					</div>
 				</div>
-			)}
+
+				{/* Footer links */}
+				<div className="mt-6 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-zinc-500 border-t border-zinc-800/60 pt-4">
+					<button
+						className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
+						onClick={() => void openExternalUrl(TERMS_URL)}
+						type="button"
+					>
+						Terms of Service
+					</button>
+					<span>•</span>
+					<button
+						className="hover:text-zinc-300 transition-colors underline-offset-4 hover:underline"
+						onClick={() => void openExternalUrl(PRIVACY_URL)}
+						type="button"
+					>
+						Privacy Policy
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }

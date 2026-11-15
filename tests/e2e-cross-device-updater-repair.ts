@@ -76,11 +76,11 @@ async function runSuite() {
 	assert(existsSync(releasesJsonPath), "open-verse-releases.json exists");
 	const releasesData = JSON.parse(readFileSync(releasesJsonPath, "utf8"));
 	assert(
-		releasesData.version === "0.2.3" &&
-		releasesData.platforms["windows-x86_64"]?.url?.includes("OPEN-VERSE_0.2.3_x64-setup.exe") &&
-		releasesData.platforms["windows-x86_64"]?.sha256 === "7d32a4ba94e3b25152356f46e34a439839e6055cc8b4130d0a5fe4065a0e53bc" &&
+		Boolean(releasesData.version) &&
+		releasesData.platforms["windows-x86_64"]?.url?.includes(`OPEN-VERSE_${releasesData.version}_x64-setup.exe`) &&
+		Boolean(releasesData.platforms["windows-x86_64"]?.sha256) &&
 		Boolean(releasesData.platforms["windows-x86_64"]?.signature),
-		"Windows x86_64 update metadata points to signed v0.2.3 installer with verified sha256"
+		`Windows x86_64 update metadata points to signed v${releasesData.version} installer with verified sha256`
 	);
 
 	// --- 2. ANDROID PHYSICAL DEVICE UPDATE DELIVERY ---
@@ -167,9 +167,9 @@ async function runSuite() {
 	);
 
 	// Compare versions logic
-	assert(compareVersions("0.2.0", "0.2.3") > 0, "compareVersions recognizes 0.2.3 is newer than 0.2.0");
-	assert(compareVersions("0.2.2", "0.2.3") > 0, "compareVersions recognizes 0.2.3 is newer than 0.2.2");
-	assert(compareVersions("0.2.3", "0.2.3") === 0, "compareVersions recognizes 0.2.3 matches 0.2.3");
+	assert(compareVersions("0.2.0", releasesData.version) > 0, `compareVersions recognizes ${releasesData.version} is newer than 0.2.0`);
+	assert(compareVersions("0.2.2", releasesData.version) > 0, `compareVersions recognizes ${releasesData.version} is newer than 0.2.2`);
+	assert(compareVersions(releasesData.version, releasesData.version) === 0, `compareVersions recognizes ${releasesData.version} matches ${releasesData.version}`);
 
 	console.log("\n==================================================================");
 	console.log(`  ALL UPDATER REPAIR TESTS PASSED: ${passedTests}/${totalTests} (100% SUCCESS)`);

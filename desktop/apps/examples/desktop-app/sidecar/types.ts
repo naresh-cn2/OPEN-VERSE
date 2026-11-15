@@ -136,6 +136,24 @@ export type SidecarWebSocketClient = {
 	close?: () => void;
 };
 
+export type ConcurrencySlot = {
+  taskId: string;
+  sessionId: string;
+  startedAt: number;
+};
+
+export type TaskStats = {
+  queued: number;
+  running: number;
+  completed: number;
+  failed: number;
+  cancelled: number;
+  paused: number;
+  retrying: number;
+  maxConcurrent: number;
+  activeSlots: number;
+};
+
 export type SidecarContext = {
 	liveSessions: Map<string, LiveSession>;
 	restoringWorkspacePaths: Set<string>;
@@ -173,6 +191,9 @@ export type SidecarContext = {
 	hubAuthToken?: string;
 	/** Hub URL obtained from the CLI during startup. */
 	hubUrl?: string;
+	/** Multi-chat task queue and concurrency controller (optional until first task enqueued). */
+	taskQueue?: import("./task-queue").TaskQueue;
+	concurrencyController?: import("./concurrency-controller").ConcurrencyController;
 };
 export type BunRuntimeApi = {
 	serve: (options: unknown) => { port: number; stop?: () => void };

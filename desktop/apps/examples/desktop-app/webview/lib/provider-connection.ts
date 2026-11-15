@@ -15,6 +15,11 @@ export const OAUTH_PROVIDER_IDS = new Set([
 	"cline-pass",
 	"oca",
 	"openai-codex",
+	"chatgpt-web",
+	"claude-web",
+	"gemini-web",
+	"deepseek-web",
+	"qwen-web",
 ]);
 
 export type ProviderAuthKind = "oauth" | "local" | "api-key";
@@ -88,11 +93,17 @@ export async function runProviderOAuthLogin(
 export function getProviderAuthKind(provider: Provider): ProviderAuthKind {
 	if (
 		provider.capabilities?.includes("oauth") ||
-		OAUTH_PROVIDER_IDS.has(provider.id)
+		OAUTH_PROVIDER_IDS.has(provider.id) ||
+		provider.id.endsWith("-web")
 	) {
 		return "oauth";
 	}
-	if (provider.capabilities?.includes("local-auth")) {
+	if (
+		provider.capabilities?.includes("local-auth") ||
+		provider.id === "ollama" ||
+		provider.id === "lmstudio" ||
+		provider.id.startsWith("local-")
+	) {
 		return "local";
 	}
 	return "api-key";

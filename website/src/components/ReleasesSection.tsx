@@ -6,10 +6,23 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.3",
+      version: "v0.2.4",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Google-First Native Authentication: Official Google Account Chooser with dynamic multi-account selection (prompt=select_account).",
+        "Authoritative Google Account Profile: Real-time display of verified Google account name and profile picture with no-referrer CDN security bypass.",
+        "Strict Multi-Account Privacy: Isolated local workspace sessions and clean state separation per Google account.",
+        "Unified Cross-Platform Updates: Real-time update checks and seamless distribution across desktop, mobile, and web.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.3",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Native Android PackageInstaller Intent Bridge: Instant in-app APK installation via Android PackageInstaller activity (v0.2.3 / versionCode 5).",
         "Reactive In-App Update Lifecycle: Fixed update-check resolution state in About view so updates immediately display with action buttons.",

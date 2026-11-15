@@ -13,18 +13,18 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const host = req.headers.host || "open-verse-website.vercel.app";
   const callbackUrl = `https://${host}/api/auth/callback?provider=${provider}`;
 
-  const isGoogleConfigured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-  const isGithubConfigured = Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+  const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID;
+  const isGoogleConfigured = Boolean(clientId);
 
   // 1. Real Google OAuth redirect if credentials are configured
   if (provider === "google" && isGoogleConfigured) {
     const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-    googleAuthUrl.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID!);
+    googleAuthUrl.searchParams.set("client_id", clientId!);
     googleAuthUrl.searchParams.set("redirect_uri", callbackUrl);
     googleAuthUrl.searchParams.set("response_type", "code");
     googleAuthUrl.searchParams.set("scope", "openid email profile");
     googleAuthUrl.searchParams.set("access_type", "offline");
-    googleAuthUrl.searchParams.set("prompt", "consent");
+    googleAuthUrl.searchParams.set("prompt", "select_account");
     googleAuthUrl.searchParams.set("state", `goog_${Date.now()}`);
 
     res.setHeader("Location", googleAuthUrl.toString());
@@ -194,6 +194,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     </div>
 
     <a href="${deepLinkCallback}" class="btn btn-primary" id="returnBtn">Authorize &amp; Open App</a>
+    <a href="http://localhost:3125/#access_token=${token}&email=${encodeURIComponent(safeEmail)}&name=${encodeURIComponent(safeName)}&provider=google" class="btn btn-secondary" style="margin-bottom: 12px; display: block; text-decoration: none;">Continue on Localhost (localhost:3125)</a>
     <button class="btn btn-secondary" onclick="copyToken()">Copy Token to Clipboard</button>
 
     <div class="token-box" id="tokenNotice">

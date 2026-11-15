@@ -66,7 +66,7 @@ export const AgentSessionRow = forwardRef<HTMLDivElement, AgentSessionRowProps>(
 				: status === "provisioning"
 					? "animate-pulse bg-yellow-400"
 					: status === "running"
-						? "bg-green-500"
+						? "animate-pulse bg-emerald-500 ring-2 ring-emerald-500/40"
 						: unread
 							? "bg-blue-500"
 							: "";

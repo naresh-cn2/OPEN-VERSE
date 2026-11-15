@@ -95,6 +95,7 @@ import { CLINE_ACCOUNT_NOT_AUTHENTICATED_RESULT } from "../webview/lib/cline-acc
 import { MAX_RECORDED_AUDIO_BYTES } from "../webview/lib/voice-input-limits";
 import { resolveDesktopTelemetryUser } from "./client-context";
 import { resolveFreshClineAuthToken } from "./cline-auth";
+import { handleBrowserCommand } from "./browser-commands";
 import {
 	getCloudSessionManager,
 	resetCloudSessionManager,
@@ -119,6 +120,7 @@ import {
 } from "./connectors";
 import {
 	broadcastEvent,
+	broadcastTaskEvent,
 	connectRemoteSessionRuntime,
 	disconnectRemoteSessionRuntime,
 	ensureSharedHubClient,
@@ -4097,5 +4099,160 @@ export async function handleCommand(
 		return { path: filePath, editor };
 	}
 
+	// ── Multi-chat task queue ─────────────────────────────────────────
+	if (
+		command === "enqueue_task" ||
+		command === "list_tasks" ||
+		command === "get_task" ||
+		command === "claim_next_task" ||
+		command === "complete_task" ||
+		command === "cancel_task" ||
+		command === "retry_task" ||
+		command === "pause_task" ||
+		command === "get_task_stats" ||
+		command === "set_max_concurrent"
+	) {
+		return await handleTaskQueueCommand(ctx, command, args);
+	}
+
+	if (command.startsWith("browser_")) {
+		return await handleBrowserCommand(ctx, command, args);
+	}
+
 	throw new Error(`unsupported desktop command: ${command}`);
 }
+
+export async function handleTaskQueueCommand(
+	ctx: SidecarContext,
+	command: string,
+	args?: Record<string, unknown>,
+): Promise<unknown> {
+	if (!ctx.taskQueue || !ctx.concurrencyController) {
+		throw new Error("Task queue not initialized");
+	}
+
+	switch (command) {
+		case "enqueue_task": {
+			const sessionId = String(args?.sessionId ?? "").trim();
+			const prompt = String(args?.prompt ?? "").trim();
+			if (!sessionId) throw new Error("sessionId is required");
+			if (!prompt) throw new Error("prompt is required");
+			const task = ctx.taskQueue.enqueue({
+				sessionId,
+				prompt,
+				priority: typeof args?.priority === "number" ? args.priority : 0,
+				model: typeof args?.model === "string" ? args.model : undefined,
+				workspaceRoot:
+					typeof args?.workspaceRoot === "string"
+						? args.workspaceRoot.trim()
+						: undefined,
+				environmentId:
+					typeof args?.environmentId === "string"
+						? args.environmentId.trim()
+						: "local",
+				maxAttempts:
+					typeof args?.maxAttempts === "number" ? args.maxAttempts : undefined,
+			});
+			broadcastTaskEvent(ctx, task.taskId, task.status, task);
+			return task;
+		}
+
+		case "list_tasks": {
+			const status = args?.status as
+				| "queued"
+				| "running"
+				| "paused"
+				| "cancelled"
+				| "completed"
+				| "failed"
+				| "retrying";
+			const sessionId =
+				typeof args?.sessionId === "string" ? args.sessionId : undefined;
+			const limit =
+				typeof args?.limit === "number" ? args.limit : 200;
+			return ctx.taskQueue.list({ status, sessionId, limit });
+		}
+
+		case "get_task": {
+			const taskId = String(args?.taskId ?? "").trim();
+			if (!taskId) throw new Error("taskId is required");
+			const task = ctx.taskQueue.get(taskId);
+			if (!task) throw new Error(`Task not found: ${taskId}`);
+			return task;
+		}
+
+		case "claim_next_task": {
+			const task = ctx.concurrencyController.getTask
+				? ctx.concurrencyController.getTask(String(args?.taskId ?? "").trim())
+				: undefined;
+			if (task) return task;
+			const claimed = ctx.taskQueue.claimNext();
+			if (!claimed) return null;
+			return claimed;
+		}
+
+		case "complete_task": {
+			const taskId = String(args?.taskId ?? "").trim();
+			if (!taskId) throw new Error("taskId is required");
+			const status = String(args?.status ?? "").trim() as
+				| "completed"
+				| "failed"
+				| "cancelled";
+			if (!status) throw new Error("status is required");
+			const ok = ctx.concurrencyController.completeTask(taskId, status, {
+				resultSummary:
+					typeof args?.resultSummary === "string"
+						? args.resultSummary
+						: null,
+				error: typeof args?.error === "string" ? args.error : null,
+			});
+			const task = ctx.taskQueue.get(taskId);
+			if (task) broadcastTaskEvent(ctx, taskId, task.status, task);
+			return { ok };
+		}
+
+		case "cancel_task": {
+			const taskId = String(args?.taskId ?? "").trim();
+			if (!taskId) throw new Error("taskId is required");
+			const ok = ctx.concurrencyController.cancelTask(taskId);
+			const task = ctx.taskQueue.get(taskId);
+			if (task) broadcastTaskEvent(ctx, taskId, task.status, task);
+			return { ok };
+		}
+
+		case "pause_task": {
+			const taskId = String(args?.taskId ?? "").trim();
+			if (!taskId) throw new Error("taskId is required");
+			const ok = ctx.concurrencyController.pauseTask(taskId);
+			const task = ctx.taskQueue.get(taskId);
+			if (task) broadcastTaskEvent(ctx, taskId, task.status, task);
+			return { ok };
+		}
+
+		case "retry_task": {
+			const taskId = String(args?.taskId ?? "").trim();
+			if (!taskId) throw new Error("taskId is required");
+			const ok = ctx.concurrencyController.retryTask(taskId);
+			const task = ctx.taskQueue.get(taskId);
+			if (task) broadcastTaskEvent(ctx, taskId, task.status, task);
+			return { ok };
+		}
+
+		case "get_task_stats": {
+			return ctx.taskQueue.getStats();
+		}
+
+		case "set_max_concurrent": {
+			const value = Number(args?.maxConcurrent);
+			if (!Number.isFinite(value) || value < 1) {
+				throw new Error("maxConcurrent must be a positive number");
+			}
+			ctx.concurrencyController.setMaxConcurrent(value);
+			return { maxConcurrent: value };
+		}
+
+		default:
+			throw new Error(`unsupported task queue command: ${command}`);
+	}
+}
+

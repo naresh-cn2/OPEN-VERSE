@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.4] - 2026-11-15
+
+### Added
+- **Official Google Native Account Chooser**: Implemented authentic Google OAuth 2.0 / OpenID Connect authorization code flow with `prompt=select_account`, displaying Google's official account chooser showing all available browser Google accounts.
+- **Authoritative Google Profile Synchronization**: Dynamic synchronization of verified Google account names (e.g. `CN2. Dev`) and high-resolution profile pictures directly from Google's `/oauth2/v3/userinfo` API.
+- **No-Referrer CDN Security Bypass**: Applied `referrerPolicy="no-referrer"` across all user avatar components to prevent Google CDN (`lh3.googleusercontent.com`) 403/429 access restrictions from localhost/custom origins.
+- **Multi-Account State Isolation**: Automated local cache partitioning and state clearance on Google account switching, ensuring complete workspace privacy.
+- **Pure Google Authentication Flow**: Streamlined authentication and account management interfaces to focus strictly on Google identity without secondary third-party clutter.
+
+### Fixed
+- **Stale Name Precedence Bug**: Corrected account registry lookup logic so Google's verified name always overrides legacy placeholder records.
+- **Sidebar Profile Pill Truncation**: Removed whitespace string-splitting on compound display names and enabled circular image avatar rendering in both expanded and collapsed modes.
+- **Update Manifest Alignment**: Updated release feeds across Windows, Android, and Web to version `0.2.4`.
+
+---
+
 ## [0.2.3] - 2026-11-12
 
 ### Added

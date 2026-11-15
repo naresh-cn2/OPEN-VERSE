@@ -36,6 +36,8 @@ import {
 import { recordHubActivity } from "./hub-admin";
 import { sessionLogPath } from "./paths";
 import { migrateOriginalClineProfileIfNeeded } from "./profile-migration";
+import { TaskQueue } from "./task-queue";
+import { ConcurrencyController } from "./concurrency-controller";
 import type {
 	LiveSession,
 	PendingAskQuestion,
@@ -284,6 +286,27 @@ export function broadcastEvent(
 	payload: unknown,
 ): void {
 	sendEvent(ctx, name, payload);
+}
+
+export function broadcastTaskEvent(
+	ctx: SidecarContext,
+	taskId: string,
+	status:
+		| "queued"
+		| "running"
+		| "paused"
+		| "cancelled"
+		| "completed"
+		| "failed"
+		| "retrying",
+	payload?: unknown,
+): void {
+	sendEvent(ctx, "task_status", {
+		taskId,
+		status,
+		timestamp: nowMs(),
+		...(typeof payload === "object" && payload !== null ? payload : {}),
+	});
 }
 
 export function broadcastChunk(
@@ -666,6 +689,7 @@ export function createSidecarContext(
 		telemetryUser?: SidecarContext["telemetryUser"];
 	} = {},
 ): SidecarContext {
+	const taskQueue = new TaskQueue();
 	return {
 		liveSessions: new Map(),
 		restoringWorkspacePaths: new Set(),
@@ -684,6 +708,8 @@ export function createSidecarContext(
 		telemetryUser: observability.telemetryUser,
 		cloudSessionManager: null,
 		hubBuildMismatch: null,
+		taskQueue,
+		concurrencyController: new ConcurrencyController(taskQueue),
 	};
 }
 
@@ -743,6 +769,14 @@ export async function disposeSidecarContext(
 	// Shuts down the PostHog client the feature flags service owns, flushing
 	// any pending $feature_flag_called events.
 	cleanup.push(disposeDesktopFeatureFlagsService());
+
+	// Stop the concurrency claim loop and close the task queue database.
+	if (ctx.concurrencyController) {
+		ctx.concurrencyController.stop();
+	}
+	if (ctx.taskQueue) {
+		ctx.taskQueue.close();
+	}
 
 	const results = [...approvalResults, ...(await Promise.allSettled(cleanup))];
 	const firstFailure = results.find(
@@ -1310,12 +1344,12 @@ export async function initializeSessionManager(
 	try {
 		const migrationResult = migrateOriginalClineProfileIfNeeded();
 		if (migrationResult.migratedSessions > 0) {
-			ctx.logger.info?.(
+			ctx.logger?.log(
 				`[profile-migration] Safely imported ${migrationResult.migratedSessions} original Cline sessions into OPEN VERSE profile.`,
 			);
 		}
 	} catch (err) {
-		ctx.logger.warn?.("[profile-migration] Migration check skipped or failed:", err);
+		ctx.logger?.log("[profile-migration] Migration check skipped or failed:", { err });
 	}
 	const { url: hubUrl, authToken: hubAuthToken } =
 		await resolveLocalHubEndpointAndToken(ctx);

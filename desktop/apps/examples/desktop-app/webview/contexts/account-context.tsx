@@ -16,6 +16,7 @@ import {
 	getCurrentSession,
 	getStoredSession,
 	openVerseSignOut,
+	refreshGoogleUserProfile,
 	subscribeAuthChange,
 } from "@/lib/open-verse-auth";
 
@@ -133,6 +134,19 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 					email: ovSession.user.email,
 					displayName: ovSession.user.displayName,
 				} as ClineAccountUser);
+
+				if (ovSession.user.provider === "google" && ovSession.accessToken) {
+					void refreshGoogleUserProfile(ovSession).then((updated) => {
+						if (updated) {
+							setOpenVerseUser(updated);
+							setUser({
+								id: updated.id,
+								email: updated.email,
+								displayName: updated.displayName,
+							} as ClineAccountUser);
+						}
+					});
+				}
 				return;
 			}
 
@@ -181,6 +195,19 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 				email: ovSession.user.email,
 				displayName: ovSession.user.displayName,
 			} as ClineAccountUser);
+
+			if (ovSession.user.provider === "google" && ovSession.accessToken) {
+				void refreshGoogleUserProfile(ovSession).then((updated) => {
+					if (updated) {
+						setOpenVerseUser(updated);
+						setUser({
+							id: updated.id,
+							email: updated.email,
+							displayName: updated.displayName,
+						} as ClineAccountUser);
+					}
+				});
+			}
 		} else {
 			setUser((current) => current ?? readCachedAccountUser());
 		}

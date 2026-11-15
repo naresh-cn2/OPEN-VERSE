@@ -185,9 +185,144 @@ export function AddProviderContent({
 
 	const content = (
 		<div className="flex flex-col gap-6">
+			{/* Preset Templates */}
+			<div className="rounded-lg border border-border p-4 bg-muted/20">
+				<div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+					Quick Presets (Online Accounts, Local Models &amp; API Keys)
+				</div>
+				<div className="flex flex-wrap gap-2">
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "ollama-local",
+								name: "Ollama (Local)",
+								baseUrl: "http://localhost:11434/v1",
+								models: ["llama3.3:latest", "deepseek-r1:latest", "qwen2.5-coder:latest"],
+								defaultModel: "llama3.3:latest",
+							}));
+						}}
+					>
+						💻 Ollama Local
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "lmstudio-local",
+								name: "LM Studio (Local)",
+								baseUrl: "http://localhost:1234/v1",
+								models: ["local-model"],
+								defaultModel: "local-model",
+							}));
+						}}
+					>
+						💻 LM Studio
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "vllm-local",
+								name: "vLLM / LocalAI",
+								baseUrl: "http://localhost:8000/v1",
+								models: ["default"],
+								defaultModel: "default",
+							}));
+						}}
+					>
+						💻 vLLM Local
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "chatgpt-account",
+								name: "ChatGPT Online Account",
+								baseUrl: "https://chatgpt.com/backend-api",
+								models: ["gpt-4o", "o3-mini", "o1"],
+								defaultModel: "gpt-4o",
+							}));
+						}}
+					>
+						🌐 ChatGPT Online
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "claude-account",
+								name: "Claude Online Account",
+								baseUrl: "https://claude.ai/api",
+								models: ["claude-3-7-sonnet", "claude-3-5-sonnet"],
+								defaultModel: "claude-3-7-sonnet",
+							}));
+						}}
+					>
+						🌐 Claude Online
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "deepseek-api",
+								name: "DeepSeek API",
+								baseUrl: "https://api.deepseek.com/v1",
+								models: ["deepseek-chat", "deepseek-reasoner"],
+								defaultModel: "deepseek-chat",
+							}));
+						}}
+					>
+						🔑 DeepSeek API
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						className="text-xs h-7 gap-1"
+						onClick={() => {
+							setForm((prev) => ({
+								...prev,
+								providerId: "qwen-api",
+								name: "Qwen / DashScope API",
+								baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+								models: ["qwen-max", "qwen-plus", "qwen-turbo"],
+								defaultModel: "qwen-max",
+							}));
+						}}
+					>
+						🔑 Qwen API
+					</Button>
+				</div>
+			</div>
+
 			<div className="rounded-lg border border-border p-5">
 				<h3 className="mb-4 text-sm font-semibold text-foreground">
-					OpenAI-Compatible Provider
+					Custom Provider Configuration
 				</h3>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div>

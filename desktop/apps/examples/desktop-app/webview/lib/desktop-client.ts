@@ -17,6 +17,7 @@ import type {
 	DesktopTransportState,
 } from "@/lib/desktop-transport";
 import type { Provider, ProviderModel } from "@/lib/provider-schema";
+import type { BrowserTab, BrowserSnapshot, BrowserConsoleMessage, BrowserNetworkRequest, BrowserPermission } from "./browser-automation";
 
 // Lazily import the Tauri invoke API only when available. When running in
 // sidecar/web mode (without Tauri), this module may not exist or the bridge
@@ -133,6 +134,45 @@ export type AgendaTaskCancelInput = AgendaTaskRevisionInput & {
 
 export type AgendaAutomationSetInput = {
 	policy: Omit<AgendaAutomationPolicy, "updatedAt">;
+};
+
+export type TaskRecord = {
+	taskId: string;
+	sessionId: string;
+	prompt: string;
+	status:
+		| "queued"
+		| "running"
+		| "paused"
+		| "cancelled"
+		| "completed"
+		| "failed"
+		| "retrying";
+	priority: number;
+	model?: string;
+	workspaceRoot?: string;
+	environmentId: string;
+	attempt: number;
+	maxAttempts: number;
+	error?: string | null;
+	resultSummary?: string | null;
+	createdAt: string;
+	startedAt?: string | null;
+	endedAt?: string | null;
+	claimToken?: string | null;
+	claimUntilAt?: string | null;
+};
+
+export type TaskStats = {
+	queued: number;
+	running: number;
+	completed: number;
+	failed: number;
+	cancelled: number;
+	paused: number;
+	retrying: number;
+	maxConcurrent: number;
+	activeSlots: number;
 };
 
 export type DesktopErrorReport = {
@@ -936,6 +976,168 @@ class DesktopClient {
 			{ ...input },
 		);
 		return response.policy;
+	}
+
+	async enqueueTask(input: {
+		sessionId: string;
+		prompt: string;
+		priority?: number;
+		model?: string;
+		workspaceRoot?: string;
+		environmentId?: string;
+		maxAttempts?: number;
+	}): Promise<TaskRecord> {
+		const response = await this.invoke<{ task: TaskRecord }>(
+			"enqueue_task",
+			{ ...input },
+		);
+		return response.task;
+	}
+
+	async listTasks(input?: {
+		status?:
+			| "queued"
+			| "running"
+			| "paused"
+			| "cancelled"
+			| "completed"
+			| "failed"
+			| "retrying";
+		sessionId?: string;
+		limit?: number;
+	}): Promise<TaskRecord[]> {
+		const response = await this.invoke<{ tasks: TaskRecord[] }>(
+			"list_tasks",
+			{ ...input },
+		);
+		return response.tasks ?? [];
+	}
+
+	async getTask(taskId: string): Promise<TaskRecord | undefined> {
+		const response = await this.invoke<{ task?: TaskRecord }>(
+			"get_task",
+			{ taskId },
+		);
+		return response.task;
+	}
+
+	async claimNextTask(): Promise<TaskRecord | null> {
+		const response = await this.invoke<{ task?: TaskRecord }>(
+			"claim_next_task",
+			{},
+		);
+		return response.task ?? null;
+	}
+
+	async completeTask(
+		taskId: string,
+		status: "completed" | "failed" | "cancelled",
+		input?: {
+			resultSummary?: string | null;
+			error?: string | null;
+		},
+	): Promise<{ ok: boolean }> {
+		return await this.invoke<{ ok: boolean }>("complete_task", {
+			taskId,
+			status,
+			...input,
+		});
+	}
+
+	async cancelTask(taskId: string): Promise<{ ok: boolean }> {
+		return await this.invoke<{ ok: boolean }>("cancel_task", {
+			taskId,
+		});
+	}
+
+	async pauseTask(taskId: string): Promise<{ ok: boolean }> {
+		return await this.invoke<{ ok: boolean }>("pause_task", {
+			taskId,
+		});
+	}
+
+	async retryTask(taskId: string): Promise<{ ok: boolean }> {
+		return await this.invoke<{ ok: boolean }>("retry_task", {
+			taskId,
+		});
+	}
+
+	async getTaskStats(): Promise<TaskStats> {
+		return await this.invoke<TaskStats>("get_task_stats", {});
+	}
+
+	async setMaxConcurrent(maxConcurrent: number): Promise<{
+		maxConcurrent: number;
+	}> {
+		return await this.invoke<{ maxConcurrent: number }>(
+			"set_max_concurrent",
+			{ maxConcurrent },
+		);
+	}
+
+	async browserAvailable(): Promise<boolean> {
+		return await this.invoke<boolean>("browser_available", {});
+	}
+
+	async browserGetTabs(): Promise<BrowserTab[]> {
+		return await this.invoke<{ tabs: BrowserTab[] }>("browser_get_tabs", {});
+	}
+
+	async browserCreateTab(args: { url?: string }): Promise<BrowserTab> {
+		const response = await this.invoke<{ tab: BrowserTab }>("browser_create_tab", args);
+		return response.tab;
+	}
+
+	async browserCloseTab(args: { tabId: string }): Promise<void> {
+		await this.invoke<void>("browser_close_tab", args);
+	}
+
+	async browserSwitchTab(args: { tabId: string }): Promise<void> {
+		await this.invoke<void>("browser_switch_tab", args);
+	}
+
+	async browserNavigateTab(args: { tabId: string; url: string }): Promise<void> {
+		await this.invoke<void>("browser_navigate_tab", args);
+	}
+
+	async browserClickTab(args: { tabId: string; selector: string }): Promise<void> {
+		await this.invoke<void>("browser_click_tab", args);
+	}
+
+	async browserTypeTab(args: { tabId: string; selector: string; text: string }): Promise<void> {
+		await this.invoke<void>("browser_type_tab", args);
+	}
+
+	async browserSubmitTab(args: { tabId: string; selector: string }): Promise<void> {
+		await this.invoke<void>("browser_submit_tab", args);
+	}
+
+	async browserSnapshotTab(args: { tabId: string }): Promise<BrowserSnapshot> {
+		const response = await this.invoke<{ snapshot: BrowserSnapshot }>("browser_snapshot_tab", args);
+		return response.snapshot;
+	}
+
+	async browserGetConsoleMessages(args: { tabId: string }): Promise<BrowserConsoleMessage[]> {
+		const response = await this.invoke<{ messages: BrowserConsoleMessage[] }>("browser_get_console_messages", args);
+		return response.messages;
+	}
+
+	async browserGetNetworkRequests(args: { tabId: string }): Promise<BrowserNetworkRequest[]> {
+		const response = await this.invoke<{ requests: BrowserNetworkRequest[] }>("browser_get_network_requests", args);
+		return response.requests;
+	}
+
+	async browserRunLighthouse(args: { tabId: string }): Promise<any> {
+		return await this.invoke<any>("browser_run_lighthouse", args);
+	}
+
+	async browserCheckPermissions(): Promise<BrowserPermission[]> {
+		return await this.invoke<{ permissions: BrowserPermission[] }>("browser_check_permissions", {});
+	}
+
+	async browserRequestPermissions(args: { permissions: BrowserPermission[] }): Promise<BrowserPermission[]> {
+		const response = await this.invoke<{ permissions: BrowserPermission[] }>("browser_request_permissions", args);
+		return response.permissions;
 	}
 
 	public getCloudSyncBaseUrl(): string {

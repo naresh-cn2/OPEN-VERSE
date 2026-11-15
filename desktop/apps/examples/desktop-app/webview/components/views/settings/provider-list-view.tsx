@@ -117,9 +117,9 @@ function writeFavoriteModels(value: Record<string, string[]>): void {
 // -----------------------------------------------------------
 
 const AUTH_KIND_LABEL: Record<ProviderAuthKind, string> = {
-	oauth: "Sign in",
-	local: "Local CLI",
-	"api-key": "API key",
+	oauth: "Online Account",
+	local: "Local Model",
+	"api-key": "API Key",
 };
 
 function AuthKindHint({ kind }: { kind: ProviderAuthKind }) {
@@ -281,6 +281,7 @@ export function ProviderListContent({
 	selectedProviderId?: string | null;
 	variant?: "page" | "panel";
 }) {
+	const [activeCategory, setActiveCategory] = useState<"all" | "oauth" | "api-key" | "local">("all");
 	const [providerSearch, setProviderSearch] = useState("");
 	const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
 		new Set(),
@@ -295,14 +296,23 @@ export function ProviderListContent({
 	};
 	const isPanel = variant === "panel";
 
+	const onlineCount = providers.filter((p) => getProviderAuthKind(p) === "oauth").length;
+	const apiCount = providers.filter((p) => getProviderAuthKind(p) === "api-key").length;
+	const localCount = providers.filter((p) => getProviderAuthKind(p) === "local").length;
+
 	const providerSearchQuery = providerSearch.trim().toLowerCase();
-	const filteredProviders = providerSearchQuery
-		? providers.filter(
-				(provider) =>
-					provider.name.toLowerCase().includes(providerSearchQuery) ||
-					provider.id.toLowerCase().includes(providerSearchQuery),
-			)
-		: providers;
+	const filteredProviders = providers.filter((provider) => {
+		if (activeCategory !== "all" && getProviderAuthKind(provider) !== activeCategory) {
+			return false;
+		}
+		if (providerSearchQuery) {
+			return (
+				provider.name.toLowerCase().includes(providerSearchQuery) ||
+				provider.id.toLowerCase().includes(providerSearchQuery)
+			);
+		}
+		return true;
+	});
 
 	const connectedProviders = filteredProviders.filter(isProviderConnected);
 	const availableProviders = filteredProviders.filter(
@@ -352,14 +362,14 @@ export function ProviderListContent({
 								isPanel ? "text-2xl" : "text-3xl",
 							)}
 						>
-							Bring your own key
+							Model Providers
 						</h1>
 						<InUseBadge section="Providers" />
 					</div>
 					<p className="mt-3 text-base leading-6 text-muted-foreground">
 						{connectedCount === 0
-							? "Connect a provider to start using models."
-							: `${connectedCount} configured · ${providers.length} available`}
+							? "Connect Online Accounts, API Keys, or Local Models. All models are orchestrated by OPEN-VERSE."
+							: `${connectedCount} configured · ${providers.length} available across Online, API, and Local`}
 					</p>
 				</div>
 				<Button
@@ -370,6 +380,61 @@ export function ProviderListContent({
 					<PlusCircle className="size-4" />
 					Add provider
 				</Button>
+			</div>
+
+			{/* 3 Pillars Category Switcher */}
+			<div className={cn("mb-4 flex flex-wrap gap-1.5 shrink-0", isPanel ? "max-w-none" : "max-w-2xl")}>
+				<button
+					type="button"
+					onClick={() => setActiveCategory("all")}
+					className={cn(
+						"px-3 py-1 text-xs rounded-full font-medium transition-colors",
+						activeCategory === "all"
+							? "bg-foreground text-background font-semibold shadow-sm"
+							: "bg-muted text-muted-foreground hover:text-foreground",
+					)}
+				>
+					All ({providers.length})
+				</button>
+				<button
+					type="button"
+					onClick={() => setActiveCategory("oauth")}
+					className={cn(
+						"px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
+						activeCategory === "oauth"
+							? "bg-foreground text-background font-semibold shadow-sm"
+							: "bg-muted text-muted-foreground hover:text-foreground",
+					)}
+				>
+					<Globe className="size-3" />
+					<span>Online Accounts ({onlineCount})</span>
+				</button>
+				<button
+					type="button"
+					onClick={() => setActiveCategory("api-key")}
+					className={cn(
+						"px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
+						activeCategory === "api-key"
+							? "bg-foreground text-background font-semibold shadow-sm"
+							: "bg-muted text-muted-foreground hover:text-foreground",
+					)}
+				>
+					<KeyRound className="size-3" />
+					<span>API Keys ({apiCount})</span>
+				</button>
+				<button
+					type="button"
+					onClick={() => setActiveCategory("local")}
+					className={cn(
+						"px-3 py-1 text-xs rounded-full font-medium transition-colors flex items-center gap-1.5",
+						activeCategory === "local"
+							? "bg-foreground text-background font-semibold shadow-sm"
+							: "bg-muted text-muted-foreground hover:text-foreground",
+					)}
+				>
+					<MonitorSmartphone className="size-3" />
+					<span>Local Models ({localCount})</span>
+				</button>
 			</div>
 
 			<div

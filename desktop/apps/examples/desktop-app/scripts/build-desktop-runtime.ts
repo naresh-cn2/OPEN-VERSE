@@ -123,7 +123,9 @@ const bundleDesktopBackend = async (): Promise<void> => {
 	const defineMap: Record<string, string> = {};
 	for (let i = 0; i < defines.length; i += 2) {
 		if (defines[i] === "--define") {
-			const [k, v] = defines[i + 1].split(/=(.*)/s);
+			const eqIdx = defines[i + 1].indexOf("=");
+			const k = eqIdx >= 0 ? defines[i + 1].slice(0, eqIdx) : defines[i + 1];
+			const v = eqIdx >= 0 ? defines[i + 1].slice(eqIdx + 1) : "";
 			defineMap[k] = v;
 		}
 	}

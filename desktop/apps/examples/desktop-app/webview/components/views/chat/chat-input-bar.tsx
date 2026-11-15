@@ -73,6 +73,7 @@ import {
 } from "@/lib/model-selection";
 import { subscribeToPromptInputFocus } from "@/lib/prompt-input-focus";
 import { normalizeProviderId } from "@/lib/provider-id";
+import { OAUTH_PROVIDER_IDS } from "@/lib/provider-connection";
 import {
 	loadProviderModelCatalog,
 	loadProviderModels,
@@ -178,6 +179,8 @@ const FALLBACK_PROVIDER_REASONING_MODELS: Record<string, string[]> = {
 	"openai-native": ["gpt-5.5"],
 	openrouter: ["anthropic/claude-sonnet-4.6"],
 	gemini: ["gemini-3-pro-latest"],
+	nvidia: ["nemotron-3.5-super-vl-120b-a12b", "minimax-m3.1-flash", "nemotron-3-nano-omni"],
+	opencode: ["nemotron-3.5-super-vl-free", "claude-fable-5.1", "claude-fable-5.2"],
 };
 
 type ReasoningEffort = NonNullable<ChatSessionConfig["reasoningEffort"]>;
@@ -1676,6 +1679,8 @@ function ChatInputBarImpl({
 							}
 							onProviderChange={onProviderChange}
 							provider={provider}
+							onReasoningChange={handleEffortChange}
+							reasoningEffort={EFFORT_LEVELS[effortIndex]?.value}
 						/>
 					</div>
 					<Select
@@ -1789,6 +1794,8 @@ const ModelSelector = memo(function ModelSelector({
 	onModelSupportsReasoningChange,
 	onModelSupportsImagesChange,
 	onOpenModelSettings,
+	onReasoningChange,
+	reasoningEffort,
 }: {
 	allowedProviderIds?: string[];
 	autoCorrectModel?: boolean;
@@ -1803,6 +1810,8 @@ const ModelSelector = memo(function ModelSelector({
 	onModelSupportsImagesChange: (supported: boolean | null) => void;
 	/** Opens Settings → Providers; adds a "set up another provider" row when set. */
 	onOpenModelSettings?: () => void;
+	onReasoningChange?: (reasoning: string) => void;
+	reasoningEffort?: string;
 }) {
 	const [providerModels, setProviderModels] = useState<
 		Record<string, string[]>
@@ -2349,14 +2358,19 @@ const ModelSelector = memo(function ModelSelector({
 		},
 		[onModelChange, rememberSelection, resolvedProvider],
 	);
-	// The picker only lists providers with saved settings, so it is also the
-	// natural place to reach the rest of the catalog.
+	// The picker lists providers across Online Accounts, API Keys, and Local Models
 	const providerOptions = useMemo(
 		() => [
-			...providers.map((value) => ({
-				label: providerNames[value]?.trim() || value,
-				value,
-			})),
+			...providers.map((value) => {
+				const isOAuth = OAUTH_PROVIDER_IDS.has(value) || value.endsWith("-web");
+				const isLocal = value === "ollama" || value === "lmstudio" || value.startsWith("local-");
+				const badge = isOAuth ? "Online" : isLocal ? "Local" : "API";
+				return {
+					badge,
+					label: providerNames[value]?.trim() || value,
+					value,
+				};
+			}),
 			...(onOpenModelSettings
 				? [
 						{
@@ -2471,8 +2485,7 @@ const ModelSelector = memo(function ModelSelector({
 			) : null}
 
 			<div className="flex min-w-0 items-center gap-0.5 group-data-[compact]/composer:hidden">
-				{/* Wide enough for the longest built-in provider names ("Cline
-				    Usage-Billing", "OpenAI ChatGPT Subscription") untruncated. */}
+				{/* Wide enough for the longest built-in provider names untruncated. */}
 				<div className="shrink-0">{renderProviderSelect("max-w-56")}</div>
 				<div className="bg-border-2 h-4 w-[0.1rem] shrink-0" />
 				{/* Uncapped so long model names show in full when the row has

@@ -6,6 +6,11 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	completeUserOnboarding,
+	loginWithGoogleOidc,
+	setStoredSession,
+} from "@/lib/open-verse-auth";
 import { OpenVerseAuth } from "./open-verse-auth";
 
 const { openExternalUrl } = vi.hoisted(() => ({
@@ -26,6 +31,10 @@ describe("OpenVerseAuth UI Component", () => {
 		document.body.appendChild(container);
 		root = createRoot(container);
 		openExternalUrl.mockClear();
+		window.localStorage.clear();
+		window.sessionStorage.clear();
+		setStoredSession(null);
+		window.location.hash = "";
 	});
 
 	afterEach(async () => {
@@ -33,6 +42,10 @@ describe("OpenVerseAuth UI Component", () => {
 			root.unmount();
 		});
 		container.remove();
+		window.localStorage.clear();
+		window.sessionStorage.clear();
+		setStoredSession(null);
+		window.location.hash = "";
 	});
 
 	function buttonByText(text: string): HTMLButtonElement {
@@ -45,148 +58,96 @@ describe("OpenVerseAuth UI Component", () => {
 		return button;
 	}
 
-	it("renders welcome screen with OPEN-VERSE branding and options", async () => {
+	it("renders Google-only authentic OPEN-VERSE screen with simple design", async () => {
 		const onAuth = vi.fn();
 		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
+			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
 		});
 
 		expect(container.textContent).toContain("OPEN-VERSE");
-		expect(container.textContent).toContain("Your AI-powered development workspace");
-		expect(container.querySelector('[data-openverse-auth-screen="welcome"]')).not.toBeNull();
-
-		// Buttons available
-		expect(buttonByText("Get Started")).not.toBeNull();
-		expect(buttonByText("Sign In")).not.toBeNull();
-		expect(container.textContent).toContain("Continue in Offline / Local Mode");
+		expect(container.textContent).toContain("Your AI workspace, everywhere.");
+		expect(container.textContent).toContain("Continue with Google");
+		// Ensure no fake options exist
+		expect(container.textContent).not.toContain("Continue with GitHub");
+		expect(container.textContent).not.toContain("Continue in Offline Local Mode");
+		expect(container.querySelector("[data-openverse-auth-container]")).not.toBeNull();
 	});
 
-	it("navigates from Get Started to the two account options: Google and GitHub", async () => {
+	it("launches official Google OAuth with prompt=select_account when clicking Continue with Google", async () => {
 		const onAuth = vi.fn();
 		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
+			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
 		});
 
+		const googleBtn = buttonByText("Continue with Google");
 		await act(async () => {
-			buttonByText("Get Started").click();
+			googleBtn.click();
 		});
 
-		expect(container.textContent).toContain("Welcome");
-		expect(container.textContent).toContain("Create an account or sign in with your provider.");
-		expect(container.querySelector('[data-openverse-auth-screen="auth_options"]')).not.toBeNull();
-
-		// The two account options exist
-		expect(buttonByText("Continue with Google")).not.toBeNull();
-		expect(buttonByText("Continue with GitHub")).not.toBeNull();
-
-		// Does not introduce additional identity providers like email/password registration
-		expect(container.querySelector("#ov-signup-password")).toBeNull();
-		expect(container.querySelector("#ov-signin-password")).toBeNull();
-	});
-
-	it("navigates from Sign In to the two account options: Google and GitHub", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
-		});
-
-		await act(async () => {
-			buttonByText("Sign In").click();
-		});
-
-		expect(container.textContent).toContain("Welcome");
-		expect(buttonByText("Continue with Google")).not.toBeNull();
-		expect(buttonByText("Continue with GitHub")).not.toBeNull();
-	});
-
-	it("triggers real OAuth browser flow when clicking Continue with Google", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
-		});
-
-		await act(async () => {
-			buttonByText("Continue with Google").click();
-		});
-
+		// Verifies that external browser URL was opened with accounts.google.com and prompt=select_account
 		expect(openExternalUrl).toHaveBeenCalledTimes(1);
-		expect(openExternalUrl).toHaveBeenCalledWith(
-			expect.stringContaining("provider=google"),
-		);
-		expect(container.textContent).toContain("Browser opened for Google sign-in");
+		const openedUrl = openExternalUrl.mock.calls[0][0];
+		expect(openedUrl).toContain("accounts.google.com/o/oauth2/v2/auth");
+		expect(openedUrl).toContain("prompt=select_account");
+		expect(openedUrl).toContain("response_type=code");
+		expect(openedUrl).toContain("scope=openid+email+profile");
 	});
 
-	it("triggers real OAuth browser flow when clicking Continue with GitHub", async () => {
+	it("authenticates returning user when Google returns identity callback", async () => {
+		// Pre-register returning user
+		const { session } = await loginWithGoogleOidc({
+			sub: "cn2_sub_999",
+			email: "nareshnayak.cn2@gmail.com",
+			name: "Naresh",
+		});
+		completeUserOnboarding(session.user.id);
+
 		const onAuth = vi.fn();
 		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
+			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
+		});
+
+		// Simulate callback dispatch from Google
+		await act(async () => {
+			const callbackUrl =
+				"openverse://auth/callback#access_token=ov_tok_999&email=nareshnayak.cn2@gmail.com&name=Naresh&sub=cn2_sub_999";
+			(window as any).__dispatchOpenVerseDeepLink(callbackUrl);
 		});
 
 		await act(async () => {
-			buttonByText("Continue with GitHub").click();
+			await new Promise((r) => setTimeout(r, 450));
 		});
 
-		expect(openExternalUrl).toHaveBeenCalledTimes(1);
-		expect(openExternalUrl).toHaveBeenCalledWith(
-			expect.stringContaining("provider=github"),
-		);
-		expect(container.textContent).toContain("Browser opened for GitHub sign-in");
-	});
-
-	it("completes OAuth sign-in when callback token is submitted", async () => {
-		const onAuth = vi.fn();
-		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="auth_options" onAuthenticated={onAuth} />);
-		});
-
-		// Start Google OAuth flow to reveal the token submission input
-		await act(async () => {
-			buttonByText("Continue with Google").click();
-		});
-
-		const tokenInput = container.querySelector<HTMLInputElement>("input");
-		expect(tokenInput).not.toBeNull();
-
-		await act(async () => {
-			const setter = Object.getOwnPropertyDescriptor(
-				window.HTMLInputElement.prototype,
-				"value",
-			)?.set;
-			setter?.call(tokenInput, "openverse://auth/callback#access_token=test_oauth_token&email=alice@gmail.com&provider=google");
-			tokenInput?.dispatchEvent(new Event("change", { bubbles: true }));
-		});
-
-		await act(async () => {
-			buttonByText("Complete").click();
-		});
-
-		expect(onAuth).toHaveBeenCalledTimes(1);
 		expect(onAuth).toHaveBeenCalledWith(
 			expect.objectContaining({
-				email: "alice@gmail.com",
+				email: "nareshnayak.cn2@gmail.com",
+				displayName: "Naresh",
 				provider: "google",
-				isOfflineMode: false,
 			}),
 		);
 	});
 
-	it("switches to Offline / Local Mode and activates local developer profile", async () => {
+	it("presents first-time onboarding wizard when a new Google user signs up", async () => {
 		const onAuth = vi.fn();
 		await act(async () => {
-			root.render(<OpenVerseAuth initialScreen="welcome" onAuthenticated={onAuth} />);
+			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
+		});
+
+		// Simulate new Google user returning from accounts.google.com
+		await act(async () => {
+			const callbackUrl =
+				"openverse://auth/callback#access_token=ov_tok_new&email=newuser@gmail.com&name=New+User&sub=new_sub_555";
+			(window as any).__dispatchOpenVerseDeepLink(callbackUrl);
 		});
 
 		await act(async () => {
-			buttonByText("Continue in Offline / Local Mode").click();
+			await new Promise((r) => setTimeout(r, 100));
 		});
 
-		expect(onAuth).toHaveBeenCalledTimes(1);
-		expect(onAuth).toHaveBeenCalledWith(
-			expect.objectContaining({
-				isOfflineMode: true,
-				id: "openverse-local-developer",
-				provider: "local",
-			}),
-		);
+		// Transitions to first-time onboarding wizard
+		expect(container.textContent).toContain("Welcome to OPEN-VERSE");
+		expect(container.textContent).toContain("Step 1 of 4");
+		const emailInput = container.querySelector('input[disabled]') as HTMLInputElement;
+		expect(emailInput?.value).toBe("newuser@gmail.com");
 	});
 });

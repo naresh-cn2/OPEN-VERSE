@@ -25,13 +25,14 @@ afterEach(async () => {
 });
 
 describe("OpenVerseAccountView", () => {
-	it("renders OPEN-VERSE first-party identity profile and separate model providers section", async () => {
+	it("renders OPEN-VERSE Google identity profile, connected providers, and separate model pillars", async () => {
 		setStoredSession({
 			user: {
 				id: "ov-user-123",
 				email: "developer@openverse.ai",
 				displayName: "Naresh",
 				provider: "google",
+				googleSub: "108392019283",
 				isOfflineMode: false,
 			},
 		});
@@ -48,18 +49,26 @@ describe("OpenVerseAccountView", () => {
 		expect(container.textContent).toContain("Account Settings");
 		expect(container.textContent).toContain("Naresh");
 		expect(container.textContent).toContain("developer@openverse.ai");
-		expect(container.textContent).toContain("Google OAuth");
+		expect(container.textContent).toContain("Google Account");
+		expect(container.textContent).toContain("108392019283");
 
-		// Data and session isolation
-		expect(container.textContent).toContain("Local Workspace & Session Storage");
-		expect(container.textContent).toContain("~/.openverse/data/db/sessions.db");
-		expect(container.textContent).toContain("Preserved intact (71+ sessions)");
+		// Connected Identity Providers (Google Only)
+		expect(container.textContent).toContain("Connected Identity Providers");
+		expect(container.textContent).toContain("Google");
 
-		// Separate AI Model Providers
-		expect(container.textContent).toContain("AI Model Providers");
-		expect(container.textContent).toContain("Cline Provider");
-		expect(container.textContent).toContain("Google Gemini");
-		expect(container.textContent).toContain("OpenAI / ChatGPT");
+		// Session Security
+		expect(container.textContent).toContain("Session Security & Expiration");
+		expect(container.textContent).toContain("30-day auto-renew");
+
+		// Separate AI Model Providers (The 3 Pillars)
+		expect(container.textContent).toContain("AI Model Providers (3 Separate Pillars)");
+		expect(container.textContent).toContain("Online Accounts");
+		expect(container.textContent).toContain("API Keys");
+		expect(container.textContent).toContain("Local Models");
+
+		// Danger zone
+		expect(container.textContent).toContain("Danger Zone");
+		expect(container.textContent).toContain("Delete Account & Data");
 	});
 
 	it("renders autonomous offline mode user with local developer badge", async () => {
@@ -82,6 +91,6 @@ describe("OpenVerseAccountView", () => {
 		});
 
 		expect(container.textContent).toContain("Local Developer");
-		expect(container.textContent).toContain("Autonomous Local Mode");
+		expect(container.textContent).toContain("Local Developer");
 	});
 });

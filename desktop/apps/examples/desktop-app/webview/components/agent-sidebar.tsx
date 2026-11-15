@@ -367,22 +367,24 @@ export function AgentSidebar({
 	const ovUser =
 		openVerseUser ??
 		(typeof window !== "undefined" ? getStoredSession()?.user : null);
-	const displayName = ovUser?.displayName || user?.displayName;
+	const displayName =
+		ovUser?.googleIdentity?.name ||
+		ovUser?.displayName ||
+		user?.displayName;
 	const email = ovUser?.email || user?.email;
-	const username = displayName?.split(" ")?.[0] || email?.split("@")?.[0];
 	const accountName =
-		username?.trim() ||
+		displayName?.trim() ||
+		email?.split("@")?.[0] ||
 		(ovUser?.isOfflineMode ? "Local Developer" : "OPEN-VERSE Desktop");
 	const accountScope = ovUser?.provider === "google"
 		? "Google Account"
-		: ovUser?.provider === "github"
-			? "GitHub Account"
-			: ovUser?.isOfflineMode
-				? "Local Mode"
-				: user
-					? (activeOrganization?.name ?? "Personal")
-					: undefined;
-	const accountInitial = accountName.charAt(0).toUpperCase();
+		: ovUser?.isOfflineMode
+			? "Local Mode"
+			: user
+				? (activeOrganization?.name ?? "Personal")
+				: undefined;
+	const avatarUrl = ovUser?.avatarUrl || ovUser?.googleIdentity?.picture;
+	const accountInitial = (accountName || "O").charAt(0).toUpperCase();
 	const {
 		deleteThread: deleteHistoryThread,
 		forkThread: forkHistoryThread,
@@ -428,6 +430,7 @@ export function AgentSidebar({
 	const [deleteConfirmThread, setDeleteConfirmThread] = useState<Thread | null>(
 		null,
 	);
+	const [sidebarAvatarError, setSidebarAvatarError] = useState(false);
 	const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(
 		() => new Set(),
 	);
@@ -1314,7 +1317,7 @@ export function AgentSidebar({
 							<button
 								aria-label="Account settings"
 								className={cn(
-									"flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+									"relative flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground overflow-hidden hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
 									view === "settings" &&
 									settingsSection === "Account" &&
 									"ring-2 ring-primary ring-offset-2 ring-offset-background",
@@ -1323,7 +1326,18 @@ export function AgentSidebar({
 								title={accountName}
 								type="button"
 							>
-								{accountInitial}
+								{avatarUrl && !sidebarAvatarError ? (
+									<img
+										src={avatarUrl}
+										alt=""
+										referrerPolicy="no-referrer"
+										crossOrigin="anonymous"
+										onError={() => setSidebarAvatarError(true)}
+										className="size-full rounded-full object-cover"
+									/>
+								) : (
+									accountInitial
+								)}
 							</button>
 							<Button
 								aria-label="Settings"
@@ -1355,8 +1369,19 @@ export function AgentSidebar({
 								title={email || undefined}
 								type="button"
 							>
-								<span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-									{accountInitial}
+								<span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground overflow-hidden">
+									{avatarUrl && !sidebarAvatarError ? (
+										<img
+											src={avatarUrl}
+											alt=""
+											referrerPolicy="no-referrer"
+											crossOrigin="anonymous"
+											onError={() => setSidebarAvatarError(true)}
+											className="size-full rounded-full object-cover"
+										/>
+									) : (
+										accountInitial
+									)}
 								</span>
 								<span className="flex min-w-0 flex-col leading-tight">
 									<span className="truncate text-sm font-medium">
