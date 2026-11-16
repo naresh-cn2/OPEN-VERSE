@@ -415,6 +415,28 @@ fn hide_console_window(command: &mut Command) {
 #[cfg(not(windows))]
 fn hide_console_window(_command: &mut Command) {}
 
+#[cfg(windows)]
+fn register_custom_protocol() {
+    use winreg::enums::HKEY_CURRENT_USER;
+    use winreg::RegKey;
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        let exe_str = exe_path.to_string_lossy();
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        if let Ok((key, _)) = hkcu.create_subkey("Software\\Classes\\openverse") {
+            let _ = key.set_value("", &"URL:OPEN-VERSE Protocol");
+            let _ = key.set_value("URL Protocol", &"");
+            if let Ok((cmd_key, _)) = key.create_subkey("shell\\open\\command") {
+                let cmd = format!("\"{}\" \"%1\"", exe_str);
+                let _ = cmd_key.set_value("", &cmd);
+            }
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn register_custom_protocol() {}
+
 fn resolve_workspace_root(launch_cwd: &str) -> String {
     let mut command = Command::new("git");
     command
@@ -1674,6 +1696,7 @@ fn main() {
             if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 clamp_main_window_to_work_area(&window);
             }
+            register_custom_protocol();
             #[cfg(target_os = "macos")]
             if let Err(error) = macos_notification::configure(app.handle()) {
                 eprintln!("[notification] setup failed: {error}");

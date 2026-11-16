@@ -8,9 +8,6 @@ import crypto from "node:crypto";
  * verifies provider identity, and mints an authenticated OPEN-VERSE session token.
  */
 
-const DEFAULT_GOOGLE_CLIENT_ID =
-  "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
-const DEFAULT_GOOGLE_CLIENT_SECRET = "d-FL95Q19q7MQmFpd7hHD0Ty";
 const CANONICAL_CALLBACK_URL =
   "https://open-verse-website.vercel.app/api/auth/callback";
 
@@ -68,10 +65,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (provider === "google") {
-      const clientId =
-        (process.env.GOOGLE_CLIENT_ID || "").trim() || DEFAULT_GOOGLE_CLIENT_ID;
-      const clientSecret =
-        (process.env.GOOGLE_CLIENT_SECRET || "").trim() || DEFAULT_GOOGLE_CLIENT_SECRET;
+      const clientId = (process.env.GOOGLE_CLIENT_ID || "").trim();
+      const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
+
+      if (!clientId || !clientSecret) {
+        throw new Error("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not configured on server.");
+      }
 
       // 1. Exchange authorization code for Google tokens
       const tokenRes = await fetch("https://oauth2.googleapis.com/token", {

@@ -3,8 +3,19 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Cline uses the microphone to transcribe speech into chat input.</string>
+	<string>OPEN-VERSE uses the microphone to transcribe speech into chat input.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Cline uses speech recognition to turn your voice into chat input.</string>
+	<string>OPEN-VERSE uses speech recognition to turn your voice into chat input.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ai.openverse.desktop</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>openverse</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

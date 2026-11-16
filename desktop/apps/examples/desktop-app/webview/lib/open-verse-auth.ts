@@ -526,10 +526,19 @@ export function getOAuthAuthorizeUrl(provider: "google" = "google"): string {
 	const config = getAuthConfig();
 	const googleClientId = getGoogleClientId();
 
-	// Default loopback redirect URI for Google OAuth (RFC 8252 standard for desktop/mobile)
-	let redirectUrl = "http://localhost:3125";
+	// Default deep link redirect URI for native desktop and mobile applications
+	let redirectUrl = "openverse://auth/callback";
 	if (typeof window !== "undefined") {
-		if (window.location.protocol.startsWith("http") && window.location.origin) {
+		const isNativeApp = Boolean(
+			(window as any).__TAURI_INTERNALS__ ||
+			(window as any).__TAURI__ ||
+			(window as any).AndroidInterface ||
+			(window as any).webkit?.messageHandlers ||
+			window.location.protocol.startsWith("tauri") ||
+			window.location.protocol.startsWith("asset")
+		);
+		// In pure web browser environments, return to origin
+		if (!isNativeApp && window.location.protocol.startsWith("http") && window.location.origin) {
 			redirectUrl = window.location.origin;
 		}
 	}

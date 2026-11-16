@@ -113,3 +113,14 @@
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro CallArtificialFunction StopDesktopProcesses
 !macroend
+
+!macro NSIS_HOOK_POSTINSTALL
+  WriteRegStr HKCU "Software\Classes\openverse" "" "URL:OPEN-VERSE Protocol"
+  WriteRegStr HKCU "Software\Classes\openverse" "URL Protocol" ""
+  WriteRegStr HKCU "Software\Classes\openverse\DefaultIcon" "" "$INSTDIR\OPEN-VERSE.exe,0"
+  WriteRegStr HKCU "Software\Classes\openverse\shell\open\command" "" '"$INSTDIR\OPEN-VERSE.exe" "%1"'
+!macroend
+
+!macro NSIS_HOOK_POSTUNINSTALL
+  DeleteRegKey HKCU "Software\Classes\openverse"
+!macroend

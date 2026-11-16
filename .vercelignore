@@ -1,0 +1,31 @@
+# Exclude non-website workspace folders
+desktop/
+mobile/
+cline/
+dashboard/
+dist-release/
+docs/
+tests/
+scripts/
+.github/
+.openverse-cloud-sync/
+
+# Dependencies and build caches
+node_modules/
+**/node_modules/
+**/.turbo/
+**/target/
+**/.cache/
+
+# Secrets and local environments
+.env*
+*.local
+*.keystore
+*.jks
+*.key
+.vercel/output
+.vercel/cache
+
+# Version control and logs
+.git/
+*.log

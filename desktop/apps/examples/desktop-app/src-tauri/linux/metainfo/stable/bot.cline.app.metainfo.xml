@@ -26,6 +26,9 @@
 	<url type="help">https://docs.cline.bot/usage/cline-desktop</url>
 	<url type="bugtracker">https://github.com/cline/cline/issues</url>
 	<content_rating type="oars-1.1" />
+	<provides>
+		<mediatype>x-scheme-handler/openverse</mediatype>
+	</provides>
 	<screenshots>
 		<screenshot type="default">
 			<caption>Run a task and review the agent's work</caption>
