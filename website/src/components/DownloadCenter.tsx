@@ -240,11 +240,21 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download for Windows (.exe)</span>
                 </a>
                 <a
+                  href={ASSETS.windowsZip}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
+                >
+                  <Download size={18} />
+                  <span>Download ZIP (.zip)</span>
+                </a>
+                <a
                   href={ASSETS.windowsSig}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary"
-                  style={{ padding: "12px 20px", fontSize: "0.95rem", gap: 8 }}
+                  style={{ padding: "12px 18px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={16} />
                   <span>Minisign Signature (.sig)</span>
@@ -266,6 +276,9 @@ export const DownloadCenter: React.FC = () => {
               </div>
               <div>
                 • <strong>When Opening Installer:</strong> If Windows SmartScreen appears, click <strong>&ldquo;More info&rdquo;</strong> and then click <strong>&ldquo;Run anyway&rdquo;</strong>.
+              </div>
+              <div>
+                • <strong>Alternative:</strong> Download the <strong>ZIP archive</strong> above, extract it, and run the installer directly.
               </div>
               <div>
                 • <strong>Integrity:</strong> Verify the SHA-256 hash or download the cryptographic Minisign signature (.sig).
