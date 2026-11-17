@@ -57,17 +57,24 @@ export const DownloadCenter: React.FC = () => {
 
   // Direct download assets hosted on GitHub Releases & Vercel CDN
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-    windowsZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
+    windows: "/api/download/windows",
+    windowsDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+    windowsZip: "/api/download/windows-zip",
+    windowsZipDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
-    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
+    mac: "/api/download/mac",
+    macDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
+    linuxDeb: "/api/download/linux-deb",
+    linuxDebDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
     linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb.sig`,
-    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
+    linuxRpm: "/api/download/linux-rpm",
+    linuxRpmDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm.sig`,
     androidApk: "/open-verse-mobile.apk",
-    androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
-    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
+    androidVersionedApk: "/api/download/android-apk",
+    androidVersionedApkDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
+    androidZip: "/api/download/android-zip",
+    androidZipDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
     iosTestFlight: `https://github.com/${GITHUB_RELEASES_ORG}/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID.`,
     iosZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/heads/main.zip`,
   };
@@ -79,25 +86,25 @@ export const DownloadCenter: React.FC = () => {
       zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
       size: "167.6 MB",
       sha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
-      available: true,
+      status: "available" as const,
     },
     mac: {
       name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
       size: "165 MB",
       sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
-      available: true,
+      status: "in-preview" as const,
     },
     linuxDeb: {
       name: `OPEN-VERSE_0.2.0_amd64.deb`,
       size: "228 MB",
       sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
-      available: true,
+      status: "in-preview" as const,
     },
     linuxRpm: {
       name: `OPEN-VERSE-0.2.0-1.x86_64.rpm`,
       size: "228 MB",
       sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
-      available: true,
+      status: "in-preview" as const,
     },
     android: {
       name: `open-verse-mobile.apk`,
@@ -105,15 +112,14 @@ export const DownloadCenter: React.FC = () => {
       zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
       size: "10.0 MB",
       sha256: "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
-      available: true,
+      status: "available" as const,
     },
     ios: {
       name: `open-verse-ios-v${DESKTOP_VERSION}`,
       version: DESKTOP_VERSION,
       build: "7",
-      size: "TestFlight / PWA",
-      testFlightUrl: "https://testflight.apple.com/join/openverse-preview",
-      available: true,
+      size: "PWA / Xcode",
+      status: "in-preview" as const,
     },
   };
 
@@ -132,11 +138,6 @@ export const DownloadCenter: React.FC = () => {
     copyToClipboard(steps, "win-install");
   };
 
-  const copyMacGatekeeperCommand = () => {
-    const cmd = "sudo xattr -cr /Applications/OPEN-VERSE.app";
-    copyToClipboard(cmd, "mac-gatekeeper");
-  };
-
   const copyLinuxDebCommand = () => {
     const cmd = `sudo dpkg -i ${FILE_META.linuxDeb.name}`;
     copyToClipboard(cmd, "linux-deb");
@@ -147,12 +148,30 @@ export const DownloadCenter: React.FC = () => {
     copyToClipboard(cmd, "linux-rpm");
   };
 
-  const platformBadge = (available: boolean) => (
-    <span className={`badge ${available ? "badge-green" : "badge-purple"}`} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-      {available ? <Check size={14} style={{ color: "var(--emerald)" }} /> : <AlertCircle size={14} style={{ color: "var(--accent-light)" }} />}
-      <span>{available ? "Available" : "Not Available"}</span>
-    </span>
-  );
+  const platformBadge = (status: "available" | "in-preview" | "planned") => {
+    if (status === "available") {
+      return (
+        <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <Check size={14} style={{ color: "var(--emerald)" }} />
+          <span>Available</span>
+        </span>
+      );
+    }
+    if (status === "in-preview") {
+      return (
+        <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(56, 189, 248, 0.12)", color: "var(--sky)", borderColor: "rgba(56, 189, 248, 0.3)" }}>
+          <Info size={14} style={{ color: "var(--sky)" }} />
+          <span>In Preview</span>
+        </span>
+      );
+    }
+    return (
+      <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+        <AlertCircle size={14} style={{ color: "var(--accent-light)" }} />
+        <span>Planned</span>
+      </span>
+    );
+  };
 
   return (
     <section id="download" style={{ padding: "80px 0", position: "relative" }}>
@@ -221,7 +240,7 @@ export const DownloadCenter: React.FC = () => {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for Windows</h3>
-                  {platformBadge(FILE_META.windows.available)}
+                  {platformBadge(FILE_META.windows.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
                   Native 64-bit NSIS installer (.exe) for Windows 10 & 11 with built-in agent runtime, Minisign signature verification, and automated background update service.
@@ -231,8 +250,7 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.windows}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={FILE_META.windows.name}
                   className="btn-primary"
                   style={{ padding: "12px 24px", fontSize: "0.95rem", gap: 8 }}
                 >
@@ -241,8 +259,7 @@ export const DownloadCenter: React.FC = () => {
                 </a>
                 <a
                   href={ASSETS.windowsZip}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={FILE_META.windows.zipName}
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
                 >
@@ -259,6 +276,12 @@ export const DownloadCenter: React.FC = () => {
                   <Download size={16} />
                   <span>Minisign Signature (.sig)</span>
                 </a>
+              </div>
+              <div style={{ marginTop: 10, fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+                <span>Direct GitHub mirrors:</span>
+                <a href={ASSETS.windowsDirect} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.name}>Installer (.exe)</a>
+                <span>•</span>
+                <a href={ASSETS.windowsZipDirect} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.zipName}>Standalone ZIP (.zip)</a>
               </div>
             </div>
 
@@ -349,17 +372,16 @@ export const DownloadCenter: React.FC = () => {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for macOS</h3>
-                  {platformBadge(FILE_META.mac.available)}
+                  {platformBadge(FILE_META.mac.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Native Apple Silicon disk image (.dmg) built on GitHub-hosted macOS runners with ad-hoc signing. Includes embedded runtime and standalone AI assistant.
+                  Native Apple Silicon disk image (.dmg) built on GitHub-hosted macOS runners. Includes embedded runtime and standalone AI assistant.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.mac}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={FILE_META.mac.name}
                   className="btn-primary"
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
                 >
@@ -402,17 +424,13 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                 <Info size={15} style={{ color: "var(--sky)" }} />
-                <span>Installation Instructions</span>
+                <span>Installation Guidance</span>
               </div>
               <div className="code-box">
                 <span>1. Download {FILE_META.mac.name}</span>
-                <span>2. Open the disk image and drag OPEN-VERSE to your Applications folder</span>
-                <span>3. Ad-hoc build: If prompted by macOS Gatekeeper, run:</span>
-                <span>   sudo xattr -cr /Applications/OPEN-VERSE.app</span>
+                <span>2. Open disk image and drag OPEN-VERSE to your Applications folder</span>
+                <span>3. Note: Developer ID signing and Apple Notarization are in progress for automated Gatekeeper verification</span>
                 <span>4. Launch OPEN-VERSE</span>
-                <button onClick={copyMacGatekeeperCommand} className="copy-btn" title="Copy Gatekeeper command">
-                  {copiedKey === "mac-gatekeeper" ? <Check size={16} /> : <Copy size={16} />}
-                </button>
               </div>
             </div>
 
@@ -432,7 +450,7 @@ export const DownloadCenter: React.FC = () => {
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for Linux</h3>
-                  {platformBadge(FILE_META.linuxDeb.available)}
+                  {platformBadge(FILE_META.linuxDeb.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
                   Native packages for 64-bit Linux distributions (Ubuntu, Debian, Fedora, RHEL).
@@ -442,8 +460,7 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.linuxDeb}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={FILE_META.linuxDeb.name}
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
@@ -452,8 +469,7 @@ export const DownloadCenter: React.FC = () => {
                 </a>
                 <a
                   href={ASSETS.linuxRpm}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={FILE_META.linuxRpm.name}
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
@@ -544,7 +560,7 @@ export const DownloadCenter: React.FC = () => {
                     <Smartphone size={22} style={{ color: "var(--emerald)" }} />
                     <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android APK</h4>
                   </div>
-                  {platformBadge(FILE_META.android.available)}
+                  {platformBadge(FILE_META.android.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16, lineHeight: 1.5 }}>
                   Native Android application with Direct AI Streaming (Gemini, Claude, OpenAI, Ollama) and OPEN-VERSE Desktop Hub companion pairing.
@@ -552,8 +568,7 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                   <a
                     href={ASSETS.androidApk}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    download="open-verse-mobile.apk"
                     className="btn-primary"
                     style={{
                       display: "flex",
@@ -567,15 +582,13 @@ export const DownloadCenter: React.FC = () => {
                       borderRadius: 10,
                       textDecoration: "none",
                     }}
-                    download="open-verse-mobile.apk"
                   >
                     <Download size={18} />
                     <span>Download Android APK (v{DESKTOP_VERSION})</span>
                   </a>
                   <a
                     href={ASSETS.androidVersionedApk}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    download={FILE_META.android.versionedName}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -596,8 +609,7 @@ export const DownloadCenter: React.FC = () => {
                   </a>
                   <a
                     href={ASSETS.androidZip}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    download={FILE_META.android.zipName}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -658,10 +670,7 @@ export const DownloadCenter: React.FC = () => {
                     <Apple size={22} style={{ color: "var(--sky)" }} />
                     <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone App</h4>
                   </div>
-                  <span className="badge badge-green" style={{ fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <Check size={12} style={{ color: "var(--emerald)" }} />
-                    <span>Ready</span>
-                  </span>
+                  {platformBadge(FILE_META.ios.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16, lineHeight: 1.5 }}>
                   Native iOS companion with WKWebView container, deep-link Google OAuth callbacks, and Desktop Hub pairing.

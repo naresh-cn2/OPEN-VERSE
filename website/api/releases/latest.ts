@@ -24,6 +24,8 @@ export interface UnifiedReleaseManifest {
     ios?: {
       version: string;
       build: string;
+      status: string;
+      betaWaitlistUrl?: string;
       testFlightUrl?: string;
       appStoreUrl?: string;
     };
@@ -57,7 +59,8 @@ export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
     ios: {
       version: "0.2.6",
       build: "7",
-      testFlightUrl: "https://testflight.apple.com/join/openverse-preview"
+      status: "in-preview",
+      betaWaitlistUrl: "https://github.com/naresh-cn2/OPEN-VERSE/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID."
     },
     web: {
       version: "0.2.6",
