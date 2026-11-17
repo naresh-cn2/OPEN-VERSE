@@ -68,7 +68,7 @@ export const DownloadCenter: React.FC = () => {
     androidApk: "/open-verse-mobile.apk",
     androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
     androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-    iosTestFlight: "https://testflight.apple.com/join/openverse-preview",
+    iosTestFlight: `https://github.com/${GITHUB_RELEASES_ORG}/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID.`,
     iosZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/heads/main.zip`,
   };
 
@@ -231,21 +231,23 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.windows}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
                   style={{ padding: "12px 24px", fontSize: "0.95rem", gap: 8 }}
-                  download={FILE_META.windows.name}
                 >
                   <Download size={18} />
                   <span>Download for Windows (.exe)</span>
                 </a>
                 <a
-                  href={ASSETS.windowsZip}
+                  href={ASSETS.windowsSig}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-secondary"
-                  style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
-                  download={FILE_META.windows.zipName}
+                  style={{ padding: "12px 20px", fontSize: "0.95rem", gap: 8 }}
                 >
-                  <Download size={18} />
-                  <span>Download ZIP (.zip)</span>
+                  <Download size={16} />
+                  <span>Minisign Signature (.sig)</span>
                 </a>
               </div>
             </div>
@@ -266,7 +268,7 @@ export const DownloadCenter: React.FC = () => {
                 • <strong>When Opening Installer:</strong> If Windows SmartScreen appears, click <strong>&ldquo;More info&rdquo;</strong> and then click <strong>&ldquo;Run anyway&rdquo;</strong>.
               </div>
               <div>
-                • <strong>Alternative:</strong> Download the <strong>ZIP archive</strong> above, extract it, and run the installer directly.
+                • <strong>Integrity:</strong> Verify the SHA-256 hash or download the cryptographic Minisign signature (.sig).
               </div>
             </div>
 
@@ -298,17 +300,6 @@ export const DownloadCenter: React.FC = () => {
                   <span>{copiedKey === "win-sha" ? "Copied" : "Copy"}</span>
                 </button>
               </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-              <a
-                href={ASSETS.windowsSig}
-                className="btn-secondary"
-                style={{ padding: "10px 22px", fontSize: "0.85rem", gap: 8 }}
-              >
-                <Download size={16} />
-                <span>Minisign Signature (.sig)</span>
-              </a>
             </div>
 
             {/* Installation Instructions */}
@@ -354,9 +345,10 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.mac}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
-                  download={FILE_META.mac.name}
                 >
                   <Download size={18} />
                   <span>Download for macOS (.dmg)</span>
@@ -437,18 +429,20 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.linuxDeb}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                  download={FILE_META.linuxDeb.name}
                 >
                   <Download size={17} />
                   <span>Download .deb (Ubuntu / Debian)</span>
                 </a>
                 <a
                   href={ASSETS.linuxRpm}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                  download={FILE_META.linuxRpm.name}
                 >
                   <Download size={17} />
                   <span>Download .rpm (Fedora / RHEL)</span>
@@ -473,7 +467,7 @@ export const DownloadCenter: React.FC = () => {
                   </button>
                 </div>
                 <div style={{ marginTop: 10 }}>
-                  <a href={ASSETS.linuxDebSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
+                  <a href={ASSETS.linuxDebSig} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
                     <Download size={13} />
                     <span>Download .deb.sig</span>
                   </a>
@@ -495,7 +489,7 @@ export const DownloadCenter: React.FC = () => {
                   </button>
                 </div>
                 <div style={{ marginTop: 10 }}>
-                  <a href={ASSETS.linuxRpmSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
+                  <a href={ASSETS.linuxRpmSig} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
                     <Download size={13} />
                     <span>Download .rpm.sig</span>
                   </a>
@@ -545,6 +539,8 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                   <a
                     href={ASSETS.androidApk}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="btn-primary"
                     style={{
                       display: "flex",
@@ -558,14 +554,15 @@ export const DownloadCenter: React.FC = () => {
                       borderRadius: 10,
                       textDecoration: "none",
                     }}
-                    download={FILE_META.android.name}
+                    download="open-verse-mobile.apk"
                   >
                     <Download size={18} />
                     <span>Download Android APK (v{DESKTOP_VERSION})</span>
                   </a>
                   <a
                     href={ASSETS.androidVersionedApk}
-                    download={FILE_META.android.versionedName}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -586,7 +583,8 @@ export const DownloadCenter: React.FC = () => {
                   </a>
                   <a
                     href={ASSETS.androidZip}
-                    download={FILE_META.android.zipName}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -657,11 +655,9 @@ export const DownloadCenter: React.FC = () => {
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                  {/* Primary: Apple TestFlight Link */}
-                  <a
-                    href={ASSETS.iosTestFlight}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  {/* Primary: Instant Safari PWA Install */}
+                  <button
+                    onClick={() => setShowIosSafariGuide(!showIosSafariGuide)}
                     className="btn-primary"
                     style={{
                       display: "flex",
@@ -673,18 +669,20 @@ export const DownloadCenter: React.FC = () => {
                       fontSize: "0.95rem",
                       fontWeight: 600,
                       borderRadius: 10,
-                      textDecoration: "none",
+                      cursor: "pointer",
+                      border: "none",
                       boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)",
                     }}
                   >
-                    <Apple size={18} />
-                    <span>Join iOS Beta (Apple TestFlight)</span>
-                    <ExternalLink size={14} style={{ opacity: 0.8 }} />
-                  </a>
+                    <Share2 size={18} />
+                    <span>Install on iPhone (Safari Add to Home Screen)</span>
+                  </button>
 
-                  {/* Secondary: Instant Safari PWA Install */}
-                  <button
-                    onClick={() => setShowIosSafariGuide(!showIosSafariGuide)}
+                  {/* Secondary: Apple TestFlight Invite Queue */}
+                  <a
+                    href={ASSETS.iosTestFlight}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -698,13 +696,14 @@ export const DownloadCenter: React.FC = () => {
                       border: "1px solid var(--border-subtle)",
                       background: "rgba(255, 255, 255, 0.05)",
                       color: "#ffffff",
-                      cursor: "pointer",
+                      textDecoration: "none",
                       transition: "all 0.2s ease",
                     }}
                   >
-                    <Share2 size={16} style={{ color: "var(--accent-light)" }} />
-                    <span>Install on iPhone (Safari Add to Home Screen)</span>
-                  </button>
+                    <Apple size={16} />
+                    <span>Join iOS Beta (Apple TestFlight Queue)</span>
+                    <ExternalLink size={13} style={{ opacity: 0.7 }} />
+                  </a>
 
                   {/* Developer: Xcode Project Archive */}
                   <a
