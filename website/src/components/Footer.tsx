@@ -73,7 +73,7 @@ export const Footer: React.FC = () => {
             </p>
             <div style={{ display: "flex", gap: 12 }}>
               <a
-                href="https://github.com/cline/cline"
+                href="https://github.com/naresh-cn2/OPEN-VERSE"
                 target="_blank"
                 rel="noreferrer"
                 className="btn-secondary"

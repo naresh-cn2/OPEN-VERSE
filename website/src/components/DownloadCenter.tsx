@@ -10,12 +10,16 @@ import {
 	ShieldCheck,
 	AlertCircle,
 	Info,
+	Apple,
+	ExternalLink,
+	Share2,
 } from "lucide-react";
 
 export const DownloadCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"windows" | "mac" | "linux" | "mobile">("windows");
   const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | "mobile" | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showIosSafariGuide, setShowIosSafariGuide] = useState(false);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -23,13 +27,28 @@ export const DownloadCenter: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  // Sync hash with active tab (e.g. #download-mobile opens the mobile tab automatically)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes("windows")) setActiveTab("windows");
+      else if (hash.includes("mac")) setActiveTab("mac");
+      else if (hash.includes("linux")) setActiveTab("linux");
+      else if (hash.includes("mobile") || hash.includes("android") || hash.includes("ios") || hash.includes("iphone")) setActiveTab("mobile");
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const ua = navigator.userAgent.toLowerCase();
-    if (ua.includes("win")) setDetectedOS("windows");
+    if (ua.includes("android") || ua.includes("iphone") || ua.includes("ipad")) setDetectedOS("mobile");
+    else if (ua.includes("win")) setDetectedOS("windows");
     else if (ua.includes("mac")) setDetectedOS("mac");
-    else if (ua.includes("linux") && !ua.includes("android")) setDetectedOS("linux");
-    else if (ua.includes("android") || ua.includes("iphone") || ua.includes("ipad")) setDetectedOS("mobile");
+    else if (ua.includes("linux")) setDetectedOS("linux");
   }, []);
 
   // Release versions — updated via release automation
@@ -41,7 +60,6 @@ export const DownloadCenter: React.FC = () => {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
     windowsZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    windowsApi: `/api/download?platform=windows`,
     mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
     linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
     linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb.sig`,
@@ -50,7 +68,8 @@ export const DownloadCenter: React.FC = () => {
     androidApk: "/open-verse-mobile.apk",
     androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
     androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-    androidApi: "/api/download?platform=android",
+    iosTestFlight: "https://testflight.apple.com/join/openverse-preview",
+    iosZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/heads/main.zip`,
   };
 
   // File metadata (size + checksum) — updated via release automation
@@ -89,9 +108,11 @@ export const DownloadCenter: React.FC = () => {
       available: true,
     },
     ios: {
-      name: `open-verse-ios-simulator.zip`,
-      size: "Xcode Project",
-      sha256: "Build via Xcode (mobile/ios) or GitHub Actions CI",
+      name: `open-verse-ios-v${DESKTOP_VERSION}`,
+      version: DESKTOP_VERSION,
+      build: "7",
+      size: "TestFlight / PWA",
+      testFlightUrl: "https://testflight.apple.com/join/openverse-preview",
       available: true,
     },
   };
@@ -100,15 +121,30 @@ export const DownloadCenter: React.FC = () => {
   const [initialTabSet, setInitialTabSet] = useState(false);
 
   useEffect(() => {
-    if (!initialTabSet && isDefaultTab) {
+    if (!initialTabSet && isDefaultTab && !window.location.hash) {
       setActiveTab(isDefaultTab);
       setInitialTabSet(true);
     }
   }, [isDefaultTab, initialTabSet]);
 
-  const copySourceCommand = () => {
-    const cmd = `git clone https://github.com/${GITHUB_RELEASES_ORG}.git && cd OPEN-VERSE && bun install`;
-    copyToClipboard(cmd, "source");
+  const copyWinInstallCommand = () => {
+    const steps = `1. Download ${FILE_META.windows.name}\n2. Run installer and follow prompts\n3. Launch OPEN-VERSE from Start Menu`;
+    copyToClipboard(steps, "win-install");
+  };
+
+  const copyMacGatekeeperCommand = () => {
+    const cmd = "sudo xattr -cr /Applications/OPEN-VERSE.app";
+    copyToClipboard(cmd, "mac-gatekeeper");
+  };
+
+  const copyLinuxDebCommand = () => {
+    const cmd = `sudo dpkg -i ${FILE_META.linuxDeb.name}`;
+    copyToClipboard(cmd, "linux-deb");
+  };
+
+  const copyLinuxRpmCommand = () => {
+    const cmd = `sudo rpm -i ${FILE_META.linuxRpm.name}`;
+    copyToClipboard(cmd, "linux-rpm");
   };
 
   const platformBadge = (available: boolean) => (
@@ -125,7 +161,7 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Get the official desktop application. All downloads are cryptographically verified
+            Get the official cross-platform application for desktop and mobile. All downloads are cryptographically verified
             with Minisign signatures and receive automatic in-app updates.
           </p>
         </div>
@@ -142,41 +178,39 @@ export const DownloadCenter: React.FC = () => {
         >
           <button
             onClick={() => setActiveTab("windows")}
-            className={activeTab === "windows" ? "btn-primary" : "btn-secondary"}
-            style={{ padding: "10px 22px", fontSize: "0.9rem" }}
+            className={`tab-btn ${activeTab === "windows" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
             <Monitor size={16} />
             <span>Windows (10 / 11)</span>
-            {activeTab === "windows" && <span style={{ marginLeft: 6, fontSize: "0.8rem" }}>✓</span>}
+            {detectedOS === "windows" && <Check size={13} style={{ color: "var(--emerald)" }} />}
           </button>
-
           <button
             onClick={() => setActiveTab("mac")}
-            className={activeTab === "mac" ? "btn-primary" : "btn-secondary"}
-            style={{ padding: "10px 22px", fontSize: "0.9rem", opacity: FILE_META.mac.available ? 1 : 0.5 }}
-            disabled={!FILE_META.mac.available}
+            className={`tab-btn ${activeTab === "mac" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
-            <Monitor size={16} />
+            <Apple size={16} />
             <span>macOS</span>
+            {detectedOS === "mac" && <Check size={13} style={{ color: "var(--emerald)" }} />}
           </button>
-
           <button
             onClick={() => setActiveTab("linux")}
-            className={activeTab === "linux" ? "btn-primary" : "btn-secondary"}
-            style={{ padding: "10px 22px", fontSize: "0.9rem", opacity: FILE_META.linuxDeb.available ? 1 : 0.5 }}
-            disabled={!FILE_META.linuxDeb.available}
+            className={`tab-btn ${activeTab === "linux" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
-            <Monitor size={16} />
+            <Terminal size={16} />
             <span>Linux</span>
+            {detectedOS === "linux" && <Check size={13} style={{ color: "var(--emerald)" }} />}
           </button>
-
           <button
             onClick={() => setActiveTab("mobile")}
-            className={activeTab === "mobile" ? "btn-primary" : "btn-secondary"}
-            style={{ padding: "10px 22px", fontSize: "0.9rem" }}
+            className={`tab-btn ${activeTab === "mobile" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
             <Smartphone size={16} />
-            <span>Mobile Companion</span>
+            <span>Mobile Companion (Android & iOS)</span>
+            {detectedOS === "mobile" && <Check size={13} style={{ color: "var(--emerald)" }} />}
           </button>
         </div>
 
@@ -241,9 +275,28 @@ export const DownloadCenter: React.FC = () => {
                 <Clock size={15} style={{ color: "var(--accent-light)" }} />
                 <span>Asset: <code>{FILE_META.windows.name}</code> (x86_64) • {FILE_META.windows.size}</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
                 <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
                 <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.windows.sha256}</code>
+                <button
+                  onClick={() => copyToClipboard(FILE_META.windows.sha256, "win-sha")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--accent-light)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: "0.78rem",
+                    padding: "3px 8px",
+                    borderRadius: 4,
+                  }}
+                  title="Copy SHA-256 Checksum"
+                >
+                  {copiedKey === "win-sha" ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{copiedKey === "win-sha" ? "Copied" : "Copy"}</span>
+                </button>
               </div>
             </div>
 
@@ -269,8 +322,8 @@ export const DownloadCenter: React.FC = () => {
                 <span>2. Run the installer and follow the prompts</span>
                 <span>3. Launch OPEN-VERSE from your Start menu</span>
                 <span>4. The app will auto-check for updates on future launches</span>
-                <button onClick={copySourceCommand} className="copy-btn" title="Copy install steps">
-                  <Copy size={16} />
+                <button onClick={copyWinInstallCommand} className="copy-btn" title="Copy install steps">
+                  {copiedKey === "win-install" ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
             </div>
@@ -315,9 +368,28 @@ export const DownloadCenter: React.FC = () => {
                 <Clock size={15} style={{ color: "var(--accent-light)" }} />
                 <span>Asset: <code>{FILE_META.mac.name}</code> (Apple Silicon / ARM64) • {FILE_META.mac.size}</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
                 <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
                 <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.mac.sha256}</code>
+                <button
+                  onClick={() => copyToClipboard(FILE_META.mac.sha256, "mac-sha")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--accent-light)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: "0.78rem",
+                    padding: "3px 8px",
+                    borderRadius: 4,
+                  }}
+                  title="Copy SHA-256 Checksum"
+                >
+                  {copiedKey === "mac-sha" ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{copiedKey === "mac-sha" ? "Copied" : "Copy"}</span>
+                </button>
               </div>
             </div>
 
@@ -332,6 +404,9 @@ export const DownloadCenter: React.FC = () => {
                 <span>3. Ad-hoc build: If prompted by macOS Gatekeeper, run:</span>
                 <span>   sudo xattr -cr /Applications/OPEN-VERSE.app</span>
                 <span>4. Launch OPEN-VERSE</span>
+                <button onClick={copyMacGatekeeperCommand} className="copy-btn" title="Copy Gatekeeper command">
+                  {copiedKey === "mac-gatekeeper" ? <Check size={16} /> : <Copy size={16} />}
+                </button>
               </div>
             </div>
 
@@ -390,8 +465,11 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 4 }}>
                   Size: <code>{FILE_META.linuxDeb.size}</code>
                 </div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all" }}>
-                  SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxDeb.sha256}</code>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxDeb.sha256.slice(0, 16)}...</code></span>
+                  <button onClick={() => copyToClipboard(FILE_META.linuxDeb.sha256, "deb-sha")} style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {copiedKey === "deb-sha" ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
                 </div>
                 <div style={{ marginTop: 10 }}>
                   <a href={ASSETS.linuxDebSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
@@ -409,8 +487,11 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 4 }}>
                   Size: <code>{FILE_META.linuxRpm.size}</code>
                 </div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all" }}>
-                  SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxRpm.sha256}</code>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxRpm.sha256.slice(0, 16)}...</code></span>
+                  <button onClick={() => copyToClipboard(FILE_META.linuxRpm.sha256, "rpm-sha")} style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {copiedKey === "rpm-sha" ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
                 </div>
                 <div style={{ marginTop: 10 }}>
                   <a href={ASSETS.linuxRpmSig} className="btn-secondary" style={{ padding: "6px 14px", fontSize: "0.78rem", gap: 6 }}>
@@ -430,6 +511,9 @@ export const DownloadCenter: React.FC = () => {
                 <span>Debian/Ubuntu: sudo dpkg -i {FILE_META.linuxDeb.name}</span>
                 <span>Fedora/RHEL: sudo rpm -i {FILE_META.linuxRpm.name}</span>
                 <span>Launch: cline-app (or select OPEN-VERSE in application launcher)</span>
+                <button onClick={copyLinuxDebCommand} className="copy-btn" title="Copy Debian install command">
+                  {copiedKey === "linux-deb" ? <Check size={16} /> : <Copy size={16} />}
+                </button>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
@@ -444,7 +528,7 @@ export const DownloadCenter: React.FC = () => {
         {/* Tab 4: Mobile (Android & iOS) */}
         {activeTab === "mobile" && (
           <div className="glass-card" style={{ padding: 36, maxWidth: 960, margin: "0 auto" }} id="download-mobile">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28 }}>
               {/* Android Card */}
               <div style={{ background: "#0d0d12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -454,14 +538,13 @@ export const DownloadCenter: React.FC = () => {
                   </div>
                   {platformBadge(FILE_META.android.available)}
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16 }}>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16, lineHeight: 1.5 }}>
                   Native Android application with Direct AI Streaming (Gemini, Claude, OpenAI, Ollama) and OPEN-VERSE Desktop Hub companion pairing.
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                   <a
                     href={ASSETS.androidApk}
-                    download="open-verse-mobile.apk"
-                    className="btn btn-primary"
+                    className="btn-primary"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -469,10 +552,12 @@ export const DownloadCenter: React.FC = () => {
                       gap: 8,
                       width: "100%",
                       padding: "12px 20px",
+                      fontSize: "0.95rem",
                       fontWeight: 600,
                       borderRadius: 10,
                       textDecoration: "none",
                     }}
+                    download={FILE_META.android.name}
                   >
                     <Download size={18} />
                     <span>Download Android APK (v{DESKTOP_VERSION})</span>
@@ -558,7 +643,7 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ background: "#0d0d12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Smartphone size={22} style={{ color: "var(--sky)" }} />
+                    <Apple size={22} style={{ color: "var(--sky)" }} />
                     <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone App</h4>
                   </div>
                   <span className="badge badge-green" style={{ fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -566,37 +651,122 @@ export const DownloadCenter: React.FC = () => {
                     <span>Ready</span>
                   </span>
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16 }}>
-                  Native iOS project with WKWebView container, deep-link OAuth callbacks, and Desktop Hub pairing.
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16, lineHeight: 1.5 }}>
+                  Native iOS companion with WKWebView container, deep-link Google OAuth callbacks, and Desktop Hub pairing.
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-                  <div
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+                  {/* Primary: Apple TestFlight Link */}
+                  <a
+                    href={ASSETS.iosTestFlight}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary"
                     style={{
-                      padding: "12px 18px",
-                      borderRadius: 10,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid var(--border-subtle)",
                       display: "flex",
                       alignItems: "center",
-                      gap: 10,
-                      fontSize: "0.85rem",
-                      color: "var(--text-secondary)",
                       justifyContent: "center",
+                      gap: 8,
+                      width: "100%",
+                      padding: "12px 20px",
+                      fontSize: "0.95rem",
+                      fontWeight: 600,
+                      borderRadius: 10,
+                      textDecoration: "none",
+                      boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)",
                     }}
                   >
-                    <Info size={16} style={{ color: "var(--sky)" }} />
-                    <span>Build via Xcode (`mobile/ios`)</span>
-                  </div>
+                    <Apple size={18} />
+                    <span>Join iOS Beta (Apple TestFlight)</span>
+                    <ExternalLink size={14} style={{ opacity: 0.8 }} />
+                  </a>
+
+                  {/* Secondary: Instant Safari PWA Install */}
+                  <button
+                    onClick={() => setShowIosSafariGuide(!showIosSafariGuide)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      width: "100%",
+                      padding: "10px 16px",
+                      fontSize: "0.84rem",
+                      fontWeight: 600,
+                      borderRadius: 8,
+                      border: "1px solid var(--border-subtle)",
+                      background: "rgba(255, 255, 255, 0.05)",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <Share2 size={16} style={{ color: "var(--accent-light)" }} />
+                    <span>Install on iPhone (Safari Add to Home Screen)</span>
+                  </button>
+
+                  {/* Developer: Xcode Project Archive */}
+                  <a
+                    href={ASSETS.iosZip}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      width: "100%",
+                      padding: "9px 16px",
+                      fontSize: "0.82rem",
+                      fontWeight: 500,
+                      borderRadius: 8,
+                      border: "1px solid var(--border-subtle)",
+                      background: "rgba(255, 255, 255, 0.03)",
+                      color: "var(--text-secondary)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Download size={14} />
+                    <span>Download Xcode Project & Source (.zip)</span>
+                  </a>
+
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                    <span>Target: iOS 15.0+</span>
-                    <span>Simulator CI Enabled</span>
+                    <span>Target: iOS 15.0+ (iPhone & iPad)</span>
+                    <span style={{ color: "var(--emerald)", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Check size={13} />
+                      <span>OAuth & Pairing Ready</span>
+                    </span>
                   </div>
                 </div>
+
+                {/* iOS Step-by-Step Guidance Box */}
+                <div style={{ background: "rgba(139, 92, 246, 0.08)", border: "1px solid rgba(139, 92, 246, 0.25)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
+                  <strong style={{ color: "var(--accent-light)", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Info size={15} />
+                    <span>How to Install on iPhone / iPad:</span>
+                  </strong>
+                  
+                  <div style={{ marginTop: 6 }}>
+                    <strong>1. Official Public Beta (Apple TestFlight):</strong>
+                    <div style={{ paddingLeft: 6, color: "var(--text-secondary)", marginTop: 2 }}>
+                      Tap <strong>&ldquo;Join iOS Beta (Apple TestFlight)&rdquo;</strong> above. If you don&apos;t have TestFlight yet, install it free from the App Store, then accept the invitation and tap <strong>Install</strong>.
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 8 }}>
+                    <strong>2. Instant Web App (No App Store / No Xcode needed):</strong>
+                    <div style={{ paddingLeft: 6, color: "var(--text-secondary)", marginTop: 2 }}>
+                      In <strong>Safari</strong> on your iPhone, tap the <strong>Share</strong> button (box with arrow <span style={{ fontWeight: 700 }}>⎋</span>) at the bottom toolbar, scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong>. OPEN-VERSE launches full-screen as a standalone native app!
+                    </div>
+                  </div>
+                </div>
+
+                {/* Developer Instructions */}
                 <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Build & Run Instructions:</div>
+                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Developer & Sideloading (Xcode / AltStore):</div>
                   <div>1. Open <code style={{ color: "var(--sky)" }}>mobile/ios/OPEN-VERSE.xcodeproj</code> in Xcode 15+.</div>
-                  <div>2. Select an iPhone Simulator or connected iOS device.</div>
-                  <div>3. Press Run (<kbd>⌘R</kbd>) or trigger the GitHub Actions iOS workflow.</div>
+                  <div>2. Select an iPhone Simulator or connected iOS device and press Run (<kbd>⌘R</kbd>).</div>
+                  <div>3. Or sideload unsigned IPA builds via AltStore, TrollStore, or Sideloadly.</div>
                 </div>
               </div>
             </div>

@@ -45,7 +45,7 @@ export const Hero: React.FC = () => {
       case "android":
         return { label: "Download Android Companion", sub: "v0.2.6 Stable • Direct APK & Fast Install", href: "#download" };
       case "ios":
-        return { label: "OPEN-VERSE iOS Companion", sub: "Apple TestFlight Planned", href: "#download" };
+        return { label: "Install iOS Companion", sub: "Apple TestFlight & Safari Web App", href: "#download-mobile" };
     }
   };
 
