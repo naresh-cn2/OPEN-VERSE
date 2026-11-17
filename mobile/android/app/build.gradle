@@ -22,10 +22,11 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("release.keystore")
-            storePassword "openverse_mobile"
-            keyAlias "openverse"
-            keyPassword "openverse_mobile"
+            def customKeystore = System.getenv("ANDROID_KEYSTORE_PATH")
+            storeFile file(customKeystore ?: "release.keystore")
+            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "openverse_mobile"
+            keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "openverse"
+            keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: "openverse_mobile"
             v1SigningEnabled true
             v2SigningEnabled true
         }

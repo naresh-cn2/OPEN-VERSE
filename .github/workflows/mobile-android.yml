@@ -43,18 +43,37 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x mobile/android/gradlew
 
+      - name: Setup Android Keystore from Secret (if configured)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > mobile/android/app/release.keystore
+            echo "Keystore decoded from repository secret."
+          elif [ -f "mobile/android/app/release.keystore" ]; then
+            echo "Using existing workspace keystore."
+          else
+            echo "Error: Keystore not found."
+            exit 1
+          fi
+
       - name: Build Android Release APK & AAB
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'openverse_mobile' }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'openverse' }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'openverse_mobile' }}
         run: |
           cd mobile/android
           ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Rename and Prepare Deliverables
         run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' mobile/android/app/build.gradle || echo "0.2.6")
           mkdir -p mobile/artifacts
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v0.2.1.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v${VERSION}.apk
           cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile.apk
           if [ -f mobile/android/app/build/outputs/bundle/release/app-release.aab ]; then
-            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v0.2.1.aab
+            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v${VERSION}.aab
             cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile.aab
           fi
           cd mobile/artifacts
@@ -79,6 +98,7 @@ jobs:
       - name: Publish to GitHub Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: v0.2.1
         run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' mobile/android/app/build.gradle || echo "0.2.6")
+          export RELEASE_TAG="v${VERSION}"
           bun run mobile/scripts/publish-android-release.ts

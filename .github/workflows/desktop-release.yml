@@ -103,6 +103,15 @@ jobs:
           }
           bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.release.conf.json
 
+      - name: Sign Windows Executables with Authenticode (if configured)
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          ./scripts/sign-windows-authenticode.ps1
+
       - name: Verify Release and Updater Artifacts Exist
         shell: pwsh
         id: artifacts

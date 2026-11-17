@@ -90,7 +90,22 @@ jobs:
             cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
           fi
 
+      - name: Setup Android Keystore from Secret (if configured)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > mobile/android/app/release.keystore
+            echo "Keystore decoded from repository secret."
+          elif [ -f "mobile/android/app/release.keystore" ]; then
+            echo "Using existing workspace keystore."
+          fi
+
       - name: Build Android Release APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'openverse_mobile' }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'openverse' }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'openverse_mobile' }}
         run: |
           cd mobile/android
           chmod +x gradlew
@@ -139,6 +154,15 @@ jobs:
           bun run build:runtime
           bun run build:web
           bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.release.conf.json
+
+      - name: Sign Windows Executables with Authenticode (if configured)
+        shell: pwsh
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          ./scripts/sign-windows-authenticode.ps1
 
       - name: Generate latest.json Update Manifest
         shell: pwsh

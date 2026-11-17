@@ -14,6 +14,13 @@ website/saved_preview.html
 
 test-apk-*/
 
+# Keystore and signing keys
+*.keystore
+*.jks
+mobile/android/app/release.keystore
+*.pfx
+*.p12
+
 # Local OS files
 .DS_Store
 Thumbs.db
