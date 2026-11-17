@@ -78,7 +78,7 @@ export const DownloadCenter: React.FC = () => {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
       zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
       size: "167.6 MB",
-      sha256: "7d32a4ba94e3b25152356f46e34a439839e6055cc8b4130d0a5fe4065a0e53bc",
+      sha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
       available: true,
     },
     mac: {
@@ -331,7 +331,8 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Operating System: Windows 10 (1903+) or Windows 11</div>
               <div>• Architecture: 64-bit Intel / AMD (x86_64)</div>
-              <div>• Updater: Verified Minisign public key cryptography</div>
+              <div>• Integrity: Verified Minisign Ed25519 cryptography (.sig)</div>
+              <div>• Signing: Open-source release (Minisign signed; Authenticode in roadmap)</div>
               <div>• Auto-updates: In-app, automatic</div>
             </div>
           </div>
