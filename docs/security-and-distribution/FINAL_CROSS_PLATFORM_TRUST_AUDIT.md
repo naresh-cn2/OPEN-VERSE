@@ -33,8 +33,9 @@
 
 | Problem | Root Cause |
 | :--- | :--- |
-| **Edge Network Issue / Organization Prompt** | Chromium download tray pauses disk writes during SmartScreen prompts. The Azure Blob SAS token / CDN socket idles out, and Edge emits an enterprise error string due to an internal enterprise profile GUID. |
-| **Windows ZIP 404** | Upload timeout left GitHub release asset ID `758364890` in `starter` state. |
+| **Edge Network Issue / Organization Prompt** | Chromium download tray pauses disk writes during SmartScreen prompts. The Azure Blob SAS token / CDN socket idles out, and Edge emits an enterprise error string due to an internal enterprise profile GUID. Additionally, Edge was configured with `default_directory: D:\` (a non-existent drive), triggering `USER_CANCELED` (code 40) interrupts when prompts were closed. |
+| **Windows ZIP 404 & Space-Substitution** | In addition to previous starter-state assets, user-side text formatting or translation substituted hyphens (`-`) with spaces (` `), transforming `naresh-cn2/OPEN-VERSE` into `naresh cn2/OPEN VERSE`, which GitHub rejects with HTTP 404 Not Found. |
+| **Download Buttons Opening Dead Tabs** | Download buttons used `target="_blank"` on binary assets, opening orphaned blank tabs that were flagged by Edge pop-up blockers instead of initiating in-page downloads. |
 | **Keystore in Repo** | Initial development convenience committed credentials directly into git index. |
 | **macOS Gatekeeper Block** | Lack of Apple Developer ID Application certificate and missing Apple Notary ticket. |
 | **Missing Security Headers** | Default Vercel deployment omitted explicit CSP and HSTS configuration blocks. |
@@ -43,30 +44,33 @@
 
 ## 3. Fixes Implemented
 
-1. **GitHub Release Asset Repair**:
+1. **Canonical Same-Domain Download Endpoints**:
+   - Replaced fragile external download URLs with clean, same-domain Vercel API redirect endpoints: `/api/download/windows`, `/api/download/windows-zip`, `/open-verse-mobile.apk`, `/api/download/android-apk`, and `/api/download/android-zip`.
+   - Removed `target="_blank"` from all binary download buttons across all platforms, enabling native in-browser downloads without opening empty or black tabs.
+2. **GitHub Release Asset Repair**:
    - Deleted stuck starter asset and streamed complete 167,657,609-byte archive via `curl` with `Expect: 100-continue`. Transitioned to `state: "uploaded"` (`asset_id: 758784607`).
-2. **Android Keystore Quarantine & Protection**:
+3. **Android Keystore Quarantine & Protection**:
    - Removed `release.keystore` from git index (`git rm --cached`).
    - Configured `.gitignore` to block all `.keystore`, `.jks`, `.pfx`, and `.p12` files.
    - Migrated signing material to GitHub Secret `ANDROID_RELEASE_KEYSTORE_BASE64`.
    - Updated `build.gradle` and CI workflows (`mobile-android.yml`, `unified-release.yml`) to dynamically decode the secret in memory.
    - Verified automated CI build: generated both signed APK and Google Play-ready AAB in 1m 54s.
-3. **Android APK Checksum Synchronization**:
+4. **Android APK Checksum Synchronization**:
    - Overwrote Vercel CDN APK with canonical GitHub Release binary (`187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955`).
    - Synchronized all manifests and API feeds.
-4. **Windows Authenticode Signing Pipeline**:
-   - Created `desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1`.
-   - Integrated Authenticode signing with SHA-256 and RFC 3161 timestamping into `desktop-release.yml` and `unified-release.yml`.
-   - Retained Tauri Minisign Ed25519 updater signatures.
-5. **Linux GPG Package Signing Script**:
+5. **Windows Authenticode Signing Pipeline**:
+   - Created `desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1` with SHA-256, RFC 3161 timestamping, strict enforcement mode, and multi-binary verification.
+   - Integrated Authenticode signing into `desktop-release.yml` and `unified-release.yml`.
+   - Retained and verified Tauri Minisign Ed25519 updater signatures.
+6. **Linux GPG Package Signing Script**:
    - Created `scripts/sign-linux-packages.sh` to generate detached `.asc` signatures and clear-signed `SHA256SUMS.asc`.
-6. **Website Cleanup & Honest Platform Statuses**:
+7. **Website Cleanup & Honest Platform Statuses**:
    - Removed `sudo xattr -cr` command from website.
    - Removed fake placeholder TestFlight link; redirected iOS beta queue to official GitHub Issues waitlist.
    - Updated platform badges from binary "Available" to honest statuses (`Available`, `In Preview`).
-7. **Production Edge Security Headers**:
+8. **Production Edge Security Headers**:
    - Configured strict CSP, HSTS (`max-age=63072000`), Permissions-Policy, and X-Content-Type-Options in `website/vercel.json`.
-   - Deployed live to Vercel production: Deployment `dpl_AXS4ex66cJtcA7GGKsYnc7hQ78YX` (`READY`).
+   - Deployed live to Vercel production: Deployment `dpl_DUXEZzCwJYkth9A28ZV3Ajwwptpu` (`READY`).
 
 ---
 
@@ -157,15 +161,20 @@ Exit Code: 0
 
 ## 9. Real-Device Acceptance Matrix
 
-| Platform | Classification Status | Evidence & Test Notes | Next Milestone |
+| Platform / Environment | Verified Status | Evidence & Test Notes | Next Action |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | **DEVICE TESTED / VERIFIED BUT UNSIGNED** | Full binary download verified. Standalone ZIP runs without warnings. NSIS `.exe` runs after "Keep anyway" SmartScreen click. | Add Authenticode Certificate (Certum or Store). |
-| **Windows 11 (Smart App Control)** | **BLOCKED** | Laptop SAC is in Evaluation mode (`1`). In Enforced mode (`2`), unsigned executables are blocked by Code Integrity. | Acquire Authenticode Certificate. |
-| **macOS Desktop** | **BUILD VERIFIED / IN PREVIEW** | DMG packages built in CI. Ad-hoc signed. | Apple Developer ID ($99/yr) & Notarization. |
-| **Linux Desktop** | **BUILD VERIFIED / IN PREVIEW** | Packages built in CI. GPG signing script prepared. | Export GPG release key & AppImage build. |
-| **Android Physical Devices** | **DEVICE TESTED / VERIFIED AND SIGNED** | Physical Android 14 testing verified. Google Sign-In, UI, and WebSocket pairing operational. | Google Play Store registration ($25). |
-| **iOS Mobile** | **IN PREVIEW / PRE-TESTFLIGHT** | PWA installable on iPhone via Safari. Native project builds in CI. | Connect Apple Developer Team ID. |
-| **Web Production** | **PRODUCTION RELEASED** | Live on Vercel with strict CSP, HSTS, and multi-origin OAuth routing. | Continuous security maintenance. |
+| **Windows 10 / 11 (General)** | **DEVICE TESTED** | Complete 167 MB download verified. Standalone ZIP runs cleanly. NSIS `.exe` runs after user confirmation ("Keep anyway"). Minisign verified. | Enroll Authenticode certificate to eliminate SmartScreen reputation warning. |
+| **Windows 11 (Smart App Control Enforced)** | **BLOCKED** | Laptop SAC is in Evaluation mode (`1`). In Enforced mode (`2`), unsigned executables are blocked by Code Integrity. | Acquire EV or Trusted Signing Authenticode Certificate. |
+| **Microsoft Edge (Windows)** | **DOWNLOAD VERIFIED** | Tested via `/api/download/windows-zip` and `/api/download/windows`. Downloads stream without network timeouts or dead tabs. | Continuous monitoring. |
+| **Google Chrome (Desktop / Android)** | **DOWNLOAD VERIFIED** | Tested direct APK stream and desktop packages. | Continuous monitoring. |
+| **macOS (Apple Silicon / Intel)** | **BUILD VERIFIED** | Ad-hoc signed DMG built in CI. Native ARM64 binary compiled. | Apple Developer ID ($99/yr) & Notarization required before Gatekeeper approval. |
+| **macOS Gatekeeper Active** | **BLOCKED** | Gatekeeper blocks launch without Developer ID and Apple Notarization ticket. `xattr -cr` removed from user instructions. | Apple Developer Program enrollment. |
+| **Ubuntu / Debian (.deb)** | **BUILD VERIFIED** | .deb packages built in CI. GPG signing script implemented. | Attach GPG key to CI to generate `SHA256SUMS.asc`. |
+| **Fedora / RHEL (.rpm)** | **BUILD VERIFIED** | .rpm packages built in CI. | Release verification tests. |
+| **Android Physical Devices (API 24-34)** | **DEVICE TESTED** | Tested on physical Android 14. Full Google OAuth and pairing functional. APK verified with `apksigner` (v2 scheme). | Google Play Console registration ($25). |
+| **iPhone Physical Devices (iOS Safari)** | **DEVICE TESTED** | Safari Add to Home Screen PWA tested and functional. Native project builds in CI. | Connect Apple Developer Team ID for native TestFlight builds. |
+| **iOS TestFlight Queue** | **IMPLEMENTED** | Honest GitHub Issues invite queue deployed; fake placeholder link removed. | Issue TestFlight builds after Apple Developer enrollment. |
+| **Web Production Portal** | **PRODUCTION READY** | Deployed on Vercel with strict CSP, HSTS, and multi-origin OAuth routing. | Active production operations. |
 
 ---
 

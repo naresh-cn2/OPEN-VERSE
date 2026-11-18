@@ -13,10 +13,17 @@ param (
     [string]$TargetPath,
 
     [Parameter(Mandatory = $false)]
-    [string]$TimestampServer = "http://timestamp.digicert.com"
+    [string]$TimestampServer = "http://timestamp.digicert.com",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Strict = $false
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($env:REQUIRE_AUTHENTICODE_SIGNING -eq "true" -or $env:REQUIRE_AUTHENTICODE_SIGNING -eq "1") {
+    $Strict = $true
+}
 
 Write-Host "=========================================================="
 Write-Host "     OPEN-VERSE Windows Authenticode Signing Pipeline     "
@@ -51,10 +58,16 @@ if ($TargetPath -and (Test-Path $TargetPath)) {
         $filesToSign = @($TargetPath)
     }
 } else {
-    # Default: search Tauri release bundle directory
+    # Default: search Tauri release bundle directory and binary outputs
+    $releaseDir = Join-Path $PSScriptRoot "..\src-tauri\target\release"
+    if (Test-Path $releaseDir) {
+        $mainExe = Join-Path $releaseDir "open-verse.exe"
+        if (Test-Path $mainExe) { $filesToSign += $mainExe }
+    }
     $bundleDir = Join-Path $PSScriptRoot "..\src-tauri\target\release\bundle\nsis"
     if (Test-Path $bundleDir) {
-        $filesToSign = Get-ChildItem -Path $bundleDir -Filter "*-setup.exe" | Select-Object -ExpandProperty FullName
+        $setups = Get-ChildItem -Path $bundleDir -Filter "*-setup.exe" | Select-Object -ExpandProperty FullName
+        $filesToSign += $setups
     }
 }
 
@@ -104,6 +117,10 @@ if ($pfxBase64) {
     }
 } else {
     Write-Warning "WINDOWS_CERTIFICATE_PFX_BASE64 environment variable not found."
+    if ($Strict) {
+        Write-Error "CRITICAL: Authenticode signing is required (Strict mode / REQUIRE_AUTHENTICODE_SIGNING=true), but WINDOWS_CERTIFICATE_PFX_BASE64 is not populated in secrets."
+        exit 1
+    }
     Write-Host "Skipping Authenticode signing (credentials not yet configured)."
     Write-Host "To enable Authenticode signing in CI, set WINDOWS_CERTIFICATE_PFX_BASE64 and WINDOWS_CERTIFICATE_PASSWORD in repository secrets."
 }
