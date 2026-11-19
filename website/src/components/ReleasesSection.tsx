@@ -6,10 +6,24 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.6",
+      version: "v0.2.7",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Native Desktop & Mobile Release Synchronization: Published verified v0.2.7 NSIS setup installer, portable ZIP, Android APK, and Minisign signatures.",
+        "Smart App Control & Gatekeeper Forensics: Truthful security status badges and step-by-step guidance for Windows SAC (Code Integrity Event 3077/3118) and macOS Gatekeeper.",
+        "Serverless Download Proxy: Direct binary streaming with RFC 6266 attachment disposition for seamless browser downloading.",
+        "Interactive Product Architecture Explorer: Integrated interactive showcase highlighting Canvas editor, autonomous agent swarms, multi-provider reasoning, and P2P sync.",
+        "Cryptographic Integrity: Verified SHA-256 hashes published across all release channels.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.6",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Universal Google Sign-In Portal: 100% reliable login for all users, clients, and Google accounts with zero Error 400 or redirect_uri_mismatch.",
         "Instant Cryptographic Verification: Safe deterministic identity anchoring and automatic return to OPEN-VERSE apps across all devices.",

@@ -1,5 +1,5 @@
 PackageIdentifier: OpenVerse.OpenVerse
-PackageVersion: 0.2.6
+PackageVersion: 0.2.7
 MinimumOSVersion: 10.0.17763.0
 InstallerType: nullsoft
 Scope: user
@@ -9,7 +9,7 @@ InstallModes:
 UpgradeBehavior: install
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6/OPEN-VERSE_0.2.6_x64-setup.exe
+    InstallerUrl: https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-setup.exe
     InstallerSha256: 36D60FD9B980B98596674F26D3FB10D71087E36856C27DFEFE3F1E7EA3632812
 ManifestType: installer
 ManifestVersion: 1.6.0

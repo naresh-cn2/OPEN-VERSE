@@ -72,8 +72,33 @@ export const Navbar: React.FC = () => {
           <a href="#security" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}>
             Security
           </a>
-          <a href="#releases" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500, transition: "color 0.2s" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")} onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}>
-            v0.2.6
+          <a
+            href="#releases"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(139, 92, 246, 0.12)",
+              border: "1px solid rgba(139, 92, 246, 0.3)",
+              color: "#c4b5fd",
+              textDecoration: "none",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              padding: "4px 10px",
+              borderRadius: "100px",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.6)";
+              e.currentTarget.style.color = "#ffffff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(139, 92, 246, 0.3)";
+              e.currentTarget.style.color = "#c4b5fd";
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+            v0.2.7
           </a>
         </div>
 

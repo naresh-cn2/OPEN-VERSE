@@ -1,5 +1,5 @@
 // OPEN-VERSE Service Worker for PWA Offline Shell & Installation
-const CACHE_NAME = 'open-verse-v0.2.6';
+const CACHE_NAME = 'open-verse-v0.2.7';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

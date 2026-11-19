@@ -1,6 +1,7 @@
 import React from "react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
+import { ProductShowcase } from "./components/ProductShowcase";
 import { InteractiveRemoteDemo } from "./components/InteractiveRemoteDemo";
 import { DownloadCenter } from "./components/DownloadCenter";
 import { ArchitectureSecurity } from "./components/ArchitectureSecurity";
@@ -28,6 +29,7 @@ export function App() {
       <Navbar />
       <main>
         <Hero />
+        <ProductShowcase />
         <InteractiveRemoteDemo />
         <DownloadCenter />
         <ArchitectureSecurity />

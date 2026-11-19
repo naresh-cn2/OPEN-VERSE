@@ -37,13 +37,13 @@ export const Hero: React.FC = () => {
   const getOSDownloadInfo = () => {
     switch (detectedOS) {
       case "windows":
-        return { label: "Download for Windows (x64)", sub: "v0.2.6 Stable • Direct Installer & ZIP", href: "#download" };
+        return { label: "Download for Windows (x64)", sub: "v0.2.7 Stable • Direct Installer & ZIP", href: "#download" };
       case "mac":
-        return { label: "Get for macOS (Apple Silicon)", sub: "v0.2.6 Preview • Universal DMG", href: "#download" };
+        return { label: "Get for macOS (Apple Silicon)", sub: "v0.2.7 Preview • Universal DMG", href: "#download" };
       case "linux":
-        return { label: "Get for Linux (.deb / .rpm)", sub: "v0.2.6 Stable Packages", href: "#download" };
+        return { label: "Get for Linux (.deb / .rpm)", sub: "v0.2.7 Stable Packages", href: "#download" };
       case "android":
-        return { label: "Download Android Companion", sub: "v0.2.6 Stable • Direct APK & Fast Install", href: "#download" };
+        return { label: "Download Android Companion", sub: "v0.2.7 Stable • Direct APK & Fast Install", href: "#download" };
       case "ios":
         return { label: "Get for iOS (Beta)", sub: "Native iOS App • TestFlight & Xcode", href: "#download-mobile" };
     }
@@ -62,7 +62,7 @@ export const Hero: React.FC = () => {
             style={{ textDecoration: "none", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: 8 }}
           >
             <Sparkles size={14} />
-            <span>OPEN-VERSE v0.2.6 Cross-Platform Release</span>
+            <span>OPEN-VERSE v0.2.7 Cross-Platform Release</span>
             <ArrowRight size={13} />
           </a>
         </div>
