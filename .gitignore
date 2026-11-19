@@ -29,6 +29,8 @@ Thumbs.db
 cline/
 harmes agent/
 opencode/
+openclaw/
+open-claw/
 
 .vercel
 .env*
