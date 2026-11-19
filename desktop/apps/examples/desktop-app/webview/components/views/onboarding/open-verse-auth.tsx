@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Laptop, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { markOnboardingCompleted } from "@/lib/onboarding";
 import {
 	type OpenVerseUser,
 	completeOAuthCallback,
-	continueInOfflineMode,
 	initiateOAuthSignIn,
 } from "@/lib/open-verse-auth";
 import {
@@ -59,12 +58,6 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 	const updateStatus = useAppUpdateStatus();
 	const [checkingUpdate, setCheckingUpdate] = useState(false);
 	const [updateNotice, setUpdateNotice] = useState<string | null>(null);
-
-	const handleContinueAsGuest = () => {
-		const session = continueInOfflineMode();
-		markOnboardingCompleted();
-		onAuthenticated(session.user);
-	};
 
 	// Deep link and OAuth callback handler
 	useEffect(() => {
@@ -275,18 +268,6 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 							<GoogleIcon className="size-5 shrink-0" />
 						)}
 						<span>Continue with Google</span>
-					</Button>
-
-					{/* Secondary Continue as Guest (Offline / Local Mode) Button */}
-					<Button
-						className="w-full h-11 border border-zinc-800/90 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-300 hover:text-white font-medium text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all active:scale-[0.99]"
-						disabled={loading}
-						onClick={handleContinueAsGuest}
-						type="button"
-						variant="outline"
-					>
-						<Laptop className="size-4 text-zinc-400" />
-						<span>Continue as Guest</span>
 					</Button>
 				</div>
 

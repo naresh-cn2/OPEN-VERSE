@@ -17,6 +17,23 @@ const { openExternalUrl } = vi.hoisted(() => ({
 	openExternalUrl: vi.fn().mockResolvedValue(undefined),
 }));
 
+class MemoryStorage implements Storage {
+	private store = new Map<string, string>();
+	get length() { return this.store.size; }
+	clear() { this.store.clear(); }
+	getItem(key: string) { return this.store.has(key) ? this.store.get(key)! : null; }
+	setItem(key: string, value: string) { this.store.set(key, String(value)); }
+	removeItem(key: string) { this.store.delete(key); }
+	key(index: number) { return Array.from(this.store.keys())[index] ?? null; }
+}
+
+if (!window.localStorage || typeof window.localStorage.clear !== "function") {
+	Object.defineProperty(window, "localStorage", { value: new MemoryStorage(), writable: true });
+}
+if (!window.sessionStorage || typeof window.sessionStorage.clear !== "function") {
+	Object.defineProperty(window, "sessionStorage", { value: new MemoryStorage(), writable: true });
+}
+
 vi.mock("@/lib/desktop-client", () => ({
 	openExternalUrl,
 	desktopClient: { invoke: vi.fn(), subscribe: vi.fn(() => () => {}) },
@@ -67,10 +84,13 @@ describe("OpenVerseAuth UI Component", () => {
 		expect(container.textContent).toContain("OPEN-VERSE");
 		expect(container.textContent).toContain("Your AI workspace, everywhere.");
 		expect(container.textContent).toContain("Continue with Google");
-		// Ensure no fake options exist
+		// Ensure neither guest nor fake options exist
+		expect(container.textContent).not.toContain("Continue as Guest");
 		expect(container.textContent).not.toContain("Continue with GitHub");
 		expect(container.textContent).not.toContain("Continue in Offline Local Mode");
 		expect(container.querySelector("[data-openverse-auth-container]")).not.toBeNull();
+		// Ensure Check for Updates is present
+		expect(container.textContent).toContain("Check for Updates");
 	});
 
 	it("launches official Google OAuth with prompt=select_account when clicking Continue with Google", async () => {
@@ -151,22 +171,14 @@ describe("OpenVerseAuth UI Component", () => {
 		expect(emailInput?.value).toBe("newuser@gmail.com");
 	});
 
-	it("enters workspace in guest offline mode when clicking Continue as Guest", async () => {
+	it("strictly excludes Continue as Guest button on the opening screen", async () => {
 		const onAuth = vi.fn();
 		await act(async () => {
 			root.render(<OpenVerseAuth onAuthenticated={onAuth} />);
 		});
 
-		const guestBtn = buttonByText("Continue as Guest");
-		await act(async () => {
-			guestBtn.click();
-		});
-
-		expect(onAuth).toHaveBeenCalledWith(
-			expect.objectContaining({
-				displayName: "Local Developer",
-				isOfflineMode: true,
-			}),
-		);
+		expect(container.textContent).not.toContain("Continue as Guest");
+		expect(container.textContent).toContain("Continue with Google");
+		expect(container.textContent).toContain("Check for Updates");
 	});
 });
