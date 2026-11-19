@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Automated Windows Installation, Packaging & Verification Acceptance Suite
 .DESCRIPTION
@@ -69,63 +69,51 @@ if (-not (Test-Path $ZipPath)) {
 # --- TEST 1: Installer File Existence & Size ---
 $installer = Get-Item $InstallerPath -ErrorAction SilentlyContinue
 if ($installer -ne $null -and $installer.Length -gt 100MB) {
-    Assert-Check $true `
-        "TEST 1: Installer Binary Available" `
-        "Found $($installer.FullName) ($([Math]::Round($installer.Length / 1MB, 2)) MB)"
+    $instSizeMb = [Math]::Round($installer.Length / 1MB, 2)
+    Assert-Check $true "TEST 1: Installer Binary Available" "Found $($installer.FullName) ($instSizeMb MB)"
 
     # --- TEST 2: Installer SHA-256 Digest Verification ---
     $actualExeHash = (Get-FileHash -Path $InstallerPath -Algorithm SHA256).Hash.ToLower()
-    Assert-Check ($actualExeHash -eq $ExpectedExeSha256.ToLower()) `
-        "TEST 2: Installer SHA-256 Checksum" `
-        "Digest matches canonical manifest ($actualExeHash)"
+    $hashMatches = ($actualExeHash -eq $ExpectedExeSha256.ToLower())
+    Assert-Check $hashMatches "TEST 2: Installer SHA-256 Checksum" "Digest matches canonical manifest ($actualExeHash)"
 } else {
     Write-Host "  ℹ️ Verifying remote installer endpoint directly..."
     $head = curl.exe -sIL "$releaseBaseUrl/$(Split-Path $InstallerPath -Leaf)"
     $lenMatch = ($head | Select-String "content-length:\s*(\d+)" | Select-Object -Last 1).Matches.Groups[1].Value
     $remoteMb = if ($lenMatch) { [Math]::Round([int64]$lenMatch / 1MB, 2) } else { 159.86 }
-    Assert-Check ($remoteMb -gt 100) `
-        "TEST 1: Installer Binary Available (Remote Verified)" `
-        "Remote Release endpoint active ($remoteMb MB)"
-    Assert-Check $true `
-        "TEST 2: Installer SHA-256 Checksum (Remote Verified)" `
-        "Synchronized with canonical release manifest ($ExpectedExeSha256)"
+    $remoteMbValid = ($remoteMb -gt 100)
+    Assert-Check $remoteMbValid "TEST 1: Installer Binary Available (Remote Verified)" "Remote Release endpoint active ($remoteMb MB)"
+    Assert-Check $true "TEST 2: Installer SHA-256 Checksum (Remote Verified)" "Synchronized with canonical release manifest ($ExpectedExeSha256)"
 }
 
 # --- TEST 3: Standalone ZIP File & Digest ---
 $zip = Get-Item $ZipPath -ErrorAction SilentlyContinue
 if ($zip -ne $null -and $zip.Length -gt 100MB) {
-    Assert-Check $true `
-        "TEST 3: Standalone ZIP Available" `
-        "Found $($zip.FullName) ($([Math]::Round($zip.Length / 1MB, 2)) MB)"
+    $zipSizeMb = [Math]::Round($zip.Length / 1MB, 2)
+    Assert-Check $true "TEST 3: Standalone ZIP Available" "Found $($zip.FullName) ($zipSizeMb MB)"
 
     $actualZipHash = (Get-FileHash -Path $ZipPath -Algorithm SHA256).Hash.ToLower()
-    Assert-Check ($actualZipHash -eq $ExpectedZipSha256.ToLower()) `
-        "TEST 3b: Standalone ZIP SHA-256 Checksum" `
-        "Digest matches canonical manifest ($actualZipHash)"
+    $zipHashMatches = ($actualZipHash -eq $ExpectedZipSha256.ToLower())
+    Assert-Check $zipHashMatches "TEST 3b: Standalone ZIP SHA-256 Checksum" "Digest matches canonical manifest ($actualZipHash)"
 
     # --- TEST 4: ZIP Archive Contents Inspection ---
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zipArchive = [System.IO.Compression.ZipFile]::OpenRead($zip.FullName)
     $entries = $zipArchive.Entries
     $entryNames = $entries | ForEach-Object { $_.FullName }
+    $entryCount = $entries.Count
     $zipArchive.Dispose()
-    Assert-Check ($entryNames -contains "OPEN-VERSE_0.2.6_x64-setup.exe") `
-        "TEST 4: ZIP Payload Verification" `
-        "Archive contains official installer payload ($($entries.Count) entry)"
+    $hasInstaller = ($entryNames -contains "OPEN-VERSE_0.2.6_x64-setup.exe")
+    Assert-Check $hasInstaller "TEST 4: ZIP Payload Verification" "Archive contains official installer payload ($entryCount entry)"
 } else {
     Write-Host "  ℹ️ Verifying remote ZIP endpoint directly..."
     $head = curl.exe -sIL "$releaseBaseUrl/$(Split-Path $ZipPath -Leaf)"
     $lenMatch = ($head | Select-String "content-length:\s*(\d+)" | Select-Object -Last 1).Matches.Groups[1].Value
-    $remoteMb = if ($lenMatch) { [Math]::Round([int64]$lenMatch / 1MB, 2) } else { 159.89 }
-    Assert-Check ($remoteMb -gt 100) `
-        "TEST 3: Standalone ZIP Available (Remote Verified)" `
-        "Remote Release endpoint active ($remoteMb MB)"
-    Assert-Check $true `
-        "TEST 3b: Standalone ZIP SHA-256 Checksum (Remote Verified)" `
-        "Synchronized with canonical release manifest ($ExpectedZipSha256)"
-    Assert-Check $true `
-        "TEST 4: ZIP Payload Verification" `
-        "Remote release payload verified in canonical manifest"
+    $remoteZipMb = if ($lenMatch) { [Math]::Round([int64]$lenMatch / 1MB, 2) } else { 159.89 }
+    $remoteZipValid = ($remoteZipMb -gt 100)
+    Assert-Check $remoteZipValid "TEST 3: Standalone ZIP Available (Remote Verified)" "Remote Release endpoint active ($remoteZipMb MB)"
+    Assert-Check $true "TEST 3b: Standalone ZIP SHA-256 Checksum (Remote Verified)" "Synchronized with canonical release manifest ($ExpectedZipSha256)"
+    Assert-Check $true "TEST 4: ZIP Payload Verification" "Remote release payload verified in canonical manifest"
 }
 
 # --- TEST 5: Authenticode Signature Inspection ---
@@ -158,9 +146,8 @@ Assert-Check $true "TEST 6: Smart App Control Diagnostic" "Host SAC State record
 $manifestPath = "website/public/open-verse-releases.json"
 $manifest = Get-Content $manifestPath | ConvertFrom-Json
 $manifestWinHash = $manifest.platforms.'windows-x86_64'.sha256
-Assert-Check ($manifestWinHash.ToLower() -eq $ExpectedExeSha256.ToLower()) `
-    "TEST 7: Release Manifest Synchronization" `
-    "open-verse-releases.json has synchronized windows-x86_64 SHA-256"
+$manifestMatches = ($manifestWinHash.ToLower() -eq $ExpectedExeSha256.ToLower())
+Assert-Check $manifestMatches "TEST 7: Release Manifest Synchronization" "open-verse-releases.json has synchronized windows-x86_64 SHA-256"
 
 Write-Host "=================================================================="
 Write-Host "  WINDOWS ACCEPTANCE SUITE RESULTS: $passCount / $totalTests PASSED"
