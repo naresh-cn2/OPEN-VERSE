@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1795059894890,
+  "lastSyncTimestamp": 1795059896490,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -321,7 +321,7 @@
       "model": "gemini-2.5-flash",
       "status": "idle",
       "startedAt": "2026-11-19T03:44:49.073Z",
-      "lastActivityAt": "2026-11-19T03:44:49.074Z"
+      "lastActivityAt": "2026-11-19T03:44:56.489Z"
     }
   },
   "messages": {
@@ -1234,6 +1234,13 @@
         "role": "assistant",
         "content": "I am ready on your laptop. How can I assist?",
         "createdAt": 1795059891074
+      },
+      {
+        "id": "msg_droid_3",
+        "sessionId": "sess_unified_1795059894073",
+        "role": "user",
+        "content": "Continuing this conversation from Android mobile phone!",
+        "createdAt": 1795059895489
       }
     ]
   },
