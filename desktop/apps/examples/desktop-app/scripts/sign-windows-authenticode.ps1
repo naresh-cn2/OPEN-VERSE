@@ -45,7 +45,8 @@ if (-not $signTool) {
 
 if (-not $signTool) {
     Write-Warning "signtool.exe not found in PATH or Windows Kits. Checking PowerShell fallback."
-} else {
+}
+else {
     Write-Host "SignTool located at: $signTool"
 }
 
@@ -54,10 +55,12 @@ $filesToSign = @()
 if ($TargetPath -and (Test-Path $TargetPath)) {
     if ((Get-Item $TargetPath) -is [System.IO.DirectoryInfo]) {
         $filesToSign = Get-ChildItem -Path $TargetPath -Include "*.exe", "*.dll" -Recurse | Select-Object -ExpandProperty FullName
-    } else {
+    }
+    else {
         $filesToSign = @($TargetPath)
     }
-} else {
+}
+else {
     # Default: search Tauri release bundle directory and binary outputs
     $releaseDir = Join-Path $PSScriptRoot "..\src-tauri\target\release"
     if (Test-Path $releaseDir) {
@@ -96,7 +99,8 @@ if ($pfxBase64) {
                 if ($LASTEXITCODE -ne 0) {
                     Write-Error "SignTool failed for $f with exit code $LASTEXITCODE"
                 }
-            } else {
+            }
+            else {
                 # PowerShell fallback (local cert store)
                 $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPfx, $pfxPassword)
                 Set-AuthenticodeSignature -FilePath "$f" -Certificate $cert -TimestampServer $TimestampServer -HashAlgorithm SHA256
@@ -109,13 +113,15 @@ if ($pfxBase64) {
                 Write-Error "Verification failed: Signature on $f is not Valid."
             }
         }
-    } finally {
+    }
+    finally {
         if (Test-Path $tempPfx) {
             Remove-Item -Force $tempPfx
             Write-Host "Securely purged temporary PFX file."
         }
     }
-} else {
+}
+else {
     Write-Warning "WINDOWS_CERTIFICATE_PFX_BASE64 environment variable not found."
     if ($Strict) {
         Write-Error "CRITICAL: Authenticode signing is required (Strict mode / REQUIRE_AUTHENTICODE_SIGNING=true), but WINDOWS_CERTIFICATE_PFX_BASE64 is not populated in secrets."
