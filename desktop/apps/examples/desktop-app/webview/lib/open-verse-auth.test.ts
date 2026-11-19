@@ -24,6 +24,7 @@ import {
 	signInWithGoogleDirect,
 	subscribeAuthChange,
 	updateUserPreferences,
+	validateGoogleIdToken,
 } from "./open-verse-auth";
 
 const { openExternalUrl } = vi.hoisted(() => ({
@@ -181,6 +182,7 @@ describe("open-verse-auth library", () => {
 									"header." +
 									Buffer.from(
 										JSON.stringify({
+											iss: "https://accounts.google.com",
 											sub: "google_sub_user_abc",
 											email: "alex@custom-domain.org",
 											name: "Alex User",
@@ -239,6 +241,7 @@ describe("open-verse-auth library", () => {
 									"header." +
 									Buffer.from(
 										JSON.stringify({
+											iss: "https://accounts.google.com",
 											sub: "google_sub_user_abc",
 											email: "alex@custom-domain.org",
 											name: "Alex User",
@@ -376,6 +379,129 @@ describe("open-verse-auth library", () => {
 			expect(deleted).toBe(true);
 			expect(findUserByGoogleSub("delete_test_sub")).toBeNull();
 			expect(getCurrentSession()).toBeNull();
+		});
+	});
+
+	describe("OIDC ID-Token Validation (Security & Replay Protection)", () => {
+		function createMockJwt(header: object, payload: object): string {
+			const encHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
+			const encPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+			return `${encHeader}.${encPayload}.mock_signature_bytes`;
+		}
+
+		it("validates a compliant Google ID token with expected claims", () => {
+			const now = Math.floor(Date.now() / 1000);
+			const token = createMockJwt(
+				{ alg: "RS256", typ: "JWT" },
+				{
+					iss: "https://accounts.google.com",
+					aud: "test-client-id.apps.googleusercontent.com",
+					sub: "119823019283019",
+					email: "verified@gmail.com",
+					email_verified: true,
+					name: "Verified User",
+					iat: now - 10,
+					exp: now + 3600,
+					nonce: "test_nonce_123",
+				},
+			);
+
+			const result = validateGoogleIdToken(token, {
+				expectedClientId: "test-client-id.apps.googleusercontent.com",
+				expectedNonce: "test_nonce_123",
+			});
+
+			expect(result.valid).toBe(true);
+			expect(result.claims?.sub).toBe("119823019283019");
+			expect(result.claims?.email).toBe("verified@gmail.com");
+			expect(result.claims?.name).toBe("Verified User");
+		});
+
+		it("rejects token with invalid issuer", () => {
+			const now = Math.floor(Date.now() / 1000);
+			const token = createMockJwt(
+				{ alg: "RS256", typ: "JWT" },
+				{
+					iss: "https://evil-untrusted-issuer.com",
+					aud: "test-client-id",
+					sub: "12345",
+					email: "user@evil.com",
+					iat: now - 10,
+					exp: now + 3600,
+				},
+			);
+
+			const result = validateGoogleIdToken(token);
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain("Invalid token issuer");
+		});
+
+		it("rejects expired token", () => {
+			const now = Math.floor(Date.now() / 1000);
+			const token = createMockJwt(
+				{ alg: "RS256", typ: "JWT" },
+				{
+					iss: "accounts.google.com",
+					aud: "test-client-id",
+					sub: "12345",
+					email: "user@domain.com",
+					iat: now - 7200,
+					exp: now - 3600, // expired 1 hour ago
+				},
+			);
+
+			const result = validateGoogleIdToken(token);
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain("ID token has expired");
+		});
+
+		it("rejects token with mismatched audience", () => {
+			const now = Math.floor(Date.now() / 1000);
+			const token = createMockJwt(
+				{ alg: "RS256", typ: "JWT" },
+				{
+					iss: "https://accounts.google.com",
+					aud: "wrong-client-id.apps.googleusercontent.com",
+					sub: "12345",
+					email: "user@domain.com",
+					iat: now - 10,
+					exp: now + 3600,
+				},
+			);
+
+			const result = validateGoogleIdToken(token, {
+				expectedClientId: "correct-client-id.apps.googleusercontent.com",
+			});
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain("Mismatched audience");
+		});
+
+		it("rejects token with mismatched nonce (anti-replay check)", () => {
+			const now = Math.floor(Date.now() / 1000);
+			const token = createMockJwt(
+				{ alg: "RS256", typ: "JWT" },
+				{
+					iss: "https://accounts.google.com",
+					aud: "client-id",
+					sub: "12345",
+					email: "user@domain.com",
+					iat: now - 10,
+					exp: now + 3600,
+					nonce: "captured_old_nonce",
+				},
+			);
+
+			const result = validateGoogleIdToken(token, {
+				expectedNonce: "fresh_session_nonce",
+			});
+			expect(result.valid).toBe(false);
+			expect(result.error).toContain("Mismatched OIDC nonce");
+		});
+
+		it("rejects malformed token strings", () => {
+			expect(validateGoogleIdToken("not.a.jwt.extra.parts").valid).toBe(false);
+			expect(validateGoogleIdToken("singlepart").valid).toBe(false);
+			expect(validateGoogleIdToken("").valid).toBe(false);
 		});
 	});
 });

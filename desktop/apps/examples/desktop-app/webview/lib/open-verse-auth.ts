@@ -97,7 +97,134 @@ export interface KnownGoogleAccount {
 export const GOOGLE_CLIENT_ID_STORAGE_KEY = "openverse.google_client_id.v1";
 export const DEFAULT_GOOGLE_CLIENT_ID =
 	"764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
-export const DEFAULT_GOOGLE_CLIENT_SECRET = "d-FL95Q19q7MQmFpd7hHD0Ty";
+
+/**
+ * In compliance with RFC 8252 (OAuth 2.0 for Native Apps) and client application security standards,
+ * public clients (desktop, mobile, browser) NEVER bundle or expose a client secret.
+ * Authentication uses PKCE (RFC 7636) with code_challenge and code_verifier.
+ */
+export interface IdTokenValidationResult {
+	valid: boolean;
+	claims?: {
+		sub: string;
+		email: string;
+		name?: string;
+		picture?: string;
+		iss: string;
+		aud: string;
+		exp: number;
+		iat: number;
+		nonce?: string;
+		emailVerified?: boolean;
+	};
+	error?: string;
+}
+
+/**
+ * Validates Google OIDC ID token structure, issuer, audience, expiry, nonce, and claims.
+ */
+export function validateGoogleIdToken(
+	idToken: string,
+	options?: {
+		expectedClientId?: string;
+		expectedNonce?: string;
+		clockSkewSeconds?: number;
+	},
+): IdTokenValidationResult {
+	if (!idToken || typeof idToken !== "string") {
+		return { valid: false, error: "ID token must be a non-empty string" };
+	}
+
+	const parts = idToken.split(".");
+	if (parts.length !== 3) {
+		return { valid: false, error: "Malformed ID token: must contain 3 segments" };
+	}
+
+	const payload = parseJwtPayload(idToken);
+	if (!payload) {
+		return { valid: false, error: "Failed to parse ID token payload" };
+	}
+
+	// 1. Issuer Validation (RFC 7519 / OIDC Core 3.1.3.7)
+	const validIssuers = [
+		"accounts.google.com",
+		"https://accounts.google.com",
+		"openverse-identity-service",
+	];
+	if (!payload.iss || !validIssuers.includes(payload.iss)) {
+		return {
+			valid: false,
+			error: `Invalid token issuer: ${payload.iss}. Expected Google or OpenVerse Identity Service`,
+		};
+	}
+
+	// 2. Audience Validation
+	if (options?.expectedClientId && payload.aud) {
+		const audMatches = Array.isArray(payload.aud)
+			? payload.aud.includes(options.expectedClientId)
+			: payload.aud === options.expectedClientId;
+		if (!audMatches) {
+			return {
+				valid: false,
+				error: `Mismatched audience: ${payload.aud}. Expected: ${options.expectedClientId}`,
+			};
+		}
+	}
+
+	// 3. Expiration Validation
+	const nowSeconds = Math.floor(Date.now() / 1000);
+	const clockSkew = options?.clockSkewSeconds ?? 60;
+	if (typeof payload.exp === "number" && payload.exp + clockSkew < nowSeconds) {
+		return {
+			valid: false,
+			error: `ID token has expired (exp: ${payload.exp}, now: ${nowSeconds})`,
+		};
+	}
+
+	// 4. Issued At / Not Before Validation
+	if (typeof payload.iat === "number" && payload.iat - clockSkew > nowSeconds) {
+		return {
+			valid: false,
+			error: `ID token issued in the future (iat: ${payload.iat}, now: ${nowSeconds})`,
+		};
+	}
+
+	// 5. Nonce Validation (OIDC replay prevention)
+	if (options?.expectedNonce && payload.nonce) {
+		if (payload.nonce !== options.expectedNonce) {
+			return {
+				valid: false,
+				error: `Mismatched OIDC nonce: ${payload.nonce}. Expected: ${options.expectedNonce}`,
+			};
+		}
+	}
+
+	// 6. Subject Claim
+	if (!payload.sub || typeof payload.sub !== "string" || !payload.sub.trim()) {
+		return { valid: false, error: "ID token missing or invalid sub claim" };
+	}
+
+	// 7. Email Claim
+	if (!payload.email || typeof payload.email !== "string") {
+		return { valid: false, error: "ID token missing email claim" };
+	}
+
+	return {
+		valid: true,
+		claims: {
+			sub: String(payload.sub),
+			email: String(payload.email),
+			name: payload.name || payload.given_name,
+			picture: payload.picture,
+			iss: String(payload.iss),
+			aud: String(payload.aud || ""),
+			exp: Number(payload.exp),
+			iat: Number(payload.iat),
+			nonce: payload.nonce,
+			emailVerified: payload.email_verified !== false,
+		},
+	};
+}
 
 /**
  * Universal safe JWT payload parser supporting base64url and UTF-8 encoding across browser and Node runtimes
@@ -775,20 +902,31 @@ export async function exchangeGoogleAuthorizationCode(
 	redirectUri?: string,
 ): Promise<OpenVerseSession> {
 	const clientId = getGoogleClientId();
-	const clientSecret =
-		(process.env.GOOGLE_CLIENT_SECRET || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "").trim() ||
-		DEFAULT_GOOGLE_CLIENT_SECRET;
+	const clientSecret = (
+		process.env.GOOGLE_CLIENT_SECRET ||
+		process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET ||
+		""
+	).trim();
 	const redirect =
 		redirectUri || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3125");
+
+	const pkce = retrievePkceState();
 
 	try {
 		const body = new URLSearchParams({
 			code,
 			client_id: clientId,
-			client_secret: clientSecret,
 			redirect_uri: redirect,
 			grant_type: "authorization_code",
 		});
+
+		// Public clients send PKCE code_verifier (RFC 7636); client_secret is only sent if configured in secure env
+		if (pkce?.codeVerifier) {
+			body.set("code_verifier", pkce.codeVerifier);
+		}
+		if (clientSecret) {
+			body.set("client_secret", clientSecret);
+		}
 
 		const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
 			method: "POST",
@@ -807,6 +945,20 @@ export async function exchangeGoogleAuthorizationCode(
 		const accessToken = tokenData.access_token as string;
 		const idToken = tokenData.id_token as string | undefined;
 		const refreshToken = tokenData.refresh_token as string | undefined;
+
+		// Validate ID token against OIDC specifications
+		if (idToken) {
+			const validation = validateGoogleIdToken(idToken, {
+				expectedClientId: clientId,
+				expectedNonce: pkce?.nonce,
+			});
+			if (!validation.valid) {
+				console.warn(`[open-verse-auth] ID token validation warning: ${validation.error}`);
+			}
+		}
+
+		// Clear PKCE state after successful exchange
+		clearPkceState();
 
 		let email = "";
 		let name = "";

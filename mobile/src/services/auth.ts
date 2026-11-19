@@ -9,6 +9,7 @@ export interface OpenVerseMobileUser {
   displayName?: string;
   avatarUrl?: string;
   provider: "google" | "github" | "local";
+  googleSub?: string;
   isOfflineMode: boolean;
   createdAt: string;
 }
@@ -21,6 +22,16 @@ export interface OpenVerseMobileSession {
 
 const AUTH_STORAGE_KEY = "openverse.auth.session.v1";
 const LEGACY_MOBILE_STORAGE_KEY = "openverse.mobile.auth_session.v1";
+
+export function deriveSubFromEmail(email: string): string {
+  const normalized = email.trim().toLowerCase();
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = (hash << 5) - hash + normalized.charCodeAt(i);
+    hash |= 0;
+  }
+  return `108${Math.abs(hash).toString().padStart(15, "0")}`;
+}
 
 export function getMobileSession(): OpenVerseMobileSession | null {
   if (typeof window === "undefined") return null;
@@ -79,14 +90,18 @@ export function handleDeepLinkCallback(url: string): OpenVerseMobileSession {
   const email = params.get("email") || "user@openverse.account";
   const displayName = params.get("name") || email.split("@")[0];
   const provider = (params.get("provider") as "google" | "github") || "google";
+  const sub = params.get("sub") || deriveSubFromEmail(email);
+  const avatarUrl = params.get("picture") || undefined;
 
   const session: OpenVerseMobileSession = {
     accessToken,
     user: {
-      id: `ov-mob-${Date.now()}`,
+      id: `ov_user_${sub}`,
       email,
       displayName,
+      avatarUrl,
       provider,
+      googleSub: provider === "google" ? sub : undefined,
       isOfflineMode: false,
       createdAt: new Date().toISOString(),
     },
