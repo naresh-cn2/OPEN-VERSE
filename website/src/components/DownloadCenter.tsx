@@ -57,24 +57,17 @@ export const DownloadCenter: React.FC = () => {
 
   // Direct download assets hosted on GitHub Releases & Vercel CDN
   const ASSETS = {
-    windows: "/api/download/windows",
-    windowsDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-    windowsZip: "/api/download/windows-zip",
-    windowsZipDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
+    windowsZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
     windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    mac: "/api/download/mac",
-    macDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
-    linuxDeb: "/api/download/linux-deb",
-    linuxDebDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
+    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
     linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb.sig`,
-    linuxRpm: "/api/download/linux-rpm",
-    linuxRpmDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
+    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
     linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm.sig`,
     androidApk: "/open-verse-mobile.apk",
-    androidVersionedApk: "/api/download/android-apk",
-    androidVersionedApkDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
-    androidZip: "/api/download/android-zip",
-    androidZipDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
+    androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
+    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
     iosTestFlight: `https://github.com/${GITHUB_RELEASES_ORG}/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID.`,
     iosZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/heads/main.zip`,
   };
@@ -249,22 +242,22 @@ export const DownloadCenter: React.FC = () => {
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
-                  href={ASSETS.windows}
-                  download={FILE_META.windows.name}
+                  href={ASSETS.windowsZip}
+                  download={FILE_META.windows.zipName}
                   className="btn-primary"
                   style={{ padding: "12px 24px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download for Windows (.exe)</span>
+                  <span>Download ZIP Archive (.zip) [Recommended • Instant]</span>
                 </a>
                 <a
-                  href={ASSETS.windowsZip}
-                  download={FILE_META.windows.zipName}
+                  href={ASSETS.windows}
+                  download={FILE_META.windows.name}
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download ZIP (.zip)</span>
+                  <span>Download Installer (.exe)</span>
                 </a>
                 <a
                   href={ASSETS.windowsSig}
@@ -278,33 +271,35 @@ export const DownloadCenter: React.FC = () => {
                 </a>
               </div>
               <div style={{ marginTop: 10, fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-                <span>Direct GitHub mirrors:</span>
-                <a href={ASSETS.windowsDirect} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.name}>Installer (.exe)</a>
+                <span>Direct GitHub CDN:</span>
+                <a href={ASSETS.windowsZip} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.zipName}>Standalone ZIP (.zip)</a>
                 <span>•</span>
-                <a href={ASSETS.windowsZipDirect} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.zipName}>Standalone ZIP (.zip)</a>
+                <a href={ASSETS.windows} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.name}>Installer (.exe)</a>
               </div>
             </div>
 
             {/* SmartScreen & Browser Warning Clarification */}
-            <div style={{ background: "rgba(14, 165, 233, 0.08)", border: "1px solid rgba(14, 165, 233, 0.25)", borderRadius: 10, padding: "14px 18px", marginBottom: 20, fontSize: "0.84rem", color: "#e2e8f0", lineHeight: 1.6 }}>
-              <div style={{ fontWeight: 600, color: "var(--sky)", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                <ShieldCheck size={16} />
-                <span>Windows Defender SmartScreen & Chrome Note:</span>
+            <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
+              <div style={{ fontWeight: 600, color: "#fbbf24", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertCircle size={18} />
+                <span>Notice for Microsoft Edge & Chrome Downloads</span>
               </div>
-              <div>
-                Because OPEN-VERSE is open-source and newly released, Windows SmartScreen or Chrome may prompt <em>&ldquo;Unrecognized app&rdquo;</em> or <em>&ldquo;File not commonly downloaded&rdquo;</em>.
-              </div>
-              <div style={{ marginTop: 6 }}>
-                • <strong>In Chrome / Edge:</strong> In your browser downloads bar/tray, click <strong>&ldquo;Keep&rdquo; → &ldquo;Keep anyway&rdquo;</strong> to allow the download.
-              </div>
-              <div>
-                • <strong>When Opening Installer:</strong> If Windows SmartScreen appears, click <strong>&ldquo;More info&rdquo;</strong> and then click <strong>&ldquo;Run anyway&rdquo;</strong>.
-              </div>
-              <div>
-                • <strong>Alternative:</strong> Download the <strong>ZIP archive</strong> above, extract it, and run the installer directly.
-              </div>
-              <div>
-                • <strong>Integrity:</strong> Verify the SHA-256 hash or download the cryptographic Minisign signature (.sig).
+              <p style={{ fontSize: "0.86rem", color: "#e2e8f0", margin: "0 0 10px 0", lineHeight: 1.5 }}>
+                Because OPEN-VERSE is a newly released open-source project without a paid enterprise certificate, Microsoft Edge and Chrome may pause the <code>.exe</code> download and display: <em>&ldquo;OPEN-VERSE_...exe isn&apos;t commonly downloaded&rdquo;</em>.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+                <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <strong style={{ color: "#38bdf8" }}>Option 1: Download Standalone ZIP (Recommended)</strong>
+                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4 }}>
+                    Click <strong>&ldquo;Download ZIP Archive (.zip)&rdquo;</strong> above. ZIP packages download immediately with <strong>zero browser warnings</strong>. Extract the ZIP and double-click to run!
+                  </div>
+                </div>
+                <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <strong style={{ color: "#fbbf24" }}>Option 2: Completing the .exe Download in Edge</strong>
+                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4 }}>
+                    Hover over the paused file in Edge&apos;s Downloads tray → Click <strong>•••</strong> (More options) → Click <strong>Keep</strong> → Click <strong>Show more</strong> → Click <strong>Keep anyway</strong>.
+                  </div>
+                </div>
               </div>
             </div>
 
