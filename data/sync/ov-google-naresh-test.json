@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1795054206628,
+  "lastSyncTimestamp": 1795054215094,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -1067,6 +1067,13 @@
         "role": "user",
         "content": "Confirmed from Android mobile device: sync is bidirectional",
         "createdAt": 1795054199838
+      },
+      {
+        "id": "msg_win_turn_4",
+        "sessionId": "sess_parity_1795054199470",
+        "role": "user",
+        "content": "Windows simultaneous command execution",
+        "createdAt": 1795054215194
       }
     ]
   },
