@@ -1,5 +1,11 @@
 # OPEN-VERSE Changelog
 
+## 0.2.8
+
+- **Pure Google Sign-In Authentication**: Streamlined the opening screen to feature direct Google Sign-In with official Account Chooser, removing the guest bypass.
+- **Pre-Login In-App Updates**: One-click update check and automatic background updater available directly on the opening screen.
+- **Complete White-Label Brand Unification**: Fully white-labeled desktop application interface, connectors, schedules, settings, and notifications to OPEN-VERSE.
+
 ## 0.2.7
 
 - **Complete OPEN-VERSE Brand Unification**: Fully white-labeled desktop application interface, consistent typography, purple accent system, and complete elimination of legacy branding.
