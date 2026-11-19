@@ -81,8 +81,8 @@ export const DocsSection: React.FC = () => {
 
   const faqs = [
     {
-      q: "Why does Windows 11 Smart App Control show a warning when running the installer?",
-      a: "Windows 11 22H2+ includes Smart App Control (SAC) Enforced mode, which uses cloud intelligence to block unsigned or newly released executables that lack historical cloud reputation. OPEN-VERSE provides full SHA-256 integrity checksums and Minisign signatures. To install on SAC Enforced machines, use the portable ZIP or run via winget / developer mode.",
+      q: "How does code signing and integrity verification work?",
+      a: "All OPEN-VERSE release binaries and packages are cryptographically signed using Minisign Ed25519 signatures (.sig), with published SHA-256 checksums for every build. On first launch of a new community release on Windows or macOS, your operating system may ask for confirmation. You can confirm via 'Run anyway' / 'Open anyway', install via the official winget package, or run the Portable ZIP package directly.",
     },
     {
       q: "Does my proprietary code ever get sent to OPEN-VERSE servers?",

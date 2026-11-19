@@ -12,7 +12,7 @@ export const ReleasesSection: React.FC = () => {
       badgeClass: "badge-green",
       changes: [
         "Native Desktop & Mobile Release Synchronization: Published verified v0.2.7 NSIS setup installer, portable ZIP, Android APK, and Minisign signatures.",
-        "Smart App Control & Gatekeeper Forensics: Truthful security status badges and step-by-step guidance for Windows SAC (Code Integrity Event 3077/3118) and macOS Gatekeeper.",
+        "Streamlined Native Distribution: Clean, professional download center with direct NSIS setup installer, portable ZIP package, Android APK, and Minisign cryptographic verification.",
         "Serverless Download Proxy: Direct binary streaming with RFC 6266 attachment disposition for seamless browser downloading.",
         "Interactive Product Architecture Explorer: Integrated interactive showcase highlighting Canvas editor, autonomous agent swarms, multi-provider reasoning, and P2P sync.",
         "Cryptographic Integrity: Verified SHA-256 hashes published across all release channels.",

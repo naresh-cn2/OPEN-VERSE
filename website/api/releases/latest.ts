@@ -41,7 +41,7 @@ export const CURRENT_RELEASE_MANIFEST: UnifiedReleaseManifest = {
   releaseDate: "2026-11-19T13:55:00Z",
   channel: "stable",
   mandatory: false,
-  releaseNotes: "• Synchronized Native Distribution: Official v0.2.7 release artifacts across Windows, Android, Linux, macOS, and iOS\n• Truth-First Platform Status Taxonomy: Clear labeling of signing requirements and known OS security restrictions\n• Windows Smart App Control Diagnostics: Full forensic documentation of Code Integrity policies (Event 3077/3118) and Azure Trusted Signing / Microsoft Store MSIX paths\n• High-Performance Direct Streaming: Direct APK distribution and synchronized desktop auto-updater manifests",
+  releaseNotes: "• Synchronized Native Distribution: Official v0.2.7 release artifacts across Windows, Android, Linux, macOS, and iOS\n• Streamlined Release Portal: Polished native downloads with direct NSIS installer, portable ZIP, and Minisign signatures\n• High-Performance Direct Streaming: Direct APK distribution and synchronized desktop auto-updater manifests",
   platforms: {
     "windows-x86_64": {
       version: "0.2.7",
