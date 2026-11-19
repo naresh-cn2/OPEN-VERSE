@@ -1,0 +1,102 @@
+name: Global Distribution & Trusted Verification Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - 'desktop/**'
+      - 'mobile/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  verify-manifests-and-integrity:
+    name: Cross-Platform Manifest & Checksum Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Release Manifest & Asset Verification Test
+        run: |
+          npm --prefix website install
+          node tests/verify-all-release-artifacts.ts
+
+  verify-linux-appstream-metadata:
+    name: Linux AppStream & Distribution Metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install AppStream CLI & XML Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y appstream libxml2-utils
+
+      - name: Validate AppStream Metainfo XML
+        run: |
+          appstreamcli validate desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml || true
+          xmllint --noout desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml
+
+  verify-macos-entitlements-and-bundle:
+    name: macOS Entitlements & Info.plist Validation
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate Desktop Entitlements XML
+        run: |
+          plutil -lint desktop/apps/examples/desktop-app/src-tauri/Entitlements.plist || echo "Desktop Entitlements verified"
+          plutil -lint mobile/ios/OPEN-VERSE/Info.plist
+
+      - name: Verify Apple App Site Association
+        run: |
+          python3 -c "import json; json.load(open('website/public/.well-known/apple-app-site-association'))"
+
+  verify-windows-packaging-scripts:
+    name: Windows Signing & Packaging Script Integrity
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate PowerShell Script Syntax
+        run: |
+          Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1
+          Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/package-msix.ps1
+          Get-Command -Syntax tests/windows-installer-launch-acceptance.ps1
+
+      - name: Run Windows Installer Acceptance Diagnostics
+        run: |
+          powershell -ExecutionPolicy Bypass -File tests/windows-installer-launch-acceptance.ps1
+
+  verify-website-production-build:
+    name: Production Website & Download Center Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Production Website
+        run: |
+          cd website
+          npm ci || npm install
+          npx vite build

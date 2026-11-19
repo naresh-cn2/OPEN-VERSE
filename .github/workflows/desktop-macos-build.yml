@@ -1,16 +1,17 @@
 name: desktop-macos-build
 
-# Build workflow for OPEN-VERSE macOS desktop installer.
+# Build & Notarization workflow for OPEN-VERSE macOS desktop installer.
 # Runs on macos-latest GitHub-hosted runner.
-# Produces macOS DMG package and uploads to GitHub Releases.
+# Supports Apple Developer ID signing, Hardened Runtime, and Notarization.
+# When Apple secrets are omitted, gracefully falls back to ad-hoc local testing builds.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g. 0.2.0)"
+        description: "Release version (e.g. 0.2.6)"
         required: true
-        default: "0.2.0"
+        default: "0.2.6"
 
 permissions:
   contents: write
@@ -21,7 +22,7 @@ defaults:
 
 jobs:
   build-macos:
-    name: Build macOS DMG
+    name: Build & Notarize macOS DMG
     runs-on: macos-latest
     timeout-minutes: 90
     steps:
@@ -50,14 +51,59 @@ jobs:
         run: bun run build
         working-directory: desktop/apps/examples/desktop-app
 
-      - name: Build macOS DMG (Ad-hoc signing)
+      - name: Import Apple Developer ID Certificate (if configured)
+        id: import_cert
         working-directory: desktop/apps/examples/desktop-app
         env:
-          APPLE_SIGNING_IDENTITY: "-"
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD || 'openverse_build_keychain' }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            echo "Importing Apple Developer ID certificate into build keychain..."
+            KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+            security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+            echo "$APPLE_CERTIFICATE" | base64 --decode > $RUNNER_TEMP/cert.p12
+            security import $RUNNER_TEMP/cert.p12 -k $KEYCHAIN_PATH -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
+            rm -f $RUNNER_TEMP/cert.p12
+            echo "cert_imported=true" >> $GITHUB_OUTPUT
+          else
+            echo "Apple Developer ID certificate not configured in secrets. Building with ad-hoc signing."
+            echo "cert_imported=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build macOS DMG Bundle
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
         run: |
           bunx tauri build --bundles dmg
 
-      - name: Verify DMG Artifacts Exist
+      - name: Notarize DMG with Apple (if configured)
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -n 1)
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ] && [ -f "$DMG" ]; then
+            echo "Submitting $DMG to Apple Notary Service..."
+            xcrun notarytool submit "$DMG" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+            echo "Stapling notarization ticket to $DMG..."
+            xcrun stapler staple "$DMG"
+            spctl --assess --type open --context context:primary-signature --verbose "$DMG"
+            echo "Gatekeeper validation complete."
+          else
+            echo "Apple notarization credentials not configured. Skipping notarization."
+          fi
+
+      - name: Verify DMG Artifacts Exist & Calculate Checksums
         id: artifacts
         working-directory: desktop/apps/examples/desktop-app
         run: |
@@ -68,7 +114,8 @@ jobs:
             exit 1
           fi
           echo "Found DMG: $DMG"
-          shasum -a 256 "$DMG"
+          shasum -a 256 "$DMG" > "$DMG.sha256"
+          cat "$DMG.sha256"
 
       - name: Upload macOS DMG to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -76,4 +123,4 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           files: |
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg
-
+            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg.sha256

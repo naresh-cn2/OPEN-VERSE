@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for OPEN-VERSE .deb and .rpm packages.
+  Software centers (GNOME Software, KDE Discover) read this from /usr/share/metainfo
+  to display the application's icon, description, and metadata.
+-->
+<component type="desktop-application">
+	<id>ai.openverse.desktop</id>
+	<launchable type="desktop-id">OPEN-VERSE.desktop</launchable>
+	<name>OPEN-VERSE</name>
+	<summary>Autonomous AI coding assistant for desktop and mobile</summary>
+	<developer id="ai.openverse">
+		<name>OPEN-VERSE Project</name>
+	</developer>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>Apache-2.0</project_license>
+	<description>
+		<p>OPEN-VERSE is an autonomous AI coding assistant. It reads your code, edits files, runs commands, and collaborates on tasks across your projects on your machine.</p>
+	</description>
+	<url type="homepage">https://open-verse-website.vercel.app</url>
+	<url type="bugtracker">https://github.com/naresh-cn2/OPEN-VERSE/issues</url>
+	<content_rating type="oars-1.1" />
+	<provides>
+		<mediatype>x-scheme-handler/openverse</mediatype>
+	</provides>
+</component>

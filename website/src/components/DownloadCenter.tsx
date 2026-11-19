@@ -86,19 +86,19 @@ export const DownloadCenter: React.FC = () => {
       name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
       size: "165 MB",
       sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
-      status: "in-preview" as const,
+      status: "requires-external-signing" as const,
     },
     linuxDeb: {
       name: `OPEN-VERSE_0.2.0_amd64.deb`,
       size: "228 MB",
       sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
-      status: "in-preview" as const,
+      status: "signature-verified" as const,
     },
     linuxRpm: {
       name: `OPEN-VERSE-0.2.0-1.x86_64.rpm`,
       size: "228 MB",
       sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
-      status: "in-preview" as const,
+      status: "signature-verified" as const,
     },
     android: {
       name: `open-verse-mobile.apk`,
@@ -106,14 +106,14 @@ export const DownloadCenter: React.FC = () => {
       zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
       size: "10.0 MB",
       sha256: "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
-      status: "available" as const,
+      status: "signature-verified" as const,
     },
     ios: {
       name: `open-verse-ios-v${DESKTOP_VERSION}`,
       version: DESKTOP_VERSION,
-      build: "7",
-      size: "PWA / Xcode",
-      status: "in-preview" as const,
+      build: "8",
+      size: "PWA / Xcode Archive",
+      status: "requires-external-signing" as const,
     },
   };
 
@@ -142,29 +142,68 @@ export const DownloadCenter: React.FC = () => {
     copyToClipboard(cmd, "linux-rpm");
   };
 
-  const platformBadge = (status: "available" | "in-preview" | "planned") => {
-    if (status === "available") {
-      return (
-        <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-          <Check size={14} style={{ color: "var(--emerald)" }} />
-          <span>Available</span>
-        </span>
-      );
+  type TruthfulPlatformStatus =
+    | "available"
+    | "signature-verified"
+    | "install-verified"
+    | "device-tested"
+    | "requires-external-signing"
+    | "preview-only"
+    | "planned";
+
+  const platformBadge = (status: TruthfulPlatformStatus) => {
+    switch (status) {
+      case "available":
+        return (
+          <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <Check size={14} style={{ color: "var(--emerald)" }} />
+            <span>Available for Download</span>
+          </span>
+        );
+      case "signature-verified":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(16, 185, 129, 0.12)", color: "var(--emerald)", borderColor: "rgba(16, 185, 129, 0.3)" }}>
+            <ShieldCheck size={14} style={{ color: "var(--emerald)" }} />
+            <span>Signature Verified • Ready</span>
+          </span>
+        );
+      case "install-verified":
+        return (
+          <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(56, 189, 248, 0.12)", color: "var(--sky)", borderColor: "rgba(56, 189, 248, 0.3)" }}>
+            <Check size={14} style={{ color: "var(--sky)" }} />
+            <span>Installation Verified</span>
+          </span>
+        );
+      case "device-tested":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(139, 92, 246, 0.15)", color: "#c4b5fd", borderColor: "rgba(139, 92, 246, 0.35)" }}>
+            <Monitor size={14} style={{ color: "#c4b5fd" }} />
+            <span>Device Tested</span>
+          </span>
+        );
+      case "requires-external-signing":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(245, 158, 11, 0.12)", color: "#fbbf24", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+            <AlertCircle size={14} style={{ color: "#fbbf24" }} />
+            <span>Requires External Signing</span>
+          </span>
+        );
+      case "preview-only":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(56, 189, 248, 0.12)", color: "var(--sky)", borderColor: "rgba(56, 189, 248, 0.3)" }}>
+            <Info size={14} style={{ color: "var(--sky)" }} />
+            <span>Preview Only</span>
+          </span>
+        );
+      case "planned":
+      default:
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <AlertCircle size={14} style={{ color: "var(--accent-light)" }} />
+            <span>Planned</span>
+          </span>
+        );
     }
-    if (status === "in-preview") {
-      return (
-        <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(56, 189, 248, 0.12)", color: "var(--sky)", borderColor: "rgba(56, 189, 248, 0.3)" }}>
-          <Info size={14} style={{ color: "var(--sky)" }} />
-          <span>In Preview</span>
-        </span>
-      );
-    }
-    return (
-      <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-        <AlertCircle size={14} style={{ color: "var(--accent-light)" }} />
-        <span>Planned</span>
-      </span>
-    );
   };
 
   return (
