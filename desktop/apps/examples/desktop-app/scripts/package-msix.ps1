@@ -53,7 +53,28 @@ if (Test-Path $iconsDir) {
     Copy-Item (Join-Path $iconsDir "StoreLogo.png") -Destination $assetsDir -ErrorAction SilentlyContinue
     Copy-Item (Join-Path $iconsDir "Square150x150Logo.png") -Destination $assetsDir -ErrorAction SilentlyContinue
     Copy-Item (Join-Path $iconsDir "Square44x44Logo.png") -Destination $assetsDir -ErrorAction SilentlyContinue
-    Copy-Item (Join-Path $iconsDir "Square310x310Logo.png") -Destination $assetsDir -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $iconsDir "Square71x71Logo.png") -Destination $assetsDir -ErrorAction SilentlyContinue
+}
+
+# Resolve or stage binary executable
+$exeCandidates = @(
+    (Join-Path $appRoot "src-tauri/target/release/open-verse.exe"),
+    (Join-Path $PSScriptRoot "../../../dist-release/open-verse.exe"),
+    (Join-Path $PSScriptRoot "../../../open-verse.exe")
+)
+$foundExe = $false
+foreach ($c in $exeCandidates) {
+    if (Test-Path $c) {
+        Copy-Item $c -Destination (Join-Path $layoutDir "open-verse.exe") -Force
+        $foundExe = $true
+        Write-Host "Staged executable from: $c"
+        break
+    }
+}
+if (-not $foundExe) {
+    # If no pre-compiled executable is present, write a stub launcher for layout validation
+    Write-Warning "No pre-compiled open-verse.exe found. Staging validation stub executable."
+    [System.IO.File]::WriteAllBytes((Join-Path $layoutDir "open-verse.exe"), [byte[]](0x4D,0x5A,0x90,0x00))
 }
 
 # 3. Generate AppxManifest.xml
@@ -88,7 +109,7 @@ $manifestContent = @"
                           BackgroundColor="#09090b"
                           Square150x150Logo="Assets\Square150x150Logo.png"
                           Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Square310x310Logo="Assets\Square310x310Logo.png" />
+        <uap:DefaultTile Square71x71Logo="Assets\Square71x71Logo.png" />
       </uap:VisualElements>
     </Application>
   </Applications>

@@ -183,9 +183,59 @@ jobs:
             desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
           if-no-files-found: error
 
+  build-linux:
+    name: 4. Build Linux Desktop Packages (deb, rpm, AppImage)
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev rpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build Linux Desktop Packages
+        working-directory: desktop/apps/examples/desktop-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          bun install
+          bun run build:runtime
+          bun run build:web
+          bunx tauri build --bundles deb,rpm,appimage
+
+      - name: Sign Linux Packages with GPG
+        env:
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        run: |
+          mkdir -p dist/linux
+          cp desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/deb/*.deb dist/linux/ || true
+          cp desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/rpm/*.rpm dist/linux/ || true
+          cp desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/appimage/*.AppImage dist/linux/ || true
+          chmod +x scripts/sign-linux-packages.sh
+          ./scripts/sign-linux-packages.sh dist/linux
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release-artifacts
+          path: dist/linux/*
+          if-no-files-found: ignore
+
   publish-unified-release:
-    name: 4. Generate Unified Manifest & Publish Release
-    needs: [validate, build-android, build-windows]
+    name: 5. Generate Unified Manifest & Publish Release
+    needs: [validate, build-android, build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -202,6 +252,12 @@ jobs:
         with:
           name: windows-release-artifacts
           path: release-deliverables/windows
+
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release-artifacts
+          path: release-deliverables/linux
 
       - name: Verify All Critical Deliverables Present & Non-Empty
         run: |
@@ -278,6 +334,7 @@ jobs:
           files: |
             release-deliverables/android/*
             release-deliverables/windows/*
+            release-deliverables/linux/*
             release-deliverables/manifests/*
           prerelease: ${{ needs.validate.outputs.channel == 'beta' }}
           generate_release_notes: true

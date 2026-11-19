@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ai.openverse.mobile",
+      "sha256_cert_fingerprints": [
+        "D3:4F:4D:F7:09:6E:7B:78:30:57:0D:7C:13:A4:EF:5E:E7:F8:31:51:C9:F4:5E:BC:D5:BD:10:E0:EE:1E:B7:6A"
+      ]
+    }
+  }
+]

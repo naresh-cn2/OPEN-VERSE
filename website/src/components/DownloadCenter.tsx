@@ -13,6 +13,9 @@ import {
 	Apple,
 	ExternalLink,
 	Share2,
+	Globe,
+	Laptop,
+	Layers,
 } from "lucide-react";
 
 export const DownloadCenter: React.FC = () => {
@@ -20,6 +23,34 @@ export const DownloadCenter: React.FC = () => {
   const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | "mobile" | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showIosSafariGuide, setShowIosSafariGuide] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+  const [showPwaGuide, setShowPwaGuide] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
+      setIsPwaInstalled(true);
+    }
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === "accepted") {
+        setIsPwaInstalled(true);
+      }
+      setDeferredPrompt(null);
+    } else {
+      setShowPwaGuide(!showPwaGuide);
+    }
+  };
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -217,6 +248,99 @@ export const DownloadCenter: React.FC = () => {
             with Minisign signatures and receive automatic in-app updates.
           </p>
         </div>
+
+        {/* Universal PWA Instant Installation Banner */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(14, 165, 233, 0.15))",
+            border: "1px solid rgba(139, 92, 246, 0.35)",
+            borderRadius: 14,
+            padding: "18px 24px",
+            maxWidth: 960,
+            margin: "0 auto 28px auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ background: "rgba(139, 92, 246, 0.25)", padding: 10, borderRadius: 10 }}>
+              <Globe size={26} style={{ color: "var(--accent-light)" }} />
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 700, color: "#ffffff", fontSize: "1.05rem" }}>
+                  Universal Progressive Web App (PWA)
+                </span>
+                <span className="badge badge-green" style={{ fontSize: "0.72rem" }}>
+                  Zero OS Warnings • 100% Native Sandbox
+                </span>
+              </div>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: "4px 0 0 0" }}>
+                Install OPEN-VERSE as a native desktop or mobile window across Windows 10/11, macOS, Linux, Android, and iOS.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleInstallPwa}
+            className="btn-primary"
+            style={{
+              padding: "10px 22px",
+              fontSize: "0.88rem",
+              fontWeight: 600,
+              gap: 8,
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(139, 92, 246, 0.4)",
+            }}
+          >
+            <Download size={16} />
+            <span>{isPwaInstalled ? "PWA App Installed" : "Install Web App (PWA)"}</span>
+          </button>
+        </div>
+
+        {/* Collapsible PWA Installation Guide */}
+        {showPwaGuide && (
+          <div
+            style={{
+              background: "#0d0d12",
+              border: "1px solid rgba(14, 165, 233, 0.3)",
+              borderRadius: 12,
+              padding: 20,
+              maxWidth: 960,
+              margin: "-14px auto 28px auto",
+            }}
+          >
+            <div style={{ fontWeight: 600, color: "var(--sky)", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>How to Install OPEN-VERSE in Your Browser:</span>
+              <button
+                onClick={() => setShowPwaGuide(false)}
+                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                Close ✕
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, fontSize: "0.82rem", color: "#cbd5e1" }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
+                <strong style={{ color: "#ffffff" }}>Microsoft Edge (Windows/macOS):</strong>
+                <div style={{ marginTop: 4 }}>Click the <strong>App Available (⊞)</strong> icon in the right side of the address bar &rarr; Click <strong>Install</strong>.</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
+                <strong style={{ color: "#ffffff" }}>Google Chrome (Desktop):</strong>
+                <div style={{ marginTop: 4 }}>Click the <strong>Install OPEN-VERSE (⇩)</strong> icon in the address bar &rarr; Click <strong>Install</strong>.</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
+                <strong style={{ color: "#ffffff" }}>Apple Safari (iOS / iPhone):</strong>
+                <div style={{ marginTop: 4 }}>Tap <strong>Share (⎋)</strong> &rarr; scroll down &rarr; tap <strong>Add to Home Screen</strong>.</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
+                <strong style={{ color: "#ffffff" }}>Android (Chrome/Edge):</strong>
+                <div style={{ marginTop: 4 }}>Tap <strong>••• Menu</strong> &rarr; tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Platform Selection Tabs */}
         <div
@@ -418,6 +542,57 @@ export const DownloadCenter: React.FC = () => {
                 <button onClick={copyWinInstallCommand} className="copy-btn" title="Copy install steps">
                   {copiedKey === "win-install" ? <Check size={16} /> : <Copy size={16} />}
                 </button>
+              </div>
+            </div>
+
+            {/* Alternative Legitimate Windows Distribution Channels */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, marginBottom: 24 }}>
+              {/* Windows Package Manager (winget) */}
+              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#ffffff", fontSize: "0.9rem" }}>
+                    <Terminal size={16} style={{ color: "var(--sky)" }} />
+                    <span>Windows Package Manager (winget)</span>
+                  </div>
+                  <span className="badge badge-green" style={{ fontSize: "0.7rem" }}>Microsoft Native</span>
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: 10, lineHeight: 1.4 }}>
+                  Install via Microsoft official winget package manager with automated verification:
+                </p>
+                <div className="code-box" style={{ fontSize: "0.8rem", padding: "8px 12px" }}>
+                  <code>winget install OpenVerse.OpenVerse</code>
+                  <button
+                    onClick={() => copyToClipboard("winget install OpenVerse.OpenVerse", "winget-cmd")}
+                    className="copy-btn"
+                    title="Copy winget command"
+                  >
+                    {copiedKey === "winget-cmd" ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Modern MSIX Package */}
+              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#ffffff", fontSize: "0.9rem" }}>
+                    <Layers size={16} style={{ color: "var(--accent-light)" }} />
+                    <span>Modern MSIX Package</span>
+                  </div>
+                  <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>Store & Sideload</span>
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: 10, lineHeight: 1.4 }}>
+                  Isolated container package built with Windows 10/11 SDK tools (makeappx):
+                </p>
+                <div className="code-box" style={{ fontSize: "0.8rem", padding: "8px 12px" }}>
+                  <code>Add-AppxPackage -Path .\OPEN-VERSE_0.2.6_x64.msix</code>
+                  <button
+                    onClick={() => copyToClipboard("Add-AppxPackage -Path .\\OPEN-VERSE_0.2.6_x64.msix", "msix-cmd")}
+                    className="copy-btn"
+                    title="Copy PowerShell command"
+                  >
+                    {copiedKey === "msix-cmd" ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
 

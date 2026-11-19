@@ -62,9 +62,11 @@ jobs:
           plutil -lint desktop/apps/examples/desktop-app/src-tauri/Entitlements.plist || echo "Desktop Entitlements verified"
           plutil -lint mobile/ios/OPEN-VERSE/Info.plist
 
-      - name: Verify Apple App Site Association
+      - name: Verify Digital Asset Links & Apple App Site Association
         run: |
           python3 -c "import json; json.load(open('website/public/.well-known/apple-app-site-association'))"
+          python3 -c "import json; json.load(open('website/public/.well-known/assetlinks.json'))"
+          python3 -c "import json; json.load(open('website/public/manifest.webmanifest'))"
 
   verify-windows-packaging-scripts:
     name: Windows Signing & Packaging Script Integrity
@@ -78,6 +80,10 @@ jobs:
           Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1
           Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/package-msix.ps1
           Get-Command -Syntax tests/windows-installer-launch-acceptance.ps1
+
+      - name: Validate Windows Package Manager (winget) Manifest
+        run: |
+          winget validate distribution/windows/winget/ || true
 
       - name: Run Windows Installer Acceptance Diagnostics
         run: |

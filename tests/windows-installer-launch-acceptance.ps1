@@ -78,8 +78,8 @@ Write-Host "  ℹ️ Authenticode Status: $($sig.Status) | SignatureType: $($sig
 if ($sig.Status -eq "Valid") {
     Assert-Check $true "TEST 5: Authenticode Signature" "Valid Authenticode signature found"
 } else {
-    Assert-Check $true "TEST 5: Authenticode Signature Diagnostic" `
-        "Status is $($sig.Status) (Commercial code-signing certificate awaiting external enrollment)"
+    $diagMsg = "Status is $($sig.Status) (Commercial code-signing certificate awaiting external enrollment)"
+    Assert-Check $true "TEST 5: Authenticode Signature Diagnostic" $diagMsg
 }
 
 # --- TEST 6: Smart App Control State Diagnostic ---

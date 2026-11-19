@@ -1,0 +1,20 @@
+PackageIdentifier: OpenVerse.OpenVerse
+PackageVersion: 0.2.6
+PackageLocale: en-US
+Publisher: OPEN-VERSE Open Source
+PublisherUrl: https://open-verse-website.vercel.app
+PublisherSupportUrl: https://github.com/naresh-cn2/OPEN-VERSE/issues
+PackageName: OPEN-VERSE
+PackageUrl: https://open-verse-website.vercel.app
+License: MIT
+LicenseUrl: https://github.com/naresh-cn2/OPEN-VERSE/blob/main/LICENSE
+ShortDescription: Autonomous AI Coding Assistant for Desktop & Mobile
+Description: Control your desktop's AI coding agent from your phone. OPEN-VERSE lets you build, test, and ship code autonomously across Windows, macOS, Linux, Android, and iOS.
+Tags:
+  - ai
+  - coding
+  - developer
+  - agent
+  - assistant
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
