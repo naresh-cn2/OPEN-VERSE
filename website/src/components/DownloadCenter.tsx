@@ -54,7 +54,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   // Release versions — updated via release automation
-  const DESKTOP_VERSION = "0.2.6";
+  const DESKTOP_VERSION = "0.2.7";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
   // Direct download assets hosted on GitHub Releases & Vercel CDN
@@ -486,9 +486,9 @@ export const DownloadCenter: React.FC = () => {
                   Isolated container package built with Windows 10/11 SDK tools (makeappx):
                 </p>
                 <div className="code-box" style={{ fontSize: "0.8rem", padding: "8px 12px" }}>
-                  <code>Add-AppxPackage -Path .\OPEN-VERSE_0.2.6_x64.msix</code>
+                  <code>Add-AppxPackage -Path .\OPEN-VERSE_0.2.7_x64.msix</code>
                   <button
-                    onClick={() => copyToClipboard("Add-AppxPackage -Path .\\OPEN-VERSE_0.2.6_x64.msix", "msix-cmd")}
+                    onClick={() => copyToClipboard("Add-AppxPackage -Path .\\OPEN-VERSE_0.2.7_x64.msix", "msix-cmd")}
                     className="copy-btn"
                     title="Copy PowerShell command"
                   >

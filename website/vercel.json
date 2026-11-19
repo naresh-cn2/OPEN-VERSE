@@ -8,12 +8,12 @@
   "redirects": [
     {
       "source": "/api/download/windows",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6/OPEN-VERSE_0.2.6_x64-setup.exe",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-setup.exe",
       "permanent": false
     },
     {
       "source": "/api/download/windows-zip",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6/OPEN-VERSE_0.2.6_x64-windows.zip",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-windows.zip",
       "permanent": false
     },
     {
@@ -23,12 +23,12 @@
     },
     {
       "source": "/api/download/android-apk",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6/open-verse-v0.2.6-android.apk",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-v0.2.7-android.apk",
       "permanent": false
     },
     {
       "source": "/api/download/android-zip",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6/open-verse-mobile-v0.2.6.zip",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-mobile-v0.2.7.zip",
       "permanent": false
     },
     {
