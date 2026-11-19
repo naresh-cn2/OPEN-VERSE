@@ -27,8 +27,8 @@ Thumbs.db
 
 # Engine repositories (original sources preserved independently)
 cline/
-hermes-agent/
 harmes agent/
+opencode/
 
 .vercel
 .env*
