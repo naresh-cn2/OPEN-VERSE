@@ -79,6 +79,7 @@ export const DownloadCenter: React.FC = () => {
       zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
       size: "167.6 MB",
       sha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
+      zipSha256: "b6de33be3a3e252bf4cc4ee254d66616648ea4553f7beb661a7d8636da83155f",
       status: "available" as const,
     },
     mac: {
@@ -303,33 +304,64 @@ export const DownloadCenter: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                <Clock size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Asset: <code>{FILE_META.windows.name}</code> (x86_64) • {FILE_META.windows.size}</span>
+            <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 18px", marginBottom: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <Clock size={15} style={{ color: "var(--accent-light)" }} />
+                  <span>Standalone ZIP: <code>{FILE_META.windows.zipName}</code> (159.9 MB)</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                  <span style={{ fontFamily: "var(--font-mono)" }}>ZIP SHA-256:</span>
+                  <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.windows.zipSha256}</code>
+                  <button
+                    onClick={() => copyToClipboard(FILE_META.windows.zipSha256, "win-zip-sha")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--accent-light)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: "0.78rem",
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                    }}
+                    title="Copy ZIP SHA-256 Checksum"
+                  >
+                    {copiedKey === "win-zip-sha" ? <Check size={13} /> : <Copy size={13} />}
+                    <span>{copiedKey === "win-zip-sha" ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
-                <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.windows.sha256}</code>
-                <button
-                  onClick={() => copyToClipboard(FILE_META.windows.sha256, "win-sha")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--accent-light)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: "0.78rem",
-                    padding: "3px 8px",
-                    borderRadius: 4,
-                  }}
-                  title="Copy SHA-256 Checksum"
-                >
-                  {copiedKey === "win-sha" ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copiedKey === "win-sha" ? "Copied" : "Copy"}</span>
-                </button>
+              <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <Clock size={15} style={{ color: "var(--accent-light)" }} />
+                  <span>NSIS Installer: <code>{FILE_META.windows.name}</code> (159.9 MB)</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                  <span style={{ fontFamily: "var(--font-mono)" }}>EXE SHA-256:</span>
+                  <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.windows.sha256}</code>
+                  <button
+                    onClick={() => copyToClipboard(FILE_META.windows.sha256, "win-sha")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--accent-light)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: "0.78rem",
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                    }}
+                    title="Copy EXE SHA-256 Checksum"
+                  >
+                    {copiedKey === "win-sha" ? <Check size={13} /> : <Copy size={13} />}
+                    <span>{copiedKey === "win-sha" ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
