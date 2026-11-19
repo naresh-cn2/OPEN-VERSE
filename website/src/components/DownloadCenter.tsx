@@ -52,7 +52,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   // Release version & repository configuration
-  const DESKTOP_VERSION = "0.2.7";
+  const DESKTOP_VERSION = "0.2.8";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
 
   // Official release assets

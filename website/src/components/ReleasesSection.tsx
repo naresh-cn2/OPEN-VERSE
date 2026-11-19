@@ -6,10 +6,23 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.7",
+      version: "v0.2.8",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",
+      changes: [
+        "Pure Google Sign-In: Direct authentication with official Google Account Chooser on the application opening screen, eliminating guest bypass.",
+        "Pre-Login In-App Updates: Integrated one-click update checking and automatic background delivery directly from the opening screen.",
+        "Complete Brand Unification: Fully white-labeled desktop user interface, connectors, schedules, settings, and notifications to OPEN-VERSE.",
+        "Verified NSIS Windows Installer & Portable Package: Rebuilt and published with SHA-256 and Minisign cryptographic verification.",
+      ],
+      note: "Release binaries and cryptographic Minisign signatures (.sig) are verified and published across all supported platforms.",
+    },
+    {
+      version: "v0.2.7",
+      date: "November 2026",
+      tag: "Previous Stable Release",
+      badgeClass: "badge-purple",
       changes: [
         "Native Desktop & Mobile Release Synchronization: Published verified v0.2.7 NSIS setup installer, portable ZIP, Android APK, and Minisign signatures.",
         "Streamlined Native Distribution: Clean, professional download center with direct NSIS setup installer, portable ZIP package, Android APK, and Minisign cryptographic verification.",

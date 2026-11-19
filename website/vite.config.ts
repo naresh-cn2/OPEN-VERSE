@@ -9,8 +9,8 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const redirects: Record<string, string> = {
-            "/api/download/windows": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-setup.exe",
-            "/api/download/windows-zip": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-windows.zip",
+            "/api/download/windows": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/OPEN-VERSE_0.2.8_x64-setup.exe",
+            "/api/download/windows-zip": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/OPEN-VERSE_0.2.8_x64-windows.zip",
             "/api/download/android": "/open-verse-mobile.apk",
             "/api/download/android-apk": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-v0.2.7-android.apk",
             "/api/download/android-zip": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-mobile-v0.2.7.zip",
