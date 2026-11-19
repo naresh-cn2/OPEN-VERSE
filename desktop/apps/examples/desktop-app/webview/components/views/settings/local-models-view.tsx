@@ -758,7 +758,7 @@ export function LocalModelsContent() {
 							title={
 								installedModel.deletable
 									? undefined
-									: `Cline can only delete LM Studio Hub models with one variant, on this computer. Remove this one in ${runtimeName}.`
+									: `OPEN-VERSE can only delete LM Studio Hub models with one variant, on this computer. Remove this one in ${runtimeName}.`
 							}
 							type="button"
 							variant="ghost"
@@ -979,7 +979,7 @@ export function LocalModelsContent() {
 							This frees {formatGb(pendingDelete?.sizeBytes ?? 0)} on your disk.
 							You can download it again anytime.
 							{deleteName === activeModel
-								? " Cline is set to use this model, so pick another one before your next message."
+								? " OPEN-VERSE is set to use this model, so pick another one before your next message."
 								: ""}
 						</AlertDialogDescription>
 					</AlertDialogHeader>

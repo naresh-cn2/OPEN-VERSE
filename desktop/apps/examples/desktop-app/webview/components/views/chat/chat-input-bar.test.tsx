@@ -117,10 +117,18 @@ let root: Root;
 
 beforeEach(() => {
 	Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-	if (typeof window.localStorage.clear !== "function") {
+	if (!window.localStorage || typeof window.localStorage.clear !== "function") {
+		const memStorage = new Map<string, string>();
 		Object.defineProperty(window, "localStorage", {
 			configurable: true,
-			value: window.sessionStorage,
+			value: {
+				getItem: (key: string) => memStorage.get(key) ?? null,
+				setItem: (key: string, val: string) => memStorage.set(key, String(val)),
+				removeItem: (key: string) => memStorage.delete(key),
+				clear: () => memStorage.clear(),
+				key: (i: number) => Array.from(memStorage.keys())[i] ?? null,
+				get length() { return memStorage.size; },
+			},
 		});
 	}
 	window.localStorage.removeItem(REASONING_SELECTION_STORAGE_KEY);
@@ -938,7 +946,7 @@ describe("ChatInputBar", () => {
 			providers: [],
 			enabledProviderIds: ["cline", "cline-pass", "cline-cloud"],
 			providerNames: {
-				cline: "Cline Usage-Billing",
+				cline: "OPEN-VERSE Usage",
 				"cline-pass": "ClinePass",
 				"cline-cloud": "ClineFree",
 			},
@@ -1089,7 +1097,7 @@ describe("ChatInputBar", () => {
 			await act(async () =>
 				container
 					.querySelector<HTMLButtonElement>(
-						'[aria-label="Provider: Cline Usage-Billing"]',
+						'[aria-label="Provider: OPEN-VERSE Usage"]',
 					)
 					?.click(),
 			);
@@ -1636,7 +1644,7 @@ describe("ChatInputBar", () => {
 		],
 		[
 			new DOMException("Permission denied", "NotAllowedError"),
-			"Check the microphone permission for Cline and try again.",
+			"Check the microphone permission for OPEN-VERSE and try again.",
 		],
 	])("shows speech failures in chat with a configured model: %s", async (error, description) => {
 		loadProviderModelCatalogMock.mockResolvedValue(

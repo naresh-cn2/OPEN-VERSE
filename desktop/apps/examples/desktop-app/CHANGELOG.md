@@ -1,5 +1,13 @@
 # OPEN-VERSE Changelog
 
+## 0.2.7
+
+- **Complete OPEN-VERSE Brand Unification**: Fully white-labeled desktop application interface, consistent typography, purple accent system, and complete elimination of legacy branding.
+- **OPEN-VERSE Usage & Billing**: Streamlined model provider configuration and usage tracking under OPEN-VERSE unified workspace.
+- **Native Connectors Integration**: Connect OPEN-VERSE to favorite tools including Gmail, Slack, GitHub, Linear, Notion, and Google Calendar.
+- **Enhanced First-Launch Experience**: Redesigned onboarding tour introducing autonomous agent capabilities, multi-model flexibility, and security controls.
+- **Streamlined Commercial Distribution**: Verified Windows setup installer and standalone portable package with SHA-256 and Minisign cryptographic verification.
+
 ## 0.2.6
 
 - **Universal Installation & Trusted Verification**: Windows MSIX modern container packaging, Microsoft Package Manager (winget) manifest validation, and Progressive Web App (PWA) with service worker offline shell.

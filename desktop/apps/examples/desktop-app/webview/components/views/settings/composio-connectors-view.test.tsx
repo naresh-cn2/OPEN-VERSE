@@ -433,7 +433,7 @@ describe("installed connectors", () => {
 			),
 		);
 		expect(container.textContent).toContain(
-			"Sign in to Cline to use connectors",
+			"Sign in to OPEN-VERSE to use connectors",
 		);
 		expect(container.textContent).not.toContain("Browse");
 		expect(

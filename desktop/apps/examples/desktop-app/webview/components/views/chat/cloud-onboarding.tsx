@@ -50,7 +50,7 @@ export function CloudOnboardingCard({
 		return (
 			<div className="rounded-xl border border-border bg-card/80 p-6 text-center shadow-sm backdrop-blur-sm">
 				<p className="text-sm font-medium text-foreground">
-					Could not reach Cline Cloud
+					Could not reach OPEN-VERSE Cloud
 				</p>
 				<p className="mt-1 text-sm text-muted-foreground">
 					Check your connection and try again.
@@ -88,11 +88,11 @@ export function CloudOnboardingCard({
 							{isSignedOut
 								? "Run sessions in the cloud"
 								: isNoRepositories
-									? "Give Cline access to a repository"
+									? "Give OPEN-VERSE access to a repository"
 									: "Connect GitHub to get started"}
 						</h2>
 						<p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
-							Cloud sessions run on secure, isolated sandboxes through your Cline
+							Cloud sessions run on secure, isolated sandboxes through your OPEN-VERSE
 							account. The cloud agent clones your repository, works on a branch,
 							and keeps going even when you close the app — check back in from
 							any device.
@@ -106,9 +106,9 @@ export function CloudOnboardingCard({
 						<OnboardingStep
 							icon={<LogIn aria-hidden="true" className="size-4" />}
 							index={1}
-							title="Sign in with Cline"
+							title="Sign in with OPEN-VERSE"
 						>
-							Cloud sessions are part of your Cline account.
+							Cloud sessions are part of your OPEN-VERSE account.
 						</OnboardingStep>
 					) : (
 						<OnboardingStep
@@ -117,7 +117,7 @@ export function CloudOnboardingCard({
 							index={1}
 							title="Connect GitHub"
 						>
-							Link your GitHub account from the Cline dashboard.
+							Link your GitHub account from your dashboard.
 						</OnboardingStep>
 					)}
 					<OnboardingStep
@@ -126,14 +126,14 @@ export function CloudOnboardingCard({
 						index={2}
 						title="Pick your repositories"
 					>
-						Choose which repositories the Cline GitHub App can access.
+						Choose which repositories the GitHub App can access.
 					</OnboardingStep>
 					<OnboardingStep
 						icon={<GitBranch aria-hidden="true" className="size-4" />}
 						index={3}
 						title="Start a session"
 					>
-						Pick a repo and branch here, describe the task, and Cline gets to
+						Pick a repo and branch here, describe the task, and OPEN-VERSE gets to
 						work in the cloud.
 					</OnboardingStep>
 				</ol>
@@ -143,7 +143,7 @@ export function CloudOnboardingCard({
 						<>
 							<Button disabled={signingIn} onClick={onSignIn} size="sm">
 								<LogIn aria-hidden="true" className="size-3.5" />
-								{signingIn ? "Waiting for browser…" : "Sign in with Cline"}
+								{signingIn ? "Waiting for browser…" : "Sign in with OPEN-VERSE"}
 							</Button>
 							{signingIn && onCancelSignIn && (
 								<Button
@@ -180,7 +180,7 @@ export function CloudOnboardingCard({
 										rel="noreferrer"
 										className="text-primary underline font-medium hover:text-primary/80 inline-flex items-center gap-1"
 									>
-										click here to open the Cline authorization page
+										click here to open the authorization page
 										<ExternalLink aria-hidden="true" className="size-3" />
 									</a>
 									.

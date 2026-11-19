@@ -863,7 +863,7 @@ function ChatInputBarImpl({
 			variant: "destructive",
 			title: "Speech input failed",
 			description: isMicrophoneError
-				? "Check the microphone permission for OPEN VERSE and try again."
+				? "Check the microphone permission for OPEN-VERSE and try again."
 				: message,
 		});
 	}, []);

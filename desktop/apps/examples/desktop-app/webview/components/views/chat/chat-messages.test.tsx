@@ -2539,7 +2539,7 @@ describe("persisted run errors", () => {
 		const fullError =
 			providerId === "claude-code"
 				? "The run failed: API key expired. Sign in again with the `claude` CLI in a terminal, then try again."
-				: "The run failed: API key expired. Check your model connection in Settings → Providers (or sign in with Cline), then try again.";
+				: "The run failed: API key expired. Check your model connection in Settings → Providers (or sign in with OPEN-VERSE), then try again.";
 		await renderMessages(messages, { error: fullError, status: "failed" });
 		expect(container.textContent?.split("API key expired.")).toHaveLength(2);
 		expect(container.textContent).toContain(fullError.replaceAll("`", ""));
@@ -2555,7 +2555,7 @@ describe("ChatMessages credential failures", () => {
 		sessionId: "session-1",
 		role: "error",
 		content:
-			"The run failed: cline requires re-authentication. Sign in to Cline again in Settings → Account, then try again.",
+			"The run failed: cline requires re-authentication. Sign in to OPEN-VERSE again in Settings → Account, then try again.",
 		createdAt: 2,
 		meta: { reason: "credentials", providerId: "cline" },
 	};
@@ -2578,7 +2578,7 @@ describe("ChatMessages credential failures", () => {
 		).toHaveLength(2);
 
 		const action = [...(bubble?.querySelectorAll("button") ?? [])].find(
-			(button) => button.textContent === "Sign in to Cline",
+			(button) => button.textContent === "Sign in to OPEN-VERSE",
 		);
 		expect(action).toBeDefined();
 		await act(async () => action?.click());
@@ -2624,7 +2624,7 @@ describe("ChatMessages credential failures", () => {
 		const buttons = [...container.querySelectorAll("button")].filter(
 			(button) =>
 				button.textContent === "Open API providers" ||
-				button.textContent === "Sign in to Cline",
+				button.textContent === "Sign in to OPEN-VERSE",
 		);
 		expect(buttons.map((button) => button.textContent)).toEqual([
 			"Open API providers",

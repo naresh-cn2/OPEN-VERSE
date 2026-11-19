@@ -203,7 +203,7 @@ describe("resolveCredentialFailureHint", () => {
 
 	it("points Cline at signing in again from Settings → Account", () => {
 		expect(resolveCredentialFailureHint("cline")).toBe(
-			"Sign in to Cline again in Settings → Account, then try again.",
+			"Sign in to OPEN-VERSE again in Settings → Account, then try again.",
 		);
 	});
 
@@ -254,7 +254,7 @@ describe("resolveCredentialFailureAction", () => {
 
 	it("sends Cline to the Account page and other providers to Models", () => {
 		expect(resolveCredentialFailureAction("cline")).toEqual({
-			label: "Sign in to Cline",
+			label: "Sign in to OPEN-VERSE",
 			target: "account",
 		});
 		expect(

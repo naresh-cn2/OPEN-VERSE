@@ -1222,7 +1222,7 @@ export function CustomizationSectionView({
 					</h3>
 					<ScopeBadge scope={scope} />
 					<Badge variant="outline" className="shrink-0 text-muted-foreground">
-						{plugin.agentPlugin === true ? "Agent Plugin" : "Cline Plugin"}
+						{plugin.agentPlugin === true ? "Agent Plugin" : "OPEN-VERSE Plugin"}
 					</Badge>
 					{context?.matchedEntries?.length ? (
 						<Badge variant="outline" className="shrink-0 text-muted-foreground">
@@ -1713,19 +1713,19 @@ export function CustomizationSectionView({
 			{activeTab === "Plugins" && !catalogPrimitive && (
 				<div>
 					<p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-						Cline and portable Agent Plugins discovered by the shared Hub.
+						OPEN-VERSE and portable Agent Plugins discovered by the shared Hub.
 						Changes apply when a session is rebuilt or started.
 					</p>
 
 					<div className="mb-6">
 						<h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-							Cline Plugins ({clinePlugins.length})
+							OPEN-VERSE Plugins ({clinePlugins.length})
 						</h3>
 						<div className="flex flex-col gap-3">
 							{clinePlugins.map((plugin) => renderPluginCard(plugin))}
 							{clinePlugins.length === 0 && (
 								<p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-									No Cline Plugins found.
+									No OPEN-VERSE Plugins found.
 								</p>
 							)}
 						</div>

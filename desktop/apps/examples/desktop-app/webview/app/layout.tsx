@@ -7,8 +7,8 @@ import { HUB_THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
-	title: "OPEN VERSE",
-	description: "Build software with OPEN VERSE.",
+	title: "OPEN-VERSE",
+	description: "Autonomous AI Assistant — Build software with OPEN-VERSE.",
 	icons: {
 		icon: [
 			{

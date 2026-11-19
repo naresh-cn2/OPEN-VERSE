@@ -175,7 +175,7 @@ export function HubUpdateRequiredDialog() {
 			setUpdateHint(
 				error instanceof Error && error.message
 					? error.message
-					: "Updating the Cline Hub failed. Try again, or run 'cline doctor fix' in a terminal.",
+					: "Updating the OPEN-VERSE Hub failed. Try again, or check your local setup in a terminal.",
 			);
 			setPhase("idle");
 			return;
@@ -210,13 +210,13 @@ export function HubUpdateRequiredDialog() {
 			<AlertDialog open>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Cline Hub update required</AlertDialogTitle>
+						<AlertDialogTitle>OPEN-VERSE Hub update required</AlertDialogTitle>
 						<AlertDialogDescription>
-							Cline needs a newer Cline Hub, but the running one is still
+							OPEN-VERSE needs a newer Hub, but the running one is still
 							serving {describeOutdatedHubSessions(mismatch)}.
 						</AlertDialogDescription>
 						<AlertDialogDescription>
-							Update Now stops that Hub and interrupts its sessions. Quit Cline
+							Update Now stops that Hub and interrupts its sessions. Quit OPEN-VERSE
 							closes this app and leaves the Hub running, so you can update
 							later.
 						</AlertDialogDescription>
@@ -232,7 +232,7 @@ export function HubUpdateRequiredDialog() {
 								void handleQuit();
 							}}
 						>
-							Quit Cline
+							Quit OPEN-VERSE
 						</AlertDialogCancel>
 						<AlertDialogAction
 							disabled={phase !== "idle"}
@@ -277,13 +277,13 @@ export function HubUpdateRequiredDialog() {
 		>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Cline Hub was updated</AlertDialogTitle>
+					<AlertDialogTitle>OPEN-VERSE Hub was updated</AlertDialogTitle>
 					<AlertDialogDescription>
-						Another Cline installation updated the shared Cline Hub
+						Another installation updated the shared OPEN-VERSE Hub
 						{mismatch?.hubCoreVersion
 							? ` (core ${mismatch.hubCoreVersion})`
 							: ""}
-						, and it no longer matches this app. Update and restart Cline to
+						, and it no longer matches this app. Update and restart OPEN-VERSE to
 						stay in sync with the running Hub.
 					</AlertDialogDescription>
 					{updateHint ? (

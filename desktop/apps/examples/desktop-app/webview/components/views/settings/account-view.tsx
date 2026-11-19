@@ -514,10 +514,10 @@ export function AccountView() {
 				</div>
 				<div>
 					<h3 className="text-lg font-semibold text-foreground">
-						Sign in to Cline
+						Sign in to OPEN-VERSE
 					</h3>
 					<p className="mt-2 text-sm text-muted-foreground">
-						Connect your Cline account to review credits, usage, billing, and
+						Connect your account to review credits, usage, billing, and
 						organization details.
 					</p>
 				</div>
@@ -574,7 +574,7 @@ export function AccountView() {
 									rel="noreferrer"
 									className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1"
 								>
-									click here to open the Cline sign-in page
+									click here to open the sign-in page
 									<ExternalLink className="size-3" />
 								</a>
 								.
@@ -638,11 +638,11 @@ export function AccountView() {
 			<PageHeader
 				description={
 					user
-						? "Cline AI model provider and credit management. This is separate from your OPEN-VERSE identity."
-						: "The latest models from Anthropic, OpenAI, Google, and more via Cline provider. Pay as you go, or subscribe with ClinePass."
+						? "OPEN-VERSE AI model provider and credit management. This is separate from your OPEN-VERSE identity."
+						: "The latest models from Anthropic, OpenAI, Google, and more via OPEN-VERSE provider. Pay as you go, or subscribe with ClinePass."
 				}
 				meta={<InUseBadge section="Cline" />}
-				title="Cline Provider"
+				title="OPEN-VERSE Usage & Provider"
 				actions={
 					user ? (
 						<button

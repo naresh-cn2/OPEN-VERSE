@@ -9,6 +9,22 @@ const { invoke, openExternalUrl } = vi.hoisted(() => ({
 	invoke: vi.fn(),
 	openExternalUrl: vi.fn(),
 }));
+
+if (typeof window !== "undefined" && !window.localStorage) {
+	const storage = new Map<string, string>();
+	Object.defineProperty(window, "localStorage", {
+		value: {
+			getItem: (key: string) => storage.get(key) ?? null,
+			setItem: (key: string, val: string) => storage.set(key, String(val)),
+			removeItem: (key: string) => storage.delete(key),
+			clear: () => storage.clear(),
+			key: (i: number) => Array.from(storage.keys())[i] ?? null,
+			get length() { return storage.size; },
+		},
+		writable: true,
+	});
+}
+
 vi.mock("@/lib/desktop-client", () => ({
 	desktopClient: { invoke, subscribe: vi.fn(() => () => {}) },
 	openExternalUrl,
@@ -142,7 +158,7 @@ describe("AccountView signed-out state", () => {
 		});
 
 		await vi.waitFor(() => {
-			expect(container.textContent).toContain("Sign in to Cline");
+			expect(container.textContent).toContain("Sign in to OPEN-VERSE");
 		});
 		expect(container.textContent).not.toContain(
 			"No Cline account auth token found",
@@ -197,7 +213,7 @@ describe("AccountView signed-out state", () => {
 		});
 
 		await vi.waitFor(() => {
-			expect(container.textContent).toContain("Sign in to Cline");
+			expect(container.textContent).toContain("Sign in to OPEN-VERSE");
 		});
 		expect(container.textContent).not.toContain("Beatrix");
 	});
@@ -232,6 +248,6 @@ describe("AccountView signed-out state", () => {
 		await vi.waitFor(() => {
 			expect(container.textContent).toContain("Beatrix");
 		});
-		expect(container.textContent).not.toContain("Sign in to Cline");
+		expect(container.textContent).not.toContain("Sign in to OPEN-VERSE");
 	});
 });

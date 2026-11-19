@@ -1,35 +1,24 @@
 import {
+	Bot,
+	Cpu,
 	GitBranchPlus,
 	GitPullRequest,
 	type LucideIcon,
 	Network,
+	ShieldCheck,
+	Sparkles,
+	Terminal,
 	Users,
 } from "lucide-react";
 
 /**
- * "What's new" catch-up highlights.
+ * "What's new" and onboarding catch-up highlights for OPEN-VERSE.
  *
- * Cline Desktop ships every couple of days, so individual releases are not
- * announced in-app; the About page always has the full changelog. Every so
- * often, once enough notable features have accumulated, we publish a catch-up
- * here and the app shows it once, as a dialog on the next launch.
- *
- * To publish a new catch-up:
- *
- * 1. Add an entry to the TOP of `WHATS_NEW_RELEASES`. Give it a new, stable
- *    `id` (date-prefixed, never reused): the app compares the latest id with
- *    the one the user last saw to decide whether to show the dialog.
- * 2. Give it a short title (a headline, not a sentence) and 3 or 4
- *    highlights. Lead with the user-facing capability, keep each description
- *    to one short sentence, and pick a lucide icon.
- * 3. Preview it from Settings → About → "Show what's new", which replays the
- *    latest entry without marking it seen.
- *
- * A launch big enough to carry the dialog alone can instead be a `spotlight`,
- * which `WhatsNewDialog` renders with its own layout and call to action.
- *
- * New installs never see a catch-up: onboarding marks the current entry as
- * seen, because everything is new to a first-time user anyway.
+ * OPEN-VERSE Desktop introduces key capabilities to users in-app.
+ * To publish a new highlight:
+ * 1. Add an entry to the TOP of `WHATS_NEW_RELEASES`.
+ * 2. Give it a clear title and 3-4 highlights with Lucide icons.
+ * 3. Spotlight releases (such as Connectors) render dedicated interactive layouts.
  */
 
 export type WhatsNewHighlight = {
@@ -44,38 +33,38 @@ export type WhatsNewRelease =
 
 export const WHATS_NEW_RELEASES: WhatsNewRelease[] = [
 	{
-		id: "2026-10-connectors",
-		title: "Connect Cline to your apps",
-		spotlight: "connectors",
-	},
-	{
-		id: "2026-09-remote-and-parallel",
-		title: "Work anywhere, in parallel",
+		id: "2026-11-open-verse-platform",
+		title: "Welcome to OPEN-VERSE",
 		highlights: [
 			{
-				title: "SSH remotes",
+				title: "Autonomous AI Assistant",
 				description:
-					"The app stays on your laptop while Cline works on any machine you can SSH into.",
+					"OPEN-VERSE inspects your codebase, edits files, runs tests, and completes engineering tasks in any project.",
+				icon: Bot,
+			},
+			{
+				title: "Multi-Model Intelligence",
+				description:
+					"Bring any model: Google Gemini, Anthropic Claude, OpenAI, DeepSeek, or run local offline models with Ollama.",
+				icon: Cpu,
+			},
+			{
+				title: "Terminal & Tool Execution",
+				description:
+					"Execute shell commands, file edits, and tools protected by fine-grained permission and security controls.",
+				icon: Terminal,
+			},
+			{
+				title: "SSH Remotes & Parallel Work",
+				description:
+					"Work across remote machines via SSH and delegate parallel subagents across isolated git worktrees.",
 				icon: Network,
 			},
-			{
-				title: "Worktrees",
-				description:
-					"Each task gets its own branch under ~/.cline/worktrees, so parallel work never collides.",
-				icon: GitBranchPlus,
-			},
-			{
-				title: "Pull request status",
-				description:
-					"Your branch's PR, merge state, and CI checks, right in the composer.",
-				icon: GitPullRequest,
-			},
-			{
-				title: "Parallel sub-agents",
-				description:
-					"Delegate several tasks in one session and they run at the same time.",
-				icon: Users,
-			},
 		],
+	},
+	{
+		id: "2026-11-connectors",
+		title: "Connect OPEN-VERSE to your apps",
+		spotlight: "connectors",
 	},
 ];

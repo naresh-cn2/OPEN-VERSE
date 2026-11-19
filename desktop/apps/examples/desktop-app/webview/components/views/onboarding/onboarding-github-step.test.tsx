@@ -129,7 +129,7 @@ describe("GitHubConnectStep", () => {
 			"https://github.com/apps/cline/installations/new?state=abc",
 		);
 		expect(container.textContent).toContain(
-			"Finish installing the Cline GitHub App in your browser",
+			"Finish installing the GitHub App in your browser",
 		);
 
 		// First poll: still not installed.
@@ -242,7 +242,7 @@ describe("GitHubConnectStep", () => {
 
 		// Back to the actionable connect state, not a permanent spinner.
 		expect(container.textContent).not.toContain("Finish installing");
-		expect(container.textContent).toContain("Your Cline account session ended");
+		expect(container.textContent).toContain("Your account session ended");
 		expect(buttonByText("Connect GitHub")).toBeDefined();
 
 		const callsAfterSignOut = invoke.mock.calls.length;

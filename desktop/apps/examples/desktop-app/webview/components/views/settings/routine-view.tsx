@@ -1212,7 +1212,7 @@ export function RoutineSchedulesContent({
 			<PageHeader
 				description="Run agents on cron schedules for recurring automations like daily summaries and code reviews."
 				title="Schedule"
-				meta={<CommandBadge>cline schedule</CommandBadge>}
+				meta={<CommandBadge>open-verse schedule</CommandBadge>}
 				actions={
 					<>
 						<Button

@@ -63,10 +63,10 @@ export function HubStartupScreen({
 		content = (
 			<>
 				<h1 className="text-base font-medium">
-					OPEN VERSE's desktop backend isn't responding
+					OPEN-VERSE's desktop backend isn't responding
 				</h1>
 				<p className="text-sm text-muted-foreground">
-					OPEN VERSE keeps trying in the background. You can reload, or continue in standalone mobile mode.
+					OPEN-VERSE keeps trying in the background. You can reload, or continue in standalone mobile mode.
 				</p>
 				<div className="flex flex-col gap-2 w-full max-w-xs">
 					<Button onClick={() => desktopClient.enableStandaloneMode()}>
@@ -82,7 +82,7 @@ export function HubStartupScreen({
 		content = (
 			<>
 				<h1 className="text-base font-medium">
-					OPEN VERSE couldn't connect to its Hub
+					OPEN-VERSE couldn't connect to its Hub
 				</h1>
 				<p className="text-sm text-muted-foreground">
 					{hub.error} Retry, or export diagnostics if this keeps happening.
@@ -110,7 +110,7 @@ export function HubStartupScreen({
 					className="size-6 animate-spin text-muted-foreground"
 				/>
 				<output className="text-sm text-muted-foreground">
-					Starting OPEN VERSE…
+					Starting OPEN-VERSE…
 				</output>
 				{startupDelayed ? (
 					<Button

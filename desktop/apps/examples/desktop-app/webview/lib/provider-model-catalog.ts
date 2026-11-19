@@ -846,7 +846,7 @@ export async function loadProviderModelCatalog(options?: {
 		// the account-scoped cloud response determines which models are offered.
 		return buildProviderModelCatalog(
 			Object.entries({
-				cline: "Cline Usage-Billing",
+				cline: "OPEN-VERSE Usage",
 				"cline-pass": "ClinePass",
 				"cline-cloud": "ClineFree",
 			}).map(([id, name]) => ({

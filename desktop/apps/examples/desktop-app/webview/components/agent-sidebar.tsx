@@ -476,7 +476,7 @@ export function AgentSidebar({
 				error:
 					error instanceof Error
 						? error.message
-						: "Unable to read Cline Hub status.",
+						: "Unable to read OPEN-VERSE Hub status.",
 				url: null,
 			});
 		}
@@ -931,7 +931,7 @@ export function AgentSidebar({
 						>
 							<HoverCardTrigger asChild>
 								<button
-									aria-label="OPEN VERSE home"
+									aria-label="OPEN-VERSE home"
 									className={cn(
 										"flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
 										isCollapsed && "size-9",
@@ -972,12 +972,12 @@ export function AgentSidebar({
 											)}
 										/>
 										<span className="font-medium">
-											OPEN VERSE Hub @{hubPort(hubStatus?.url ?? null) ?? "unknown"}
+											OPEN-VERSE Hub @{hubPort(hubStatus?.url ?? null) ?? "unknown"}
 										</span>
 									</div>
 									{hubStatus && !hubStatus.connected && (
 										<p className="mt-1 text-[11px] text-destructive">
-											{hubStatus.error ?? "OPEN VERSE Hub is not connected."}
+											{hubStatus.error ?? "OPEN-VERSE Hub is not connected."}
 										</p>
 									)}
 								</div>

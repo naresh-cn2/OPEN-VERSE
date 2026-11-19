@@ -168,7 +168,7 @@ function LmStudioInstallSteps({ platform }: { platform: string }) {
 			</li>
 			<li>
 				<span className="text-foreground">Open LM Studio once.</span> After
-				that, Cline can start it for you.
+				that, OPEN-VERSE can start it for you.
 			</li>
 			<li>
 				<span className="text-foreground">Come back here.</span> This page
@@ -240,7 +240,7 @@ export function LocalRuntimeSetup({
 				</StatusLine>
 				<p className="text-sm text-muted-foreground">
 					Start it to download and run models. It keeps running in the
-					background after you close Cline.
+					background after you close OPEN-VERSE.
 				</p>
 				<div>
 					<Button

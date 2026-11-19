@@ -35,7 +35,7 @@ export const PROVIDER_SECTIONS = [
 export type ProviderSection = (typeof PROVIDER_SECTIONS)[number];
 
 export const PROVIDER_SECTION_LABELS: Record<ProviderSection, string> = {
-	Cline: "Cline",
+	Cline: "OPEN-VERSE",
 	"Local Models": "Local",
 	Providers: "BYOK",
 };
@@ -51,14 +51,14 @@ export function readProviderSectionInUse(): ProviderSection {
 	const provider = normalizeProviderId(
 		readModelSelectionStorageFromWindow().lastProvider,
 	);
-	// Without a saved choice the chat uses the default Cline provider.
+	// Without a saved choice the chat uses the default OPEN-VERSE provider.
 	if (!provider || provider === "cline" || provider === "cline-pass") {
 		return "Cline";
 	}
 	return isLocalRuntime(provider) ? "Local Models" : "Providers";
 }
 
-// Customize is the unified hub for everything that extends Cline — skills,
+// Customize is the unified hub for everything that extends OPEN-VERSE — skills,
 // MCP servers, plugins, rules, hooks, and tools. "Customize" is the installed
 // inventory (labeled "Installed" in the sidebar group); "Marketplace" is the
 // dedicated browse-and-install directory.
