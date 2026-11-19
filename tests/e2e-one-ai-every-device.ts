@@ -307,7 +307,7 @@ async function runAcceptanceSuite() {
 	// -------------------------------------------------------------
 	console.log("\n--- TEST G: Release & Automatic Update Service ---");
 	assert(
-		CURRENT_RELEASE_MANIFEST.version === "0.2.0",
+		CURRENT_RELEASE_MANIFEST.version === "0.2.6",
 		"TEST G",
 		`Verified release manifest version: ${CURRENT_RELEASE_MANIFEST.version}`,
 	);

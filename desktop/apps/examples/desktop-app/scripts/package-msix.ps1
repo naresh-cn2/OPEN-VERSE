@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Automated OPEN-VERSE MSIX Packaging Pipeline
 .DESCRIPTION

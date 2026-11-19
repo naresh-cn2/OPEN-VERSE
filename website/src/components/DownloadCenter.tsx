@@ -446,7 +446,7 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ fontWeight: 600, color: "#fbbf24", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                 <AlertCircle size={18} />
-                <span>Notice for Microsoft Edge & Chrome Downloads</span>
+                <span>Windows Defender SmartScreen & Chrome Note</span>
               </div>
               <p style={{ fontSize: "0.86rem", color: "#e2e8f0", margin: "0 0 10px 0", lineHeight: 1.5 }}>
                 Because OPEN-VERSE is a newly released open-source project without a paid enterprise certificate, Microsoft Edge and Chrome may pause the <code>.exe</code> download and display: <em>&ldquo;OPEN-VERSE_...exe isn&apos;t commonly downloaded&rdquo;</em>.

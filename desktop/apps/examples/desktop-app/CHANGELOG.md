@@ -1,5 +1,12 @@
 # OPEN-VERSE Changelog
 
+## 0.2.6
+
+- **Universal Installation & Trusted Verification**: Windows MSIX modern container packaging, Microsoft Package Manager (winget) manifest validation, and Progressive Web App (PWA) with service worker offline shell.
+- **Android App Links & In-Place Upgrades**: Configured Digital Asset Links (`assetlinks.json`) and intent-filters for OAuth callback and deep linking (`openverse://`). Preserved production keystore identity for seamless updates (versionCode 8).
+- **Universal Links & iOS Parity**: Apple App Site Association (`apple-app-site-association`) on production domain, marketing version aligned to 0.2.6 (build 8).
+- **Linux AppStream Standards**: Canonical `ai.openverse.desktop.metainfo.xml` metadata and automated multi-package CI pipeline (.deb, .rpm, AppImage).
+
 ## 0.2.5
 
 - **Seamless Auto-Updater Repair**: Completely eliminated repeated update loops across Android and Desktop. Fixed native in-app package installation so updates apply right inside the app without redirecting to the website.
