@@ -30,8 +30,9 @@ jobs:
 
       - name: Run Release Manifest & Asset Verification Test
         run: |
-          npm --prefix website install
-          node tests/verify-all-release-artifacts.ts
+          cd website
+          npm install
+          npx tsx ../tests/verify-all-release-artifacts.ts
 
   verify-linux-appstream-metadata:
     name: Linux AppStream & Distribution Metadata

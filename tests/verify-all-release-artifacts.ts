@@ -114,14 +114,32 @@ async function verifyAll() {
     }
 
     // 2. Verify bit-for-bit SHA-256 hash
-    if (!existsSync(art.localPath)) {
-      console.error(`  ❌ Local canonical release binary not found at ${art.localPath}`);
-      failed++;
-      continue;
+    let calculatedHash = "";
+    if (existsSync(art.localPath)) {
+      calculatedHash = await hashFileStream(art.localPath);
+      console.log(`  Local File: ${art.localPath}`);
+    } else {
+      console.log(`  Local file not present (CI runner environment). Streaming remote endpoint for bit-for-bit SHA-256 calculation...`);
+      try {
+        const streamRes = await fetch(art.url, { redirect: "follow" });
+        if (!streamRes.ok || !streamRes.body) {
+          throw new Error(`Failed to stream ${art.url}: HTTP ${streamRes.status}`);
+        }
+        const hash = createHash("sha256");
+        const reader = (streamRes.body as any).getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          hash.update(value);
+        }
+        calculatedHash = hash.digest("hex").toLowerCase();
+      } catch (streamErr: any) {
+        console.error(`  ❌ Remote SHA-256 stream failed: ${streamErr.message}`);
+        failed++;
+        continue;
+      }
     }
 
-    const calculatedHash = await hashFileStream(art.localPath);
-    console.log(`  Local File: ${art.localPath}`);
     console.log(`  Calculated SHA-256: ${calculatedHash}`);
     console.log(`  Canonical  SHA-256: ${art.expectedSha256}`);
 
