@@ -1,7 +1,7 @@
 {
   "userId": "ov-google-naresh-test",
   "email": "naresh.developer@gmail.com",
-  "lastSyncTimestamp": 1795080295547,
+  "lastSyncTimestamp": 1795080305066,
   "sessions": {
     "sess_unified_1794307595969": {
       "id": "sess_unified_1794307595969",
@@ -352,6 +352,16 @@
       "status": "idle",
       "startedAt": "2026-11-19T09:24:23.139Z",
       "lastActivityAt": "2026-11-19T09:24:31.500Z"
+    },
+    "sess_unified_1795080304222": {
+      "id": "sess_unified_1795080304222",
+      "sessionId": "sess_unified_1795080304222",
+      "title": "Cross-Device Development Session",
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
+      "status": "idle",
+      "startedAt": "2026-11-19T09:24:59.222Z",
+      "lastActivityAt": "2026-11-19T09:24:59.223Z"
     }
   },
   "messages": {
@@ -1368,6 +1378,22 @@
         "role": "assistant",
         "content": "Android acknowledged simultaneous action",
         "createdAt": 1795080288279
+      }
+    ],
+    "sess_unified_1795080304222": [
+      {
+        "id": "msg_win_1",
+        "sessionId": "sess_unified_1795080304222",
+        "role": "user",
+        "content": "Hello from OPEN-VERSE on Windows laptop!",
+        "createdAt": 1795080300223
+      },
+      {
+        "id": "msg_win_2",
+        "sessionId": "sess_unified_1795080304222",
+        "role": "assistant",
+        "content": "I am ready on your laptop. How can I assist?",
+        "createdAt": 1795080301223
       }
     ]
   },
