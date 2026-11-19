@@ -200,7 +200,7 @@ describe("WelcomeScreen", () => {
 			executionTarget: "cloud",
 			cloudAgentsEnabled: true,
 		});
-		await clickButton("Sign in with Cline");
+		await clickButton("Sign in with OPEN-VERSE");
 		expect(container.textContent).toContain("Waiting for browser");
 		await clickButton("Cancel");
 		const cancelling = Array.from(container.querySelectorAll("button")).find(
@@ -224,7 +224,7 @@ describe("WelcomeScreen", () => {
 			else rejectLogin(new Error("Sign-in cancelled"));
 		});
 		expect(container.textContent).not.toContain("Sign in failed");
-		await clickButton("Sign in with Cline");
+		await clickButton("Sign in with OPEN-VERSE");
 		expect(
 			invokeMock.mock.calls.filter(
 				([command]) => command === "run_provider_oauth_login",

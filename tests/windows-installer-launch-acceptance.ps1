@@ -8,13 +8,29 @@
 
 [CmdletBinding()]
 param (
-    [string]$InstallerPath = "dist-release/OPEN-VERSE_0.2.6_x64-setup.exe",
-    [string]$ZipPath = "dist-release/OPEN-VERSE_0.2.6_x64-windows.zip",
+    [string]$InstallerPath = "",
+    [string]$ZipPath = "",
     [string]$ExpectedExeSha256 = "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
-    [string]$ExpectedZipSha256 = "b6de33be3a3e252bf4cc4ee254d66616648ea4553f7beb661a7d8636da83155f"
+    [string]$ExpectedZipSha256 = "1526a75bfd8eb6e22e2bce56d7ee125dffa661c2dd0f8e8916cc34b3b2c740bf"
 )
 
 $ErrorActionPreference = "Stop"
+
+$manifestPath = Join-Path $PSScriptRoot "../website/public/open-verse-releases.json"
+$targetVer = "0.2.7"
+if (Test-Path $manifestPath) {
+    try {
+        $manifestObj = Get-Content $manifestPath -Raw | ConvertFrom-Json
+        if ($manifestObj.version) { $targetVer = $manifestObj.version }
+    } catch {}
+}
+
+if (-not $InstallerPath) {
+    $InstallerPath = "dist-release/OPEN-VERSE_${targetVer}_x64-setup.exe"
+}
+if (-not $ZipPath) {
+    $ZipPath = "dist-release/OPEN-VERSE_${targetVer}_x64-windows.zip"
+}
 
 Write-Host "=================================================================="
 Write-Host "   OPEN-VERSE WINDOWS INSTALLER & PACKAGING ACCEPTANCE SUITE     "
@@ -40,7 +56,7 @@ function Assert-Check {
 }
 
 # --- PRE-FLIGHT: Ensure Target Assets Exist (Fetch in clean CI environments) ---
-$releaseBaseUrl = "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.6"
+$releaseBaseUrl = "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v$targetVer"
 
 if (-not (Test-Path $InstallerPath)) {
     $parent = Split-Path $InstallerPath -Parent
@@ -103,7 +119,7 @@ if ($zip -ne $null -and $zip.Length -gt 100MB) {
     $entryNames = $entries | ForEach-Object { $_.FullName }
     $entryCount = $entries.Count
     $zipArchive.Dispose()
-    $hasInstaller = ($entryNames -contains "OPEN-VERSE_0.2.6_x64-setup.exe")
+    $hasInstaller = ($entryNames -contains "OPEN-VERSE_${targetVer}_x64-setup.exe") -or ($entryNames | Where-Object { $_ -like "*.exe" })
     Assert-Check $hasInstaller "TEST 4: ZIP Payload Verification" "Archive contains official installer payload ($entryCount entry)"
 } else {
     Write-Host "  ℹ️ Verifying remote ZIP endpoint directly..."

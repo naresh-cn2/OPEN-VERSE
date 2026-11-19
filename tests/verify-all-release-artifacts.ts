@@ -13,9 +13,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const VERSION = "0.2.6";
 const MANIFEST_PATH = resolve(__dirname, "../website/public/open-verse-releases.json");
 const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
+const VERSION = manifest.version || "0.2.7";
 
 interface ArtifactTest {
   id: string;
@@ -90,8 +90,15 @@ async function verifyAll() {
     console.log(`  Live URL: ${art.url}`);
 
     // 1. Verify remote HTTP endpoint
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const headers: Record<string, string> = {};
+    if (token && art.url.includes("github.com")) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["Accept"] = "application/octet-stream";
+    }
+
     try {
-      const res = await fetch(art.url, { method: "HEAD", redirect: "follow" });
+      const res = await fetch(art.url, { method: "HEAD", redirect: "follow", headers });
       if (!res.ok) {
         console.error(`  ❌ Remote URL returned HTTP ${res.status} ${res.statusText}`);
         failed++;
@@ -121,7 +128,7 @@ async function verifyAll() {
     } else {
       console.log(`  Local file not present (CI runner environment). Streaming remote endpoint for bit-for-bit SHA-256 calculation...`);
       try {
-        const streamRes = await fetch(art.url, { redirect: "follow" });
+        const streamRes = await fetch(art.url, { redirect: "follow", headers });
         if (!streamRes.ok || !streamRes.body) {
           throw new Error(`Failed to stream ${art.url}: HTTP ${streamRes.status}`);
         }
