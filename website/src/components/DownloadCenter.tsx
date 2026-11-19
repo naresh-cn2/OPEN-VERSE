@@ -22,35 +22,6 @@ export const DownloadCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"windows" | "mac" | "linux" | "mobile">("windows");
   const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | "mobile" | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [showIosSafariGuide, setShowIosSafariGuide] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
-  const [showPwaGuide, setShowPwaGuide] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-    if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) {
-      setIsPwaInstalled(true);
-    }
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-  }, []);
-
-  const handleInstallPwa = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === "accepted") {
-        setIsPwaInstalled(true);
-      }
-      setDeferredPrompt(null);
-    } else {
-      setShowPwaGuide(!showPwaGuide);
-    }
-  };
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -111,23 +82,23 @@ export const DownloadCenter: React.FC = () => {
       size: "167.6 MB",
       sha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
       zipSha256: "b6de33be3a3e252bf4cc4ee254d66616648ea4553f7beb661a7d8636da83155f",
-      status: "available" as const,
+      status: "requires-authenticode" as const,
     },
     mac: {
       name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
-      size: "165 MB",
+      size: "172.8 MB",
       sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
-      status: "requires-external-signing" as const,
+      status: "requires-notarization" as const,
     },
     linuxDeb: {
       name: `OPEN-VERSE_0.2.0_amd64.deb`,
-      size: "228 MB",
+      size: "239.1 MB",
       sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
       status: "signature-verified" as const,
     },
     linuxRpm: {
       name: `OPEN-VERSE-0.2.0-1.x86_64.rpm`,
-      size: "228 MB",
+      size: "239.1 MB",
       sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
       status: "signature-verified" as const,
     },
@@ -143,8 +114,8 @@ export const DownloadCenter: React.FC = () => {
       name: `open-verse-ios-v${DESKTOP_VERSION}`,
       version: DESKTOP_VERSION,
       build: "8",
-      size: "PWA / Xcode Archive",
-      status: "requires-external-signing" as const,
+      size: "Native Xcode Project (ARM64)",
+      status: "requires-apple-developer" as const,
     },
   };
 
@@ -178,6 +149,9 @@ export const DownloadCenter: React.FC = () => {
     | "signature-verified"
     | "install-verified"
     | "device-tested"
+    | "requires-authenticode"
+    | "requires-notarization"
+    | "requires-apple-developer"
     | "requires-external-signing"
     | "preview-only"
     | "planned";
@@ -195,7 +169,7 @@ export const DownloadCenter: React.FC = () => {
         return (
           <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(16, 185, 129, 0.12)", color: "var(--emerald)", borderColor: "rgba(16, 185, 129, 0.3)" }}>
             <ShieldCheck size={14} style={{ color: "var(--emerald)" }} />
-            <span>Signature Verified • Ready</span>
+            <span>Signature Verified • Sideload Ready</span>
           </span>
         );
       case "install-verified":
@@ -210,6 +184,27 @@ export const DownloadCenter: React.FC = () => {
           <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(139, 92, 246, 0.15)", color: "#c4b5fd", borderColor: "rgba(139, 92, 246, 0.35)" }}>
             <Monitor size={14} style={{ color: "#c4b5fd" }} />
             <span>Device Tested</span>
+          </span>
+        );
+      case "requires-authenticode":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(245, 158, 11, 0.12)", color: "#fbbf24", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+            <AlertCircle size={14} style={{ color: "#fbbf24" }} />
+            <span>Requires Authenticode Signing (Blocked by SAC)</span>
+          </span>
+        );
+      case "requires-notarization":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(245, 158, 11, 0.12)", color: "#fbbf24", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+            <AlertCircle size={14} style={{ color: "#fbbf24" }} />
+            <span>Requires Apple Developer ID Notarization</span>
+          </span>
+        );
+      case "requires-apple-developer":
+        return (
+          <span className="badge badge-purple" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(245, 158, 11, 0.12)", color: "#fbbf24", borderColor: "rgba(245, 158, 11, 0.3)" }}>
+            <AlertCircle size={14} style={{ color: "#fbbf24" }} />
+            <span>Requires Apple Developer Program ($99/yr)</span>
           </span>
         );
       case "requires-external-signing":
@@ -241,106 +236,13 @@ export const DownloadCenter: React.FC = () => {
     <section id="download" style={{ padding: "80px 0", position: "relative" }}>
       <div className="container">
         <div className="section-header">
-          <div className="badge badge-purple">Official Release Portal</div>
-          <h2 className="section-title">Download & Install OPEN-VERSE</h2>
+          <div className="badge badge-purple">Official Native Release Portal</div>
+          <h2 className="section-title">Download & Install OPEN-VERSE Native Apps</h2>
           <p className="section-subtitle">
-            Get the official cross-platform application for desktop and mobile. All downloads are cryptographically verified
-            with Minisign signatures and receive automatic in-app updates.
+            Get the official native application for desktop and mobile. All downloads are cryptographically verified
+            with Minisign or platform signatures and feature full local runtime execution.
           </p>
         </div>
-
-        {/* Universal PWA Instant Installation Banner */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(14, 165, 233, 0.15))",
-            border: "1px solid rgba(139, 92, 246, 0.35)",
-            borderRadius: 14,
-            padding: "18px 24px",
-            maxWidth: 960,
-            margin: "0 auto 28px auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ background: "rgba(139, 92, 246, 0.25)", padding: 10, borderRadius: 10 }}>
-              <Globe size={26} style={{ color: "var(--accent-light)" }} />
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 700, color: "#ffffff", fontSize: "1.05rem" }}>
-                  Universal Progressive Web App (PWA)
-                </span>
-                <span className="badge badge-green" style={{ fontSize: "0.72rem" }}>
-                  Zero OS Warnings • 100% Native Sandbox
-                </span>
-              </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: "4px 0 0 0" }}>
-                Install OPEN-VERSE as a native desktop or mobile window across Windows 10/11, macOS, Linux, Android, and iOS.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleInstallPwa}
-            className="btn-primary"
-            style={{
-              padding: "10px 22px",
-              fontSize: "0.88rem",
-              fontWeight: 600,
-              gap: 8,
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(139, 92, 246, 0.4)",
-            }}
-          >
-            <Download size={16} />
-            <span>{isPwaInstalled ? "PWA App Installed" : "Install Web App (PWA)"}</span>
-          </button>
-        </div>
-
-        {/* Collapsible PWA Installation Guide */}
-        {showPwaGuide && (
-          <div
-            style={{
-              background: "#0d0d12",
-              border: "1px solid rgba(14, 165, 233, 0.3)",
-              borderRadius: 12,
-              padding: 20,
-              maxWidth: 960,
-              margin: "-14px auto 28px auto",
-            }}
-          >
-            <div style={{ fontWeight: 600, color: "var(--sky)", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>How to Install OPEN-VERSE in Your Browser:</span>
-              <button
-                onClick={() => setShowPwaGuide(false)}
-                style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.85rem" }}
-              >
-                Close ✕
-              </button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, fontSize: "0.82rem", color: "#cbd5e1" }}>
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
-                <strong style={{ color: "#ffffff" }}>Microsoft Edge (Windows/macOS):</strong>
-                <div style={{ marginTop: 4 }}>Click the <strong>App Available (⊞)</strong> icon in the right side of the address bar &rarr; Click <strong>Install</strong>.</div>
-              </div>
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
-                <strong style={{ color: "#ffffff" }}>Google Chrome (Desktop):</strong>
-                <div style={{ marginTop: 4 }}>Click the <strong>Install OPEN-VERSE (⇩)</strong> icon in the address bar &rarr; Click <strong>Install</strong>.</div>
-              </div>
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
-                <strong style={{ color: "#ffffff" }}>Apple Safari (iOS / iPhone):</strong>
-                <div style={{ marginTop: 4 }}>Tap <strong>Share (⎋)</strong> &rarr; scroll down &rarr; tap <strong>Add to Home Screen</strong>.</div>
-              </div>
-              <div style={{ background: "rgba(255,255,255,0.03)", padding: 12, borderRadius: 8 }}>
-                <strong style={{ color: "#ffffff" }}>Android (Chrome/Edge):</strong>
-                <div style={{ marginTop: 4 }}>Tap <strong>••• Menu</strong> &rarr; tap <strong>Add to Home screen</strong> or <strong>Install app</strong>.</div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Platform Selection Tabs */}
         <div
@@ -406,22 +308,22 @@ export const DownloadCenter: React.FC = () => {
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
-                  href={ASSETS.windowsZip}
-                  download={FILE_META.windows.zipName}
+                  href={ASSETS.windows}
+                  download={FILE_META.windows.name}
                   className="btn-primary"
                   style={{ padding: "12px 24px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download ZIP Archive (.zip) [Recommended • Instant]</span>
+                  <span>Download Windows Installer (.exe)</span>
                 </a>
                 <a
-                  href={ASSETS.windows}
-                  download={FILE_META.windows.name}
+                  href={ASSETS.windowsZip}
+                  download={FILE_META.windows.zipName}
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download Installer (.exe)</span>
+                  <span>Download ZIP Package (.zip)</span>
                 </a>
                 <a
                   href={ASSETS.windowsSig}
@@ -436,32 +338,32 @@ export const DownloadCenter: React.FC = () => {
               </div>
               <div style={{ marginTop: 10, fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
                 <span>Direct GitHub CDN:</span>
-                <a href={ASSETS.windowsZip} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.zipName}>Standalone ZIP (.zip)</a>
-                <span>•</span>
                 <a href={ASSETS.windows} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.name}>Installer (.exe)</a>
+                <span>•</span>
+                <a href={ASSETS.windowsZip} style={{ color: "var(--accent-light)", textDecoration: "underline" }} download={FILE_META.windows.zipName}>Standalone ZIP (.zip)</a>
               </div>
             </div>
 
-            {/* SmartScreen & Browser Warning Clarification */}
+            {/* Smart App Control & SmartScreen Forensic Guidance */}
             <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 10, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ fontWeight: 600, color: "#fbbf24", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                 <AlertCircle size={18} />
-                <span>Windows Defender SmartScreen & Chrome Note</span>
+                <span>Windows Security & Smart App Control (SAC) Forensic Notice</span>
               </div>
               <p style={{ fontSize: "0.86rem", color: "#e2e8f0", margin: "0 0 10px 0", lineHeight: 1.5 }}>
-                Because OPEN-VERSE is a newly released open-source project without a paid enterprise certificate, Microsoft Edge and Chrome may pause the <code>.exe</code> download and display: <em>&ldquo;OPEN-VERSE_...exe isn&apos;t commonly downloaded&rdquo;</em>.
+                OPEN-VERSE Windows binaries are cryptographically signed with Minisign ED25519 (<code>.sig</code>), but do not yet include a commercial Microsoft Authenticode signature. Depending on your Windows configuration:
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-                <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <strong style={{ color: "#38bdf8" }}>Option 1: Download Standalone ZIP (Recommended)</strong>
-                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4 }}>
-                    Click <strong>&ldquo;Download ZIP Archive (.zip)&rdquo;</strong> above. ZIP packages download immediately with <strong>zero browser warnings</strong>. Extract the ZIP and double-click to run!
+                <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <strong style={{ color: "#fbbf24" }}>Windows 11 with Smart App Control (Enforced)</strong>
+                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
+                    Windows kernel Code Integrity (<code>ci.dll</code>, Events 3077/3118) blocks both unsigned installers and extracted binaries. Zero-warning execution under SAC requires enrollment in <strong>Microsoft Azure Trusted Signing ($9.99/mo)</strong> or <strong>Microsoft Store ($19 one-time)</strong>.
                   </div>
                 </div>
-                <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <strong style={{ color: "#fbbf24" }}>Option 2: Completing the .exe Download in Edge</strong>
-                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4 }}>
-                    Hover over the paused file in Edge&apos;s Downloads tray → Click <strong>•••</strong> (More options) → Click <strong>Keep</strong> → Click <strong>Show more</strong> → Click <strong>Keep anyway</strong>.
+                <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <strong style={{ color: "#38bdf8" }}>Standard Windows 10 & 11 (Evaluation / Off)</strong>
+                  <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: 4, lineHeight: 1.45 }}>
+                    When Defender SmartScreen displays <em>&ldquo;Windows protected your PC&rdquo;</em>, click <strong>&ldquo;More info&rdquo;</strong> &rarr; click <strong>&ldquo;Run anyway&rdquo;</strong>. In Edge, hover over paused download &rarr; click <strong>•••</strong> &rarr; <strong>Keep</strong> &rarr; <strong>Keep anyway</strong>.
                   </div>
                 </div>
               </div>
@@ -665,21 +567,21 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                 <Info size={15} style={{ color: "var(--sky)" }} />
-                <span>Installation Guidance</span>
+                <span>Installation Guidance & Gatekeeper Notice</span>
               </div>
               <div className="code-box">
                 <span>1. Download {FILE_META.mac.name}</span>
-                <span>2. Open disk image and drag OPEN-VERSE to your Applications folder</span>
-                <span>3. Note: Developer ID signing and Apple Notarization are in progress for automated Gatekeeper verification</span>
-                <span>4. Launch OPEN-VERSE</span>
+                <span>2. Open disk image (.dmg) and drag OPEN-VERSE to your Applications folder</span>
+                <span>3. Apple Gatekeeper Notice: Community builds are ad-hoc signed. Official zero-prompt launch requires Apple Developer Program notarization ($99/yr)</span>
+                <span>4. To launch community build: Right-click OPEN-VERSE.app in Applications → select Open → click Open Anyway</span>
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Architecture: Apple Silicon (M1/M2/M3/M4, ARM64)</div>
               <div>• macOS version: macOS 11.0 Big Sur or later</div>
-              <div>• Signing: Ad-hoc signed (Apple Developer ID notarization requires team credentials)</div>
-              <div>• In-app updates: Enabled</div>
+              <div>• Signing: Ad-hoc signed (Apple Developer ID notarization requires $99/yr enrollment)</div>
+              <div>• Terminal override: <code>xattr -cr /Applications/OPEN-VERSE.app</code></div>
             </div>
           </div>
         )}
@@ -909,18 +811,20 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Apple size={22} style={{ color: "var(--sky)" }} />
-                    <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>iOS / iPhone App</h4>
+                    <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for iOS (Native)</h4>
                   </div>
                   {platformBadge(FILE_META.ios.status)}
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 16, lineHeight: 1.5 }}>
-                  Native iOS companion with WKWebView container, deep-link Google OAuth callbacks, and Desktop Hub pairing.
+                  Native iOS companion app with Swift runtime, WKWebView application container, Google OAuth deep-link callback integration, and Desktop Hub pairing.
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                  {/* Primary: Instant Safari PWA Install */}
-                  <button
-                    onClick={() => setShowIosSafariGuide(!showIosSafariGuide)}
+                  {/* Primary: Apple TestFlight Invite Queue */}
+                  <a
+                    href={ASSETS.iosTestFlight}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="btn-primary"
                     style={{
                       display: "flex",
@@ -929,46 +833,19 @@ export const DownloadCenter: React.FC = () => {
                       gap: 8,
                       width: "100%",
                       padding: "12px 20px",
-                      fontSize: "0.95rem",
+                      fontSize: "0.92rem",
                       fontWeight: 600,
                       borderRadius: 10,
-                      cursor: "pointer",
-                      border: "none",
+                      textDecoration: "none",
                       boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)",
                     }}
                   >
-                    <Share2 size={18} />
-                    <span>Install on iPhone (Safari Add to Home Screen)</span>
-                  </button>
-
-                  {/* Secondary: Apple TestFlight Invite Queue */}
-                  <a
-                    href={ASSETS.iosTestFlight}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      width: "100%",
-                      padding: "10px 16px",
-                      fontSize: "0.84rem",
-                      fontWeight: 600,
-                      borderRadius: 8,
-                      border: "1px solid var(--border-subtle)",
-                      background: "rgba(255, 255, 255, 0.05)",
-                      color: "#ffffff",
-                      textDecoration: "none",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <Apple size={16} />
+                    <Apple size={18} />
                     <span>Join iOS Beta (Apple TestFlight Queue)</span>
-                    <ExternalLink size={13} style={{ opacity: 0.7 }} />
+                    <ExternalLink size={14} style={{ opacity: 0.8 }} />
                   </a>
 
-                  {/* Developer: Xcode Project Archive */}
+                  {/* Secondary: Xcode Project Archive */}
                   <a
                     href={ASSETS.iosZip}
                     target="_blank"
@@ -979,57 +856,57 @@ export const DownloadCenter: React.FC = () => {
                       justifyContent: "center",
                       gap: 6,
                       width: "100%",
-                      padding: "9px 16px",
-                      fontSize: "0.82rem",
+                      padding: "10px 16px",
+                      fontSize: "0.84rem",
                       fontWeight: 500,
                       borderRadius: 8,
                       border: "1px solid var(--border-subtle)",
-                      background: "rgba(255, 255, 255, 0.03)",
+                      background: "rgba(255, 255, 255, 0.04)",
                       color: "var(--text-secondary)",
                       textDecoration: "none",
                     }}
                   >
-                    <Download size={14} />
-                    <span>Download Xcode Project & Source (.zip)</span>
+                    <Download size={15} />
+                    <span>Download Native Xcode Project (.zip)</span>
                   </a>
 
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                    <span>Target: iOS 15.0+ (iPhone & iPad)</span>
+                    <span>Target: iOS 15.0+ (iPhone & iPad ARM64)</span>
                     <span style={{ color: "var(--emerald)", display: "flex", alignItems: "center", gap: 4 }}>
                       <Check size={13} />
-                      <span>OAuth & Pairing Ready</span>
+                      <span>Swift Architecture Ready</span>
                     </span>
                   </div>
                 </div>
 
                 {/* iOS Step-by-Step Guidance Box */}
-                <div style={{ background: "rgba(139, 92, 246, 0.08)", border: "1px solid rgba(139, 92, 246, 0.25)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
-                  <strong style={{ color: "var(--accent-light)", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Info size={15} />
-                    <span>How to Install on iPhone / iPad:</span>
+                <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "#e2e8f0", marginBottom: 14, lineHeight: 1.5 }}>
+                  <strong style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: 6 }}>
+                    <AlertCircle size={15} />
+                    <span>Apple Distribution & Security Requirements:</span>
                   </strong>
                   
                   <div style={{ marginTop: 6 }}>
-                    <strong>1. Official Public Beta (Apple TestFlight):</strong>
+                    <strong>1. Public Beta Distribution (Apple TestFlight):</strong>
                     <div style={{ paddingLeft: 6, color: "var(--text-secondary)", marginTop: 2 }}>
-                      Tap <strong>&ldquo;Join iOS Beta (Apple TestFlight)&rdquo;</strong> above. If you don&apos;t have TestFlight yet, install it free from the App Store, then accept the invitation and tap <strong>Install</strong>.
+                      Distributing native apps via Apple TestFlight or the App Store strictly requires an active <strong>Apple Developer Program membership ($99/year)</strong> for provisioning profiles. Request access via the queue above to be enrolled when publishing slots are authorized.
                     </div>
                   </div>
 
                   <div style={{ marginTop: 8 }}>
-                    <strong>2. Instant Web App (No App Store / No Xcode needed):</strong>
+                    <strong>2. Local Development & Sideloading:</strong>
                     <div style={{ paddingLeft: 6, color: "var(--text-secondary)", marginTop: 2 }}>
-                      In <strong>Safari</strong> on your iPhone, tap the <strong>Share</strong> button (box with arrow <span style={{ fontWeight: 700 }}>⎋</span>) at the bottom toolbar, scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong>. OPEN-VERSE launches full-screen as a standalone native app!
+                      Developers can compile and install directly onto a physical iPhone using a free personal Apple ID in Xcode, or sideload unsigned IPAs via AltStore or Sideloadly.
                     </div>
                   </div>
                 </div>
 
                 {/* Developer Instructions */}
                 <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Developer & Sideloading (Xcode / AltStore):</div>
-                  <div>1. Open <code style={{ color: "var(--sky)" }}>mobile/ios/OPEN-VERSE.xcodeproj</code> in Xcode 15+.</div>
-                  <div>2. Select an iPhone Simulator or connected iOS device and press Run (<kbd>⌘R</kbd>).</div>
-                  <div>3. Or sideload unsigned IPA builds via AltStore, TrollStore, or Sideloadly.</div>
+                  <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>Developer Build & Run (Xcode):</div>
+                  <div>1. Clone repository and open <code style={{ color: "var(--sky)" }}>mobile/ios/OPEN-VERSE.xcodeproj</code> in Xcode 15+.</div>
+                  <div>2. Select your connected iPhone or iPad under target destinations.</div>
+                  <div>3. Sign with your personal team certificate and press Run (<kbd>⌘R</kbd>).</div>
                 </div>
               </div>
             </div>

@@ -1,286 +1,209 @@
-# OPEN-VERSE — Universal Installation and Trust Guide
+# OPEN-VERSE — Universal Native Application Installation & Security Guide
 
 **Document:** `docs/security-and-distribution/UNIVERSAL-INSTALLATION-GUIDE.md`  
 **Applicable Version:** v0.2.6+  
 **Official Distribution Portal:** [https://open-verse-website.vercel.app](https://open-verse-website.vercel.app)  
-**Security Posture:** Zero OS Security Degradation (Never disable Defender, Smart App Control, or Gatekeeper)
+**Security Policy:** Zero Operating System Security Degradation (Never disable Windows Defender, Smart App Control, or macOS Gatekeeper)
 
 ---
 
-## Overview
+## 1. Product Architectural Model
 
-OPEN-VERSE is designed to run seamlessly as **one unified AI assistant** across all your devices: Windows, Android, Linux, macOS, iOS, and Web. Because modern operating systems enforce strict cryptographic trust and reputation boundaries (such as Windows Smart App Control, SmartScreen, and macOS Gatekeeper), this guide provides the exact, verified steps to install and launch OPEN-VERSE on every platform safely and legitimately.
+OPEN-VERSE is engineered as a **genuine, native, platform-specific application** across all supported environments:
+- **Windows:** Native 64-bit desktop application with embedded agent runtime and WebView2 UI.
+- **Android:** Native Android application package (APK) with Direct AI SSE streaming and desktop pairing.
+- **macOS:** Native Apple Silicon desktop application (`.dmg` disk image).
+- **iOS:** Native Swift application container (`.xcodeproj`) with deep-link OAuth handling and desktop pairing.
+- **Linux:** Native distribution packages (`.deb` for Debian/Ubuntu, `.rpm` for Fedora/RHEL, and universal `.AppImage`).
 
----
-
-## Platform Quick Navigation
-
-1. [Windows 10 / 11](#1-windows-10--11)
-   - [Method A: Progressive Web App (PWA) — Recommended for Zero Warnings](#method-a-progressive-web-app-pwa--recommended-zero-prompts)
-   - [Method B: Portable Standalone ZIP](#method-b-portable-standalone-zip)
-   - [Method C: Windows Package Manager (winget)](#method-c-windows-package-manager-winget)
-   - [Understanding Windows SmartScreen and Smart App Control (SAC)](#understanding-windows-smartscreen-and-smart-app-control-sac)
-2. [Android](#2-android)
-   - [Direct APK Sideloading](#direct-apk-sideloading)
-   - [Google Play Protect Prompts](#google-play-protect-prompts)
-   - [Cryptographic Fingerprint Verification](#cryptographic-fingerprint-verification)
-   - [Installing Updates Without Data Loss](#installing-updates-without-data-loss)
-3. [Linux](#3-linux)
-   - [Method A: AppImage (Universal)](#method-a-appimage-universal)
-   - [Method B: Debian / Ubuntu (.deb)](#method-b-debian--ubuntu-deb)
-   - [Method C: Fedora / RHEL (.rpm)](#method-c-fedora--rhel-rpm)
-4. [macOS](#4-macos)
-   - [Apple Silicon & Intel (.dmg)](#apple-silicon--intel-dmg)
-   - [Navigating Apple Gatekeeper](#navigating-apple-gatekeeper)
-5. [iOS / iPadOS](#5-ios--ipados)
-   - [Method A: Safari PWA (Home Screen Web App)](#method-a-safari-pwa-home-screen-web-app)
-   - [Method B: Apple TestFlight (Beta Channel)](#method-b-apple-testflight-beta-channel)
-6. [Cross-Platform Troubleshooting](#6-cross-platform-troubleshooting)
+Each application launches the actual local OPEN-VERSE runtime with encrypted credential storage, local tool execution, and cross-device conversation synchronization.
 
 ---
 
-## 1. Windows 10 / 11
+## 2. Platform Installation Guides
 
-### Method A: Progressive Web App (PWA) — Recommended (Zero Prompts)
+### 1. Windows 10 / 11 (Native Desktop)
 
-The PWA distribution is the **fastest, most reliable, and 100% security-compliant** method for Windows 10 and 11, particularly on devices where **Smart App Control is Enforced**. It runs inside the operating system's digitally signed browser sandbox, completely bypassing SmartScreen and SAC blocks.
+#### Official Release Artifacts:
+- **NSIS Installer:** `OPEN-VERSE_0.2.6_x64-setup.exe` (167.6 MB)
+- **Archive Package:** `OPEN-VERSE_0.2.6_x64-windows.zip` (167.6 MB)
+- **Minisign Signature:** `OPEN-VERSE_0.2.6_x64-setup.exe.sig` (440 bytes)
+- **Architecture:** 64-bit Intel / AMD (x86_64)
 
-#### Step-by-Step Installation:
-1. Open **Microsoft Edge** or **Google Chrome**.
-2. Navigate to [https://open-verse-website.vercel.app](https://open-verse-website.vercel.app).
-3. Look at the right side of the address bar for the **App Available** / **Install** icon (represented by an app frame with a down-arrow `⊞` or install icon).
-4. Click **Install**.
-5. When prompted:
-   - Check **"Pin to taskbar"**
-   - Check **"Pin to Start"**
-   - Click **Allow**.
-6. **Result:** OPEN-VERSE immediately launches in a clean, borderless standalone desktop window with full keyboard shortcuts, encrypted local session storage, offline caching via ServiceWorker, and instant auto-updates.
+#### Installation Steps:
+1. Download `OPEN-VERSE_0.2.6_x64-setup.exe` from the [Official Release Portal](https://open-verse-website.vercel.app#download).
+2. If downloading via Microsoft Edge or Google Chrome, the browser may display a download reputation warning (*"OPEN-VERSE_0.2.6_x64-setup.exe isn't commonly downloaded"*):
+   - In Edge: Hover over the paused download &rarr; click **•••** (More options) &rarr; click **Keep** &rarr; click **Show more** &rarr; click **Keep anyway**.
+   - In Chrome: Click **Downloads** &rarr; click **Keep dangerous file** (or **Download anyway**).
+3. Double-click `OPEN-VERSE_0.2.6_x64-setup.exe` to run the installer.
+4. Follow the setup wizard to complete installation.
+5. Launch OPEN-VERSE from the Windows Start Menu or Desktop shortcut.
 
----
-
-### Method B: Portable Standalone ZIP
-
-For users who prefer a standalone desktop binary without running an installer setup:
-
-1. Download `OPEN-VERSE_0.2.6_x64-windows.zip` (159.89 MB) from the [Official Portal](https://open-verse-website.vercel.app) or [GitHub Releases](https://github.com/Naresh-chaurasiya/OPEN-VERSE/releases).
-2. Right-click the downloaded `.zip` file &rarr; select **Extract All...** &rarr; choose your target destination (e.g., `C:\Users\<Username>\AppData\Local\Programs\OPEN-VERSE` or your personal Tools folder).
-3. Open the extracted folder and double-click `OPEN-VERSE.exe`.
-4. **Desktop Shortcut:** Right-click `OPEN-VERSE.exe` &rarr; **Show more options** &rarr; **Send to** &rarr; **Desktop (create shortcut)**.
-
----
-
-### Method C: Windows Package Manager (winget)
-
-For automated command-line installation:
-
+#### Command-Line Installation via Windows Package Manager (winget):
 ```powershell
-# In PowerShell or Windows Terminal:
-winget install OpenVerse.OpenVerse
-```
-
-To install using the local release manifest:
-```powershell
+# Install from official manifest:
 winget install --manifest distribution/windows/winget/manifests/o/OpenVerse/OpenVerse/0.2.6/
 ```
 
----
+#### Understanding Windows SmartScreen and Smart App Control (SAC):
 
-### Understanding Windows SmartScreen and Smart App Control (SAC)
+##### A. Microsoft Defender SmartScreen (Evaluation or Standard Mode)
+- **Prompt:** *"Windows protected your PC — Microsoft Defender SmartScreen prevented an unrecognized app from starting."*
+- **Cause:** Fresh release binaries that have not yet accumulated cloud download volume in Microsoft's telemetry database.
+- **Legitimate Resolution:**
+  1. Click the underlined link: **"More info"**.
+  2. Click the button: **"Run anyway"**.
+  *(Windows registers your choice; subsequent launches will open directly).*
 
-#### What is happening?
-On Windows 11, Microsoft introduced **Smart App Control (SAC)**, a kernel-level Code Integrity policy (`ci.dll`). Unlike traditional SmartScreen (which offers a "Run anyway" button), SAC can be in one of three states:
-- **Off:** Traditional SmartScreen prompts apply.
-- **Evaluation:** SAC silently monitors; SmartScreen dialog displays "More info" &rarr; "Run anyway".
-- **Enforced (`VerifiedAndReputablePolicyState = 1`):** Kernel Code Integrity actively blocks any executable (`.exe` or `.dll`) that does not possess an enterprise-level commercial Authenticode signature or established Microsoft cloud reputation (Event IDs 3077 and 3118).
-
-#### If you see Microsoft Defender SmartScreen ("Windows protected your PC"):
-1. Click the underlined text: **"More info"**.
-2. Click the button: **"Run anyway"**.
-*(This prompt appears only on fresh releases before Microsoft's cloud reputation database registers download volume).*
-
-#### If you see Smart App Control ("An Application Control policy has blocked this file"):
-- **Do NOT attempt to disable Smart App Control or your antivirus.** Weakening your operating system security is unnecessary and dangerous.
-- **Resolution:** Use **Method A (PWA 1-Click Install)**. The PWA operates inside the trusted Microsoft Edge/WebView2 runtime, providing identical desktop functionality with zero security blocks.
-- **Enterprise Note:** In-house teams can ingest `distribution/windows/package-msix.ps1` into Microsoft Partner Center or sign with Azure Trusted Signing using `sign-windows-authenticode.ps1`.
+##### B. Microsoft Smart App Control (SAC Enforced Mode)
+- **Prompt:** *"An Application Control policy has blocked this file."* (Windows Event Log: **Event ID 3118 & 3077**).
+- **Cause:** Windows 11 Smart App Control in Enforced mode (`VerifiedAndReputablePolicyState = 1` in `HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy`) enforces kernel Code Integrity (`ci.dll`). Unsigned executables (`.exe` or `.dll`) lacking an enterprise Authenticode signature from a Microsoft-trusted Certificate Authority are intercepted and blocked.
+- **Forensic Finding regarding ZIP packages:** Extracting `OPEN-VERSE_0.2.6_x64-windows.zip` does **not** bypass SAC because the archive contains the setup executable, which remains unsigned with Authenticode.
+- **Legitimate External Requirement:** True zero-warning execution under Smart App Control Enforced mode requires enrollment in **Microsoft Azure Trusted Signing ($9.99/month)** or **Microsoft Store (MSIX) ingestion ($19 one-time)**. The repository contains ready-to-use signing scripts in `distribution/windows/sign-windows-authenticode.ps1` and `distribution/windows/package-msix.ps1`.
+- **Safety Directive:** Never disable Smart App Control or Windows Defender to install any software.
 
 ---
 
-## 2. Android
+### 2. Android (Native APK Companion)
 
-### Direct APK Sideloading
+#### Official Release Artifacts:
+- **Direct APK:** `open-verse-mobile.apk` (10,460,061 bytes)
+- **Versioned APK Mirror:** `open-verse-v0.2.6-android.apk` (10,460,061 bytes)
+- **Package Identifier:** `ai.openverse.mobile` (versionCode=8, versionName="0.2.6")
+- **Target Platform:** Android 7.0 through Android 14 (API Level 24 to 34, ARM64 & x86_64)
 
-The official OPEN-VERSE Android APK is cryptographically signed using **APK Signature Scheme v2** (RSA-2048, SHA-256 fingerprint: `d34f4df7096e7b7830570d7c13a4ef5ee7f83151c9f45ebcd5bd10e0ee1eb76a`), valid through year 2054.
-
-#### Step-by-Step Installation:
-1. Open Chrome or your mobile browser on your Android device.
-2. Navigate to [https://open-verse-website.vercel.app](https://open-verse-website.vercel.app) and tap **Download Android APK** (or download directly from `/open-verse-mobile.apk`).
-3. If prompted by your browser: *"File might be harmful. Do you want to download open-verse-mobile.apk anyway?"*, tap **Download anyway**.
-4. Once downloaded, tap **Open** from your notifications or open your device's **Files** app &rarr; **Downloads**.
-5. Tap `open-verse-mobile.apk`.
-6. **Enabling Unknown App Installation (One-time permission):**
-   - If prompted: *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings**.
-   - Toggle **"Allow from this source"** to **ON**.
-   - Tap the **Back** arrow.
-7. Tap **Install**.
-8. Once installation finishes, tap **Open**.
-
----
-
-### Google Play Protect Prompts
-
-Because OPEN-VERSE is distributed directly outside the Google Play Store, Google Play Protect may display a dialog:
-- **Prompt:** *"Blocked by Play Protect — Unrecognized app developer"*.
-- **Action:** Tap **"More details"** &rarr; tap **"Install anyway"**.
-- *(Optional)* You may tap "Send app for scan" to help Google's security catalog whitelist future updates.
-
----
-
-### Cryptographic Fingerprint Verification
-
-You can independently verify the APK's cryptographic integrity on any computer with the Android SDK:
-
-```bash
-apksigner verify --verbose --print-certs open-verse-mobile.apk
-```
-
-**Expected Verifications:**
-- **Scheme v2 (APK Signature Scheme v2):** `true`
+#### Cryptographic Signature Verification:
+The release APK is cryptographically signed using **APK Signature Scheme v2 (RSA-2048)**:
 - **Signer DN:** `CN=OPEN-VERSE Mobile, OU=Release, O=OPEN-VERSE, C=US`
-- **SHA-256 Digest:** `d34f4df7096e7b7830570d7c13a4ef5ee7f83151c9f45ebcd5bd10e0ee1eb76a`
-- This digest matches the official `/.well-known/assetlinks.json` hosted on the domain.
+- **SHA-256 Certificate Fingerprint:** `d34f4df7096e7b7830570d7c13a4ef5ee7f83151c9f45ebcd5bd10e0ee1eb76a`
+- **Integrity Digest:** `187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955`
+- Matches official domain asset links: `/.well-known/assetlinks.json`.
+
+#### Sideloading Installation Steps:
+1. On your Android device, navigate to [https://open-verse-website.vercel.app](https://open-verse-website.vercel.app#download).
+2. Tap **Download Android APK (v0.2.6)**.
+3. If Chrome prompts *"File might be harmful. Do you want to download open-verse-mobile.apk anyway?"*, tap **Download anyway**.
+4. Once downloaded:
+   - Tap **Open** from the download banner.
+   - Or open your device's **Files** app &rarr; **Downloads** &rarr; tap `open-verse-mobile.apk`.
+5. If Android prompts *"For your security, your phone is not allowed to install unknown apps from this source"*:
+   - Tap **Settings**.
+   - Enable **"Allow from this source"**.
+   - Tap the Back button.
+6. Tap **Install**.
+7. If Google Play Protect displays *"Blocked by Play Protect — Unrecognized app developer"*:
+   - Tap **"More details"** &rarr; tap **"Install anyway"**.
+8. Tap **Open** to launch OPEN-VERSE.
+
+#### In-Place Updates:
+Because all subsequent releases are signed with the identical release keystore, downloading and tapping a newer APK installs seamlessly over the existing app, preserving all user conversations and settings.
+
+#### External Requirement for Store Distribution:
+Direct APK distribution is fully functional. Official distribution via the Google Play Store requires a **Google Play Console Developer Account ($25 one-time registration fee)**.
 
 ---
 
-### Installing Updates Without Data Loss
+### 3. Linux (Native DEB, RPM & AppImage)
 
-Because all release APKs are signed with the **exact same release key and certificate**:
-1. Simply download the newer version APK.
-2. Tap to install over the existing installation.
-3. Android Package Manager will prompt: *"Do you want to update this app? Your existing data will not be lost."*
-4. Tap **Update**. All conversation history, local keys, and settings are preserved.
+#### Official Release Artifacts:
+- **Debian / Ubuntu Package:** `OPEN-VERSE_0.2.0_amd64.deb` (239.1 MB, SHA-256: `ab5777a7c571...`)
+- **Fedora / RHEL Package:** `OPEN-VERSE-0.2.0-1.x86_64.rpm` (239.1 MB, SHA-256: `90dd67b89c31...`)
+- **Minisign Signatures:** `.deb.sig` and `.rpm.sig`
+- **Metadata:** AppStream XML validated in `distribution/linux/ai.openverse.desktop.metainfo.xml`
 
----
-
-## 3. Linux
-
-### Method A: AppImage (Universal across all distributions)
-
-The AppImage is a portable, self-contained executable that runs on Ubuntu, Debian, Fedora, Arch, openSUSE, and other distributions.
-
-1. Download `OPEN-VERSE_0.2.6_amd64.AppImage` from GitHub Releases.
-2. Open your terminal in the download directory.
-3. Make the AppImage executable:
-   ```bash
-   chmod +x OPEN-VERSE_0.2.6_amd64.AppImage
-   ```
-4. Run the application:
-   ```bash
-   ./OPEN-VERSE_0.2.6_amd64.AppImage
-   ```
-5. *(Optional Desktop Integration)*: Install `appimaged` or move the AppImage to `~/.local/bin` and create an AppStream desktop shortcut.
-
----
-
-### Method B: Debian / Ubuntu (.deb)
-
+#### Debian / Ubuntu / Linux Mint Installation:
 ```bash
-# 1. Download the package
-wget https://github.com/Naresh-chaurasiya/OPEN-VERSE/releases/download/v0.2.6/open-verse_0.2.6_amd64.deb
+# 1. Download the Debian package
+wget https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb
 
-# 2. Install via dpkg
-sudo dpkg -i open-verse_0.2.6_amd64.deb
+# 2. Install using dpkg
+sudo dpkg -i OPEN-VERSE_0.2.0_amd64.deb
 
-# 3. Resolve any missing dependencies automatically
+# 3. Resolve any runtime dependencies
 sudo apt-get install -f
+
+# 4. Launch
+cline-app
 ```
 
----
-
-### Method C: Fedora / RHEL / openSUSE (.rpm)
-
+#### Fedora / RHEL / openSUSE Installation:
 ```bash
-# Using dnf (Fedora 22+)
-sudo dnf localinstall open-verse-0.2.6-1.x86_64.rpm
+# Install using dnf
+sudo dnf localinstall OPEN-VERSE-0.2.0-1.x86_64.rpm
 
 # Or using rpm directly
-sudo rpm -ivh open-verse-0.2.6-1.x86_64.rpm
+sudo rpm -ivh OPEN-VERSE-0.2.0-1.x86_64.rpm
 ```
 
 ---
 
-## 4. macOS
+### 4. macOS (Native Apple Silicon & Intel)
 
-### Apple Silicon (M1/M2/M3/M4) & Intel (.dmg)
+#### Official Release Artifacts:
+- **Apple Silicon Disk Image:** `OPEN-VERSE_0.2.0_aarch64.dmg` (172.8 MB)
+- **Target OS:** macOS 11.0 Big Sur or later (Apple Silicon M1/M2/M3/M4)
 
-1. Download `OPEN-VERSE_0.2.6_aarch64.dmg` (for Apple Silicon) or `OPEN-VERSE_0.2.6_x64.dmg` (for Intel).
-2. Double-click the `.dmg` disk image file to mount it.
-3. In the Finder window that opens, drag the **OPEN-VERSE** application icon into your **Applications** folder shortcut.
-4. Eject the disk image from Finder.
+#### Installation Steps:
+1. Download `OPEN-VERSE_0.2.0_aarch64.dmg` from the release portal.
+2. Double-click the `.dmg` file to mount the disk image.
+3. Drag the **OPEN-VERSE** application icon into your **Applications** folder.
+4. Eject the disk image.
 
----
-
-### Navigating Apple Gatekeeper
-
-Because OPEN-VERSE community builds are not yet signed with a paid Apple Developer ID certificate ($99/yr), Apple Gatekeeper will initially quarantine the download:
-
-#### Method 1: Graphical Right-Click (Standard macOS procedure for independent apps):
-1. Open **Finder** &rarr; navigate to **Applications**.
-2. **Right-click (or Control-click)** on `OPEN-VERSE.app`.
-3. Select **Open** from the context menu.
-4. A warning dialog will appear: *"macOS cannot verify the developer of OPEN-VERSE. Are you sure you want to open it?"*
-5. Click **Open**.
-*(macOS remembers your authorization; all subsequent launches will open directly with a single click).*
-
-#### Method 2: System Settings Override:
-1. Try opening `OPEN-VERSE.app` once (it will show the Gatekeeper notice). Click **Cancel**.
-2. Open **System Settings** &rarr; **Privacy & Security**.
-3. Scroll down to the **Security** section.
-4. You will see: *"OPEN-VERSE was blocked from use because it is not from an identified developer."*
-5. Click **Open Anyway** and enter your Mac password or Touch ID.
-
-#### Method 3: Terminal Quarantine Removal (Power Users):
-```bash
-xattr -cr /Applications/OPEN-VERSE.app
-```
+#### Apple Gatekeeper & Notarization Notice:
+- **Gatekeeper Behavior:** Community builds are ad-hoc signed and lack an official Apple Developer ID certificate and Notarization ticket. When opening the downloaded application for the first time, macOS Gatekeeper displays: *"OPEN-VERSE cannot be opened because the developer cannot be verified."*
+- **Legitimate External Requirement:** Permanent, zero-warning installation under Apple Gatekeeper requires an active **Apple Developer Program enrollment ($99/year)**. The application can then be signed with `codesign -s "Developer ID Application: ..."` and notarized via `xcrun notarytool submit`.
+- **Community / Developer Launch Procedure:**
+  1. Open **Finder** and navigate to **Applications**.
+  2. **Right-click (or Control-click)** on `OPEN-VERSE.app`.
+  3. Select **Open** from the context menu.
+  4. In the dialog, click **Open** (or **Open Anyway**).
+  *(macOS permanently remembers this approval for your user account).*
+  - Alternatively, in Terminal: `xattr -cr /Applications/OPEN-VERSE.app`.
 
 ---
 
-## 5. iOS / iPadOS
+### 5. iOS / iPadOS (Native Swift Application)
 
-### Method A: Safari PWA (Home Screen Web App) — Recommended
+#### Official Release Artifacts:
+- **Native Xcode Project:** `mobile/ios/OPEN-VERSE.xcodeproj`
+- **Application Runtime:** Native Swift container, `WKWebView` application bridge, Google OAuth deep-link handler (`openverse://auth/callback`), and Desktop Hub pairing.
+- **Target Architecture:** iOS 15.0+ (ARM64)
 
-Apple iOS allows full-screen web applications to install directly from Safari, offering standalone windowing, offline storage, hardware camera/audio access, and background push notifications without App Store restrictions.
-
-#### Step-by-Step Installation:
-1. Open **Safari** on your iPhone or iPad.
-2. Navigate to [https://open-verse-website.vercel.app](https://open-verse-website.vercel.app).
-3. Tap the **Share** button at the bottom of the screen (the square with an arrow pointing up `↑`).
-4. Scroll down the action sheet and tap **"Add to Home Screen"**.
-5. *(Optional)* Rename the shortcut to `OPEN-VERSE`.
-6. Tap **Add** in the top-right corner.
-7. **Result:** An OPEN-VERSE app icon appears on your iOS Home Screen. When tapped, it launches in full-screen standalone mode without Safari address bars or navigation controls.
-
----
-
-### Method B: Apple TestFlight (Beta Channel)
-
-1. Install **TestFlight** from the iOS App Store.
-2. Open the official OPEN-VERSE TestFlight invitation link from the releases page.
-3. Tap **Accept** &rarr; tap **Install**.
-4. TestFlight automatically manages beta updates and crash reporting.
+#### Distribution Channels & External Requirements:
+- **Public Beta Channel (Apple TestFlight):**
+  - Distributing native iOS apps to end users via Apple TestFlight strictly requires an active **Apple Developer Program membership ($99/year)** to generate Apple-signed provisioning profiles and upload builds via Xcode / App Store Connect.
+  - Users can join the public TestFlight waitlist queue via [GitHub Issue Request](https://github.com/naresh-cn2/OPEN-VERSE/issues/new?title=iOS+TestFlight+Beta+Invite+Request).
+- **Local Developer Compilation (Xcode):**
+  1. Clone the repository on a Mac.
+  2. Open `mobile/ios/OPEN-VERSE.xcodeproj` in Xcode 15+.
+  3. Under **Signing & Capabilities**, select your personal Apple ID (free Apple Developer account).
+  4. Select your connected iPhone or iPad and press **Run (⌘R)**.
+- **Community Sideloading:**
+  - Sideload compiled unsigned IPAs onto physical devices using AltStore, SideStore, or Sideloadly with a free personal Apple ID (7-day re-signing cycle).
 
 ---
 
-## 6. Cross-Platform Troubleshooting
+## 3. Platform Forensic Acceptance Matrix
 
-| Symptom | Cause | Solution |
-| :--- | :--- | :--- |
-| **Windows: "An Application Control policy has blocked this file"** | Windows 11 Smart App Control (SAC) is set to Enforced (`VerifiedAndReputablePolicyState = 1`). | Install via **Method A (PWA 1-Click Install)** from Microsoft Edge. It runs inside the trusted OS browser process with zero prompts. |
-| **Windows: "Windows protected your PC" (SmartScreen)** | Fresh binary release without sufficient cloud download reputation. | Click **"More info"** &rarr; click **"Run anyway"**. |
-| **Android: "App not installed"** | Existing app with conflicting signature or corrupt download. | Ensure previous unofficial builds are uninstalled before installing the official signed release APK (`versionCode=8`). |
-| **macOS: "OPEN-VERSE is damaged and can't be opened"** | Gatekeeper quarantine flag placed by macOS on unnotarized internet downloads. | Run `xattr -cr /Applications/OPEN-VERSE.app` in Terminal, or use Right-Click &rarr; Open. |
-| **Google Sign-in redirects to blank page** | Browser popup blocker or missing deep link handler. | Open `https://open-verse-website.vercel.app` directly; verify `openverse://` protocol is registered. |
-| **Conversations not syncing across devices** | Signed into different accounts or offline mode active. | Verify you are signed in with the same Google account. User identity is uniquely anchored to `ov_user_${googleSub}`. |
+| Platform | Native Artifact | Cryptographic Signature | Download Verified | Installation Verified | Runtime Verified | Operational Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Windows** | `OPEN-VERSE_0.2.6_x64-setup.exe` (167.6 MB) | Minisign ED25519 (`.sig`) | **PASS** (HTTP 200) | **BLOCKED** *(SAC Enforced)* / **PASS** *(Standard)* | **PASS** *(Runtime Engine)* | **BLOCKED BY EXTERNAL REQUIREMENT** *(Requires Azure Trusted Signing $9.99/mo for SAC)* |
+| **Android** | `open-verse-mobile.apk` (10.0 MB) | Scheme v2 (RSA-2048) | **PASS** (HTTP 200) | **PASS** *(Emulator API 34)* / **NOT TESTED** *(USB)* | **PASS** *(OAuth Callback & AI)* | **PASS** *(Sideloading Verified)* / **BLOCKED** *(Play Store requires $25 one-time)* |
+| **Linux** | `OPEN-VERSE_0.2.0_amd64.deb` (239.1 MB) | Minisign ED25519 (`.sig`) | **PASS** (HTTP 200) | **PASS** *(CI Ubuntu 24.04)* / **NOT TESTED** *(Bare Metal)* | **PASS** *(Engine)* | **PASS** *(Package Verified)* |
+| **macOS** | `OPEN-VERSE_0.2.0_aarch64.dmg` (172.8 MB) | Ad-hoc / Unnotarized | **PASS** (HTTP 200) | **BLOCKED** *(Gatekeeper)* / **PASS** *(Right-Click)* | **PASS** *(Engine)* | **BLOCKED BY EXTERNAL REQUIREMENT** *(Requires Apple Developer ID $99/yr for Notarization)* |
+| **iOS** | `mobile/ios/OPEN-VERSE.xcodeproj` (Swift) | Provisioning Profile | **PASS** (Git Source) | **BLOCKED** *(Requires Apple Profile)* | **PASS** *(Xcode Simulator)* | **BLOCKED BY EXTERNAL REQUIREMENT** *(Requires Apple Developer Program $99/yr for TestFlight/Store)* |
+
+---
+
+## 4. Summary of Commercial Requirements for Zero-Prompt Distribution
+
+| Platform | Security Gate | Required Credential / Service | Exact Cost | Pipeline Preparedness |
+| :--- | :--- | :--- | :--- | :--- |
+| **Windows 11** | Smart App Control (SAC) Code Integrity | Microsoft Azure Trusted Signing | $9.99 / month | `distribution/windows/sign-windows-authenticode.ps1` ready |
+| **Windows 10/11** | SmartScreen Reputation & SAC | Microsoft Partner Center (Store MSIX) | $19 one-time | `distribution/windows/package-msix.ps1` ready |
+| **macOS** | Apple Gatekeeper Quarantine | Apple Developer Program (Developer ID) | $99 / year | `desktop-macos-build.yml` ready |
+| **iOS** | iOS Code Signing & Provisioning | Apple Developer Program (TestFlight / Store) | $99 / year | `mobile-ios.yml` ready |
+| **Android** | Google Play Protect & Catalog | Google Play Console | $25 one-time | Keystore & `mobile-android.yml` ready |
 
 ---
 

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Real Android Emulator Installation & Runtime Acceptance Test
 .DESCRIPTION
