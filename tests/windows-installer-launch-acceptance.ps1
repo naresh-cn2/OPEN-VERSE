@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Automated Windows Installation, Packaging & Verification Acceptance Suite
 .DESCRIPTION
