@@ -131,6 +131,14 @@ def spawn_unmanaged_gateway(profile_home: Path, *, deadline: float, idle_exit: b
                                     # detached-spawn: ok — a gateway daemon launch must outlive its launcher
                                     **windows_detach_popen_kwargs())
         except OSError as exc:
+            if sys.platform == "win32" and getattr(exc, "winerror", None) == 5:
+                try:
+                    from hermes_cli._subprocess_compat import windows_detach_flags_without_breakaway
+                    return subprocess.Popen(command, cwd=root, env=env, close_fds=True,
+                                            stdin=subprocess.DEVNULL, stdout=output, stderr=output,
+                                            creationflags=windows_detach_flags_without_breakaway())
+                except OSError:
+                    pass
             # Only CreateProcess's own refusal is the job's verdict.
             reason = "windows_breakaway_unavailable" if sys.platform == "win32" else "spawn_failed"
             raise RuntimeStartError(reason, detail=os_refusal(exc)) from exc
