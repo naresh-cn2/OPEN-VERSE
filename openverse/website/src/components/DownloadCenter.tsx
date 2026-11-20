@@ -473,14 +473,16 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ background: "rgba(255, 255, 255, 0.05)", borderRadius: 8, padding: 12, fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "#ffffff", overflowX: "auto" }}
                 >{`scripts\hermes-openverse.bat`}</div>
-                <button
-                  onClick={() => copyToClipboard("cd /d C:\\Users\\nares\\Workspace\\OPEN-VERSE\\OPEN-VERSE\\OPEN-VERSE\\hermes-agent && scripts\\hermes-openverse.bat", "hermes-cmd")}
+                <a
+                  href="https://github.com/naresh-cn2/OPEN-VERSE/releases/download/hermes-agent/Hermes-Agent-2026.9.24-windows.zip"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-primary"
-                  style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
+                  style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}
                 >
                   <Download size={17} />
-                  <span>Copy Launch Command</span>
-                </button>
+                  <span>Download Hermes Agent (107 MB ZIP)</span>
+                </a>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
