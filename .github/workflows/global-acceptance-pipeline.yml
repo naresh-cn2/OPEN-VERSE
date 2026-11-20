@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'website/**'
-      - 'desktop/**'
-      - 'mobile/**'
-      - 'tests/**'
+      - 'open-verse/website/**'
+      - 'open-verse/desktop/**'
+      - 'open-verse/mobile/**'
+      - 'open-verse/tests/**'
       - '.github/workflows/**'
   pull_request:
     branches:
@@ -30,9 +30,9 @@ jobs:
 
       - name: Run Release Manifest & Asset Verification Test
         run: |
-          cd website
+          cd open-verse/website
           npm install
-          npx tsx ../tests/verify-all-release-artifacts.ts
+          npx tsx ../open-verse/tests/verify-all-release-artifacts.ts
 
   verify-linux-appstream-metadata:
     name: Linux AppStream & Distribution Metadata
@@ -48,8 +48,8 @@ jobs:
 
       - name: Validate AppStream Metainfo XML
         run: |
-          appstreamcli validate desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml || true
-          xmllint --noout desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml
+          appstreamcli validate open-verse/desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml || true
+          xmllint --noout open-verse/desktop/apps/examples/desktop-app/src-tauri/linux/metainfo/stable/ai.openverse.desktop.metainfo.xml
 
   verify-macos-entitlements-and-bundle:
     name: macOS Entitlements & Info.plist Validation
@@ -60,8 +60,8 @@ jobs:
 
       - name: Validate Desktop Entitlements XML
         run: |
-          plutil -lint desktop/apps/examples/desktop-app/src-tauri/Entitlements.plist || echo "Desktop Entitlements verified"
-          plutil -lint mobile/ios/OPEN-VERSE/Info.plist
+          plutil -lint open-verse/desktop/apps/examples/desktop-app/src-tauri/Entitlements.plist || echo "Desktop Entitlements verified"
+          plutil -lint open-verse/mobile/ios/OPEN-VERSE/Info.plist
 
       - name: Verify Digital Asset Links & Apple App Site Association
         run: |
@@ -78,9 +78,9 @@ jobs:
 
       - name: Validate PowerShell Script Syntax
         run: |
-          Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1
-          Get-Command -Syntax desktop/apps/examples/desktop-app/scripts/package-msix.ps1
-          Get-Command -Syntax tests/windows-installer-launch-acceptance.ps1
+          Get-Command -Syntax open-verse/desktop/apps/examples/desktop-app/scripts/sign-windows-authenticode.ps1
+          Get-Command -Syntax open-verse/desktop/apps/examples/desktop-app/scripts/package-msix.ps1
+          Get-Command -Syntax open-verse/tests/windows-installer-launch-acceptance.ps1
 
       - name: Validate Windows Package Manager (winget) Manifest
         run: |
@@ -88,7 +88,7 @@ jobs:
 
       - name: Run Windows Installer Acceptance Diagnostics
         run: |
-          powershell -ExecutionPolicy Bypass -File tests/windows-installer-launch-acceptance.ps1
+          powershell -ExecutionPolicy Bypass -File open-verse/tests/windows-installer-launch-acceptance.ps1
 
   verify-website-production-build:
     name: Production Website & Download Center Build
@@ -104,6 +104,6 @@ jobs:
 
       - name: Build Production Website
         run: |
-          cd website
+          cd open-verse/website
           npm ci || npm install
           npx vite build

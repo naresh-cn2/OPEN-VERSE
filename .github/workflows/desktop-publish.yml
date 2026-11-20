@@ -31,7 +31,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: desktop
+    working-directory: open-verse/desktop
 
 jobs:
   validate:
@@ -305,7 +305,7 @@ jobs:
           printf "%s" "$APPLE_API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey.p8"
 
       - name: Build, sign, and notarize desktop bundle
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         # Tauri merges repeated --config flags in order, so the beta overlay
         # (product name, bundle identifier, beta update feed) layers on top of
         # the release overlay without duplicating it. $CONFIG_ARGS is
@@ -354,7 +354,7 @@ jobs:
       # single-arch CLI would otherwise ship fine and only crash on the other
       # arch.
       - name: Verify bundle is a universal binary
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           PRODUCT: ${{ needs.validate.outputs.product }}
         run: |
@@ -383,7 +383,7 @@ jobs:
       # desktop-latest would pull its users onto stable builds, and a stable
       # bundle polling desktop-beta would push betas to every stable install.
       - name: Verify updater feed endpoint
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -439,7 +439,7 @@ jobs:
       # at runtime (the SDK exporters speak OTLP http/json only), so the
       # selfcheck must also report a usable endpoint host.
       - name: Verify CLI and desktop backend telemetry configs were inlined
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           for COMPONENT in cli backend; do
             if [ "$COMPONENT" = cli ]; then
@@ -484,14 +484,14 @@ jobs:
       # path, so it cannot reach anything else on the runner. Telemetry is
       # inlined into the backend, so expect one activation event per publish.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-universal-apple-darwin
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
         run: bun test scripts/desktop-startup.test.ts
 
       - name: Collect artifacts
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -688,7 +688,7 @@ jobs:
         run: |
           SIGN_CONF="${RUNNER_TEMP//\\//}/tauri-windows-sign.conf.json"
           if [ -n "$AZURE_CLIENT_ID" ]; then
-            SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/desktop/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
+            SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/open-verse/desktop/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
             cat > "$SIGN_CONF" <<EOF
           {
             "\$schema": "https://schema.tauri.app/config/2",
@@ -711,7 +711,7 @@ jobs:
 
       - name: Build and sign desktop bundle
         shell: bash
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         # NSIS only: the MSI (WiX) target adds nothing for direct-download
         # distribution and the updater uses the NSIS artifact. $CONFIG_ARGS is
         # deliberately unquoted: it must word-split into separate flags.
@@ -744,7 +744,7 @@ jobs:
       # contents, which defeats a string search on the installer itself.
       - name: Verify updater feed endpoint
         shell: bash
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
         run: |
@@ -789,7 +789,7 @@ jobs:
       # Same guardrail as the macOS job, run natively on the Windows build.
       - name: Verify CLI and desktop backend telemetry configs were inlined
         shell: bash
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           for COMPONENT in cli backend; do
             if [ "$COMPONENT" = cli ]; then
@@ -822,7 +822,7 @@ jobs:
       # Same release-time gate as the macOS job; see the comment there.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
         shell: bash
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-x86_64-pc-windows-msvc.exe
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
@@ -830,7 +830,7 @@ jobs:
 
       - name: Collect artifacts
         shell: bash
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -863,7 +863,7 @@ jobs:
       # would still catch an installer that skipped signCommand entirely.
       - name: Verify Authenticode signatures
         shell: pwsh
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           # The Tauri bundler signs the bundled Cline CLI in place, so check it
           # here too; a WDAC-locked machine blocks the app at runtime if the
@@ -1009,7 +1009,7 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
 
       - name: Build desktop bundles
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         # deb and rpm only. The AppImage target is excluded because linuxdeploy
         # cannot process the Bun-compiled Cline CLI (ldd fails on it and patchelf
         # corrupts it), which aborts the bundle step. $CONFIG_ARGS is
@@ -1035,7 +1035,7 @@ jobs:
       # Same guardrail as the other build jobs: assert the compiled binary
       # embeds this channel's updater feed URL and not the other channel's.
       - name: Verify updater feed endpoint
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
         run: |
@@ -1073,7 +1073,7 @@ jobs:
 
       # Same guardrail as the other build jobs, run on the Linux build.
       - name: Verify CLI and desktop backend telemetry configs were inlined
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           TARGET: ${{ matrix.target }}
         run: |
@@ -1107,7 +1107,7 @@ jobs:
 
       # Same release-time gate as the macOS job; see the comment there.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-${{ matrix.target }}
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
@@ -1122,7 +1122,7 @@ jobs:
       # CLINE_DIR and discovery record, as in the runtime test above. Only the
       # exit status is checked; the ensure output carries the Hub auth token.
       - name: Smoke-test the bundled SSH remote CLI
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           REMOTE_CLI: src-tauri/bin/remote-helpers/cline-${{ matrix.target }}
         run: |
@@ -1140,7 +1140,7 @@ jobs:
           echo "Remote CLI started and stopped an isolated Hub."
 
       - name: Collect artifacts
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}

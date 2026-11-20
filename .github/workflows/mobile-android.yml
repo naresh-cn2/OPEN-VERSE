@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'mobile/**'
-      - 'desktop/apps/examples/desktop-app/webview/**'
+      - 'open-verse/mobile/**'
+      - 'open-verse/desktop/apps/examples/desktop-app/webview/**'
       - '.github/workflows/mobile-android.yml'
   workflow_dispatch:
 
@@ -35,22 +35,22 @@ jobs:
 
       - name: Ensure Canonical Assets Synced
         run: |
-          mkdir -p mobile/android/app/src/main/assets
-          if [ -d "desktop/apps/examples/desktop-app/webview/out" ]; then
-            cp -r desktop/apps/examples/desktop-app/webview/out/* mobile/android/app/src/main/assets/
+          mkdir -p open-verse/mobile/android/app/src/main/assets
+          if [ -d "open-verse/desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r open-verse/desktop/apps/examples/desktop-app/webview/out/* open-verse/mobile/android/app/src/main/assets/
           fi
 
       - name: Make Gradle Wrapper Executable
-        run: chmod +x mobile/android/gradlew
+        run: chmod +x open-verse/mobile/android/gradlew
 
       - name: Setup Android Keystore from Secret (if configured)
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > mobile/android/app/release.keystore
+            echo "$KEYSTORE_BASE64" | base64 -d > open-verse/mobile/android/app/release.keystore
             echo "Keystore decoded from repository secret."
-          elif [ -f "mobile/android/app/release.keystore" ]; then
+          elif [ -f "open-verse/mobile/android/app/release.keystore" ]; then
             echo "Using existing workspace keystore."
           else
             echo "Error: Keystore not found."
@@ -63,20 +63,20 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'openverse' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'openverse_mobile' }}
         run: |
-          cd mobile/android
+          cd open-verse/mobile/android
           ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Rename and Prepare Deliverables
         run: |
-          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' mobile/android/app/build.gradle || echo "0.2.6")
-          mkdir -p mobile/artifacts
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile-v${VERSION}.apk
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk mobile/artifacts/open-verse-mobile.apk
-          if [ -f mobile/android/app/build/outputs/bundle/release/app-release.aab ]; then
-            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile-v${VERSION}.aab
-            cp mobile/android/app/build/outputs/bundle/release/app-release.aab mobile/artifacts/open-verse-mobile.aab
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' open-verse/mobile/android/app/build.gradle || echo "0.2.6")
+          mkdir -p open-verse/mobile/artifacts
+          cp open-verse/mobile/android/app/build/outputs/apk/release/app-release.apk open-verse/mobile/artifacts/open-verse-mobile-v${VERSION}.apk
+          cp open-verse/mobile/android/app/build/outputs/apk/release/app-release.apk open-verse/mobile/artifacts/open-verse-mobile.apk
+          if [ -f open-verse/mobile/android/app/build/outputs/bundle/release/app-release.aab ]; then
+            cp open-verse/mobile/android/app/build/outputs/bundle/release/app-release.aab open-verse/mobile/artifacts/open-verse-mobile-v${VERSION}.aab
+            cp open-verse/mobile/android/app/build/outputs/bundle/release/app-release.aab open-verse/mobile/artifacts/open-verse-mobile.aab
           fi
-          cd mobile/artifacts
+          cd open-verse/mobile/artifacts
           sha256sum open-verse-mobile.apk > open-verse-mobile.apk.sha256
           sha256sum open-verse-mobile.aab > open-verse-mobile.aab.sha256
           cat open-verse-mobile.apk.sha256
@@ -85,20 +85,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-android-apk
-          path: mobile/artifacts/open-verse-mobile.apk
+          path: open-verse/mobile/artifacts/open-verse-mobile.apk
           if-no-files-found: error
 
       - name: Upload Android AAB Artifact
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-android-aab
-          path: mobile/artifacts/*.aab
+          path: open-verse/mobile/artifacts/*.aab
           if-no-files-found: ignore
 
       - name: Publish to GitHub Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' mobile/android/app/build.gradle || echo "0.2.6")
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' open-verse/mobile/android/app/build.gradle || echo "0.2.6")
           export RELEASE_TAG="v${VERSION}"
-          bun run mobile/scripts/publish-android-release.ts
+          bun run open-verse/mobile/scripts/publish-android-release.ts

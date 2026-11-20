@@ -1,16 +1,23 @@
 # Dependencies and build outputs
 node_modules/
+**/node_modules/
 dist/
+**/dist/
 dist-release/
+build-artifacts/
 .next/
+**/.next/
 target/
+**/target/
 *.tsbuildinfo
 .env*
 !.env.example
 .openverse/
 .openverse-cloud-sync/
 desktop/apps/examples/desktop-app/src-tauri/bin/
+open-verse/desktop/apps/examples/desktop-app/src-tauri/bin/
 website/saved_preview.html
+open-verse/website/saved_preview.html
 
 test-apk-*/
 
@@ -18,6 +25,7 @@ test-apk-*/
 *.keystore
 *.jks
 mobile/android/app/release.keystore
+open-verse/mobile/android/app/release.keystore
 *.pfx
 *.p12
 
@@ -25,7 +33,12 @@ mobile/android/app/release.keystore
 .DS_Store
 Thumbs.db
 
-# Engine repositories (original sources preserved independently)
+# Upstream source repositories (original sources preserved independently with their own git histories)
+sources/cline/
+sources/hermes-agent/
+sources/opencode/
+sources/openclaw/
+sources/open-claw/
 cline/
 harmes agent/
 opencode/
@@ -33,4 +46,5 @@ openclaw/
 open-claw/
 
 .vercel
+open-verse/.vercel
 .env*

@@ -25,7 +25,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: desktop
+    working-directory: open-verse/desktop
 
 jobs:
   build-and-publish:
@@ -51,7 +51,7 @@ jobs:
 
       - name: Verify Version Consistency
         shell: pwsh
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           $inputVersion = "${{ github.event.inputs.version }}".TrimStart('v')
           $packageVersion = (Get-Content package.json | ConvertFrom-Json).version
@@ -76,23 +76,23 @@ jobs:
         run: bun run build:sdk
 
       - name: Run Desktop Verification Tests
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           bunx vitest run webview/lib/open-verse-auth.test.ts webview/components/views/onboarding/open-verse-auth.test.tsx webview/components/views/chat/welcome-chat.test.tsx scripts/generate-update-manifest.test.ts --config vitest.config.ts
 
       - name: Run End-to-End Cross-Device & Resilience Tests
         working-directory: ${{ github.workspace }}
         run: |
-          bun run tests/e2e-cross-device-updater-repair.ts
-          bun run tests/e2e-resilience-and-recovery.ts
+          bun run open-verse/tests/e2e-cross-device-updater-repair.ts
+          bun run open-verse/tests/e2e-resilience-and-recovery.ts
 
       - name: Build desktop runtime and static web frontend
         run: bun run build
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
 
       - name: Build Signed Windows NSIS Installer & Updater Artifacts
         shell: pwsh
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Sign Windows Executables with Authenticode (if configured)
         shell: pwsh
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -115,7 +115,7 @@ jobs:
       - name: Verify Release and Updater Artifacts Exist
         shell: pwsh
         id: artifacts
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           $nsisPath = "src-tauri/target/release/bundle/nsis"
           $setup = Get-ChildItem -Path $nsisPath -Filter "*-setup.exe" | Select-Object -First 1
@@ -144,7 +144,7 @@ jobs:
 
       - name: Generate latest.json Update Manifest
         shell: pwsh
-        working-directory: desktop/apps/examples/desktop-app
+        working-directory: open-verse/desktop/apps/examples/desktop-app
         run: |
           $ver = "${{ github.event.inputs.version }}".TrimStart('v')
           $tag = "v$ver"
@@ -164,10 +164,10 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.exe.sig
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.exe.sig
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
 
       - name: Update Rolling desktop-latest Release Feed
         uses: softprops/action-gh-release@v2
@@ -178,8 +178,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.exe.sig
-            desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.exe.sig
+            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
 

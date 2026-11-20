@@ -1,9 +1,21 @@
 # Exclude non-website workspace folders
+sources/
+open-verse/desktop/
+open-verse/mobile/
+open-verse/dashboard/
+open-verse/dist-release/
+open-verse/docs/
+open-verse/tests/
+open-verse/scripts/
+open-verse/build-artifacts/
+build-artifacts/
+dist-release/
+
+# Backward compatibility rules
 desktop/
 mobile/
 cline/
 dashboard/
-dist-release/
 docs/
 tests/
 scripts/

@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - 'desktop/apps/examples/desktop-app/webview/**'
-      - 'mobile/**'
-      - 'tests/visual-qa/**'
+      - 'open-verse/desktop/apps/examples/desktop-app/webview/**'
+      - 'open-verse/mobile/**'
+      - 'open-verse/tests/visual-qa/**'
       - '.github/workflows/cross-platform-qa.yml'
   workflow_dispatch:
 
@@ -30,13 +30,13 @@ jobs:
 
       - name: Install QA Suite & Playwright Dependencies
         run: |
-          cd tests/visual-qa
+          cd open-verse/tests/visual-qa
           bun install
           bunx playwright install --with-deps chromium
 
       - name: Run Cross-Platform Visual & Functional QA Suite
         run: |
-          cd tests/visual-qa
+          cd open-verse/tests/visual-qa
           bun run-cross-platform-qa.ts
 
       - name: Publish QA Job Summary
@@ -61,7 +61,7 @@ jobs:
         with:
           name: open-verse-cross-platform-qa-report
           path: |
-            tests/visual-qa/artifacts/qa-report.html
-            tests/visual-qa/artifacts/qa-report.json
-            tests/visual-qa/artifacts/screenshots/**
+            open-verse/tests/visual-qa/artifacts/qa-report.html
+            open-verse/tests/visual-qa/artifacts/qa-report.json
+            open-verse/tests/visual-qa/artifacts/screenshots/**
           if-no-files-found: error
