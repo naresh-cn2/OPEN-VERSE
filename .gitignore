@@ -48,3 +48,13 @@ open-claw/
 .vercel
 open-verse/.vercel
 .env*
+
+# Hermes runtime, build caches, and local tooling
+.hermes/
+**/.hermes/
+**/.hermes-*
+**/.pytest_cache/
+**/__pycache__/
+open-verse-2.0/.hermes/
+open-verse-2.0/**/__pycache__/
+open-verse-2.0/**/.pytest_cache/
