@@ -162,6 +162,11 @@ export function OpenVerseAuth({ onAuthenticated }: OpenVerseAuthProps) {
 		setErrorMessage(null);
 		try {
 			await initiateOAuthSignIn("google");
+			// Keep spinner active briefly while the system opens the browser,
+			// then re-enable the button after 4 seconds so the user is never stuck
+			setTimeout(() => {
+				setLoading(false);
+			}, 4000);
 		} catch (err) {
 			setErrorMessage(err instanceof Error ? err.message : String(err));
 			setLoading(false);

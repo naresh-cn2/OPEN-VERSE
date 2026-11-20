@@ -76,10 +76,10 @@ export const DownloadCenter: React.FC = () => {
     windows: {
       name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
       zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
-      size: "167.6 MB",
-      zipSize: "170.8 MB",
-      sha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
-      zipSha256: "b6de33be3a3e252bf4cc4ee254d66616648ea4553f7beb661a7d8636da83155f",
+      size: "129.3 MB",
+      zipSize: "129.3 MB",
+      sha256: "481d43089055d8bfdc1f5c67f894814ece88078503a46eb90c286db15579d4dc",
+      zipSha256: "0a875ab71b13f3659a5be7d4527f862163e8a41736ae2c27725a5b7786e8a31c",
     },
     mac: {
       name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
@@ -100,8 +100,8 @@ export const DownloadCenter: React.FC = () => {
       name: `open-verse-mobile.apk`,
       versionedName: `open-verse-v${DESKTOP_VERSION}-android.apk`,
       zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-      size: "27.2 MB",
-      sha256: "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
+      size: "10.6 MB",
+      sha256: "623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960",
     },
     ios: {
       name: `open-verse-ios-v${DESKTOP_VERSION}`,

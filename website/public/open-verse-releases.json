@@ -1,32 +1,32 @@
 {
-  "version": "0.2.7",
-  "releaseDate": "2026-11-19T13:55:00Z",
+  "version": "0.2.8",
+  "releaseDate": "2026-11-20T04:00:00Z",
   "channel": "stable",
   "mandatory": false,
-  "releaseNotes": "• Synchronized Native Distribution: Official v0.2.7 release artifacts across Windows, Android, Linux, macOS, and iOS\n• Streamlined Release Portal: Polished native downloads with direct NSIS installer, portable ZIP, and Minisign signatures\n• High-Performance Direct Streaming: Direct APK distribution and synchronized desktop auto-updater manifests",
+  "releaseNotes": "• Pure Google Sign-In: Direct authentication with official Google Account Chooser on the application opening screen, eliminating guest bypass\n• Pre-Login In-App Updates: Integrated one-click update checking and automatic background delivery directly from the opening screen\n• Complete Brand Unification: Fully white-labeled desktop user interface, connectors, schedules, settings, and notifications to OPEN-VERSE\n• Verified Cross-Platform Release: Published verified v0.2.8 NSIS setup installer, portable ZIP, Android APK, and Minisign signatures",
   "platforms": {
     "windows-x86_64": {
-      "version": "0.2.7",
-      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/OPEN-VERSE_0.2.7_x64-setup.exe",
-      "sha256": "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVGRkTnR4Y3BNYW04YThuVXBXOVRKSGxRUVFHY2xxRjRvYXAvS1JSNEI5aU9FUUJXczBUYzltVUNNRWkweHdpSWdxd1RvSkFoUmpQWnVXUzNUdDd3aEFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0ODU1MTYyCWZpbGU6T1BFTi1WRVJTRV8wLjIuNl94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjYKWWhTMmUweHBLT0NYVDZxTGFsVW5BLzFFTm9TL25DUUQ0VFZPTCtvUnMzZ3JaSjVpeG9BMXZzV0dMNjFZK3BueTZTeHI4RG9seU5FYWQ4ejdIRjBmQ0E9PQo="
+      "version": "0.2.8",
+      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/OPEN-VERSE_0.2.8_x64-setup.exe",
+      "sha256": "481d43089055d8bfdc1f5c67f894814ece88078503a46eb90c286db15579d4dc",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFJYLzJESEVnelR3SEY4eW1yamFscnhmT1dyY1JhVUtJMnRvaUFWa3lIRHk5bHVhSXhJTCtRRTM4VlpaR0hybVJ4bEFBSUEvUWgxbmRsZW9KNWd1UHdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MTA5NDIwCWZpbGU6T1BFTi1WRVJTRV8wLjIuOF94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjgKMU80K042WGxPMWE4SmgyZ1RnTFJ2d0FBZW1MUXZBOVNYQmkvaVdMYjdLMWFsWWt3ZTdEWjVOdkZ1RFRnZmpOS3pHNmphczRaUlh4bGYzeVJwNVU2QlE9PQo="
     },
     "android": {
-      "version": "0.2.7",
-      "versionCode": 9,
+      "version": "0.2.8",
+      "versionCode": 10,
       "url": "https://open-verse-website.vercel.app/open-verse-mobile.apk",
-      "sha256": "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
+      "sha256": "623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960",
       "minSdk": 24
     },
     "ios": {
-      "version": "0.2.7",
-      "build": "9",
+      "version": "0.2.8",
+      "build": "10",
       "status": "in-preview",
       "betaWaitlistUrl": "https://github.com/naresh-cn2/OPEN-VERSE/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID."
     },
     "web": {
-      "version": "0.2.7",
-      "deployedAt": "2026-11-19T13:55:00Z"
+      "version": "0.2.8",
+      "deployedAt": "2026-11-20T04:00:00Z"
     }
   }
 }

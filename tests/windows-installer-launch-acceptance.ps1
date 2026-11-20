@@ -10,14 +10,14 @@
 param (
     [string]$InstallerPath = "",
     [string]$ZipPath = "",
-    [string]$ExpectedExeSha256 = "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
-    [string]$ExpectedZipSha256 = "1526a75bfd8eb6e22e2bce56d7ee125dffa661c2dd0f8e8916cc34b3b2c740bf"
+    [string]$ExpectedExeSha256 = "481d43089055d8bfdc1f5c67f894814ece88078503a46eb90c286db15579d4dc",
+    [string]$ExpectedZipSha256 = "0a875ab71b13f3659a5be7d4527f862163e8a41736ae2c27725a5b7786e8a31c"
 )
 
 $ErrorActionPreference = "Stop"
 
 $manifestPath = Join-Path $PSScriptRoot "../website/public/open-verse-releases.json"
-$targetVer = "0.2.7"
+$targetVer = "0.2.8"
 if (Test-Path $manifestPath) {
     try {
         $manifestObj = Get-Content $manifestPath -Raw | ConvertFrom-Json
@@ -26,10 +26,18 @@ if (Test-Path $manifestPath) {
 }
 
 if (-not $InstallerPath) {
-    $InstallerPath = "dist-release/OPEN-VERSE_${targetVer}_x64-setup.exe"
+    if (Test-Path "build-artifacts/windows/OPEN-VERSE_${targetVer}_x64-setup.exe") {
+        $InstallerPath = "build-artifacts/windows/OPEN-VERSE_${targetVer}_x64-setup.exe"
+    } else {
+        $InstallerPath = "dist-release/OPEN-VERSE_${targetVer}_x64-setup.exe"
+    }
 }
 if (-not $ZipPath) {
-    $ZipPath = "dist-release/OPEN-VERSE_${targetVer}_x64-windows.zip"
+    if (Test-Path "build-artifacts/windows/OPEN-VERSE_${targetVer}_x64-windows.zip") {
+        $ZipPath = "build-artifacts/windows/OPEN-VERSE_${targetVer}_x64-windows.zip"
+    } else {
+        $ZipPath = "dist-release/OPEN-VERSE_${targetVer}_x64-windows.zip"
+    }
 }
 
 Write-Host "=================================================================="

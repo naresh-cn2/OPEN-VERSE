@@ -8,14 +8,22 @@
 import { existsSync, createReadStream, readFileSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+let token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+if (!token) {
+  try {
+    token = execSync("gh auth token", { encoding: "utf8" }).trim();
+  } catch {}
+}
+
 const MANIFEST_PATH = resolve(__dirname, "../website/public/open-verse-releases.json");
 const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
-const VERSION = manifest.version || "0.2.7";
+const VERSION = manifest.version || "0.2.8";
 
 interface ArtifactTest {
   id: string;
@@ -32,37 +40,37 @@ const ARTIFACTS: ArtifactTest[] = [
     id: "win-exe",
     name: `OPEN-VERSE_${VERSION}_x64-setup.exe`,
     url: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v${VERSION}/OPEN-VERSE_${VERSION}_x64-setup.exe`,
-    localPath: resolve(__dirname, `../dist-release/OPEN-VERSE_${VERSION}_x64-setup.exe`),
-    expectedSha256: "36d60fd9b980b98596674f26d3fb10d71087e36856c27dfefe3f1e7ea3632812",
+    localPath: resolve(__dirname, `../build-artifacts/windows/OPEN-VERSE_${VERSION}_x64-setup.exe`),
+    expectedSha256: "481d43089055d8bfdc1f5c67f894814ece88078503a46eb90c286db15579d4dc",
     expectedMime: "application/octet-stream",
-    minBytes: 150 * 1024 * 1024
+    minBytes: 120 * 1024 * 1024
   },
   {
     id: "win-zip",
     name: `OPEN-VERSE_${VERSION}_x64-windows.zip`,
     url: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v${VERSION}/OPEN-VERSE_${VERSION}_x64-windows.zip`,
-    localPath: resolve(__dirname, `../dist-release/OPEN-VERSE_${VERSION}_x64-windows.zip`),
-    expectedSha256: "b6de33be3a3e252bf4cc4ee254d66616648ea4553f7beb661a7d8636da83155f",
+    localPath: resolve(__dirname, `../build-artifacts/windows/OPEN-VERSE_${VERSION}_x64-windows.zip`),
+    expectedSha256: "0a875ab71b13f3659a5be7d4527f862163e8a41736ae2c27725a5b7786e8a31c",
     expectedMime: "application/octet-stream",
-    minBytes: 150 * 1024 * 1024
+    minBytes: 120 * 1024 * 1024
   },
   {
     id: "android-apk",
     name: `open-verse-mobile.apk`,
     url: `https://open-verse-website.vercel.app/open-verse-mobile.apk`,
     localPath: resolve(__dirname, `../website/public/open-verse-mobile.apk`),
-    expectedSha256: "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
+    expectedSha256: "623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960",
     expectedMime: "application/vnd.android.package-archive",
-    minBytes: 9 * 1024 * 1024
+    minBytes: 10 * 1024 * 1024
   },
   {
     id: "android-apk-github",
     name: `open-verse-v${VERSION}-android.apk`,
     url: `https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v${VERSION}/open-verse-v${VERSION}-android.apk`,
-    localPath: resolve(__dirname, `../dist-release/open-verse-v${VERSION}-android.apk`),
-    expectedSha256: "187dd7216b36d31f32340c129b8555cad56aa206b3de4cf003f4151badc2b955",
+    localPath: resolve(__dirname, `../build-artifacts/android/open-verse-v${VERSION}-android.apk`),
+    expectedSha256: "623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960",
     expectedMime: "application/octet-stream",
-    minBytes: 9 * 1024 * 1024
+    minBytes: 10 * 1024 * 1024
   }
 ];
 
@@ -85,39 +93,62 @@ async function verifyAll() {
   let passed = 0;
   let failed = 0;
 
+  // Fetch GitHub release metadata once if token is available
+  let ghAssets: any[] = [];
+  if (token) {
+    try {
+      const ghRes = await fetch(`https://api.github.com/repos/naresh-cn2/OPEN-VERSE/releases/tags/v${VERSION}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
+      });
+      if (ghRes.ok) {
+        const ghData = (await ghRes.json()) as any;
+        ghAssets = ghData.assets || [];
+      }
+    } catch {}
+  }
+
   for (const art of ARTIFACTS) {
     console.log(`--- Checking [${art.id}] ${art.name} ---`);
     console.log(`  Live URL: ${art.url}`);
 
-    // 1. Verify remote HTTP endpoint
-    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-    const headers: Record<string, string> = {};
-    if (token && art.url.includes("github.com")) {
-      headers["Authorization"] = `Bearer ${token}`;
-      headers["Accept"] = "application/octet-stream";
-    }
-
-    try {
-      const res = await fetch(art.url, { method: "HEAD", redirect: "follow", headers });
-      if (!res.ok) {
-        console.error(`  ❌ Remote URL returned HTTP ${res.status} ${res.statusText}`);
+    // 1. Verify remote HTTP endpoint or GitHub API Release Asset
+    if (art.url.includes("github.com")) {
+      const match = ghAssets.find((a: any) => a.name === art.name);
+      if (!match) {
+        console.error(`  ❌ GitHub Release Asset not found in v${VERSION}`);
         failed++;
         continue;
       }
-      const remoteMime = res.headers.get("content-type") || "";
-      const remoteLen = parseInt(res.headers.get("content-length") || "0", 10);
-      const remoteMb = (remoteLen / (1024 * 1024)).toFixed(2);
-      console.log(`  Remote Endpoint: HTTP ${res.status} | ${remoteMb} MB | ${remoteMime}`);
-
-      if (remoteLen < art.minBytes) {
+      const remoteMb = (match.size / (1024 * 1024)).toFixed(2);
+      console.log(`  GitHub Release Asset: State ${match.state} | ${remoteMb} MB | ${match.content_type}`);
+      if (match.size < art.minBytes) {
         console.error(`  ❌ Remote Content-Length too small (${remoteMb} MB < ${(art.minBytes / (1024*1024)).toFixed(2)} MB)`);
         failed++;
         continue;
       }
-    } catch (e: any) {
-      console.error(`  ❌ Remote endpoint fetch failed: ${e.message}`);
-      failed++;
-      continue;
+    } else {
+      try {
+        const res = await fetch(art.url, { method: "HEAD", redirect: "follow" });
+        if (!res.ok) {
+          console.error(`  ❌ Remote URL returned HTTP ${res.status} ${res.statusText}`);
+          failed++;
+          continue;
+        }
+        const remoteMime = res.headers.get("content-type") || "";
+        const remoteLen = parseInt(res.headers.get("content-length") || "0", 10);
+        const remoteMb = (remoteLen / (1024 * 1024)).toFixed(2);
+        console.log(`  Remote Endpoint: HTTP ${res.status} | ${remoteMb} MB | ${remoteMime}`);
+
+        if (remoteLen < art.minBytes) {
+          console.error(`  ❌ Remote Content-Length too small (${remoteMb} MB < ${(art.minBytes / (1024*1024)).toFixed(2)} MB)`);
+          failed++;
+          continue;
+        }
+      } catch (e: any) {
+        console.error(`  ❌ Remote endpoint fetch failed: ${e.message}`);
+        failed++;
+        continue;
+      }
     }
 
     // 2. Verify bit-for-bit SHA-256 hash

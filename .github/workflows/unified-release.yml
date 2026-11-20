@@ -191,6 +191,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Free Disk Space on Runner
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h
+
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -213,7 +218,7 @@ jobs:
           bun install
           bun run build:runtime
           bun run build:web
-          bunx tauri build --bundles deb,rpm,appimage
+          bunx tauri build --bundles deb,rpm
 
       - name: Sign Linux Packages with GPG
         env:
