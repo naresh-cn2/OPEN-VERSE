@@ -129,7 +129,7 @@ export const DownloadCenter: React.FC = () => {
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 640 }}>
-                  Hermes Agent for Windows 10 and 11 — CLI, gateway, TUI, and tools all run natively. Isolated config at C:\Users\nares\.hermes-openverse; does not affect the Store-installed Hermes.
+                  Hermes Agent for Windows 10 and 11 — CLI, gateway, TUI, and tools all run natively. Isolated config at C:/Users/nares/.hermes-openverse; does not affect the Store-installed Hermes.
                 </p>
               </div>
 
@@ -170,9 +170,7 @@ export const DownloadCenter: React.FC = () => {
                       <Monitor size={18} style={{ color: "var(--sky)" }} />
                       <span>Setup Installer (.exe)</span>
                     </div>
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                      {FILE_META.windows.size}
-                    </span>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>~107 MB</span>
                   </div>
                   <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
                     Standard Windows installer with Start Menu integration, desktop shortcuts, and automated background updates.
@@ -192,6 +190,7 @@ export const DownloadCenter: React.FC = () => {
                   </a>
                 </div>
               </div>
+            </div>
 
             {/* Launch Info */}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -204,7 +203,7 @@ export const DownloadCenter: React.FC = () => {
                   <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>From extracted ZIP</span>
                 </div>
                 <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
-                  Extract the ZIP and double-click <code style={{ color: "var(--accent-light)" }}>scripts\hermes-openverse.bat</code>.
+                  Extract the ZIP and double-click <code style={{ color: "var(--accent-light)" }}>scripts/hermes-openverse.bat</code>.
                 </p>
               </div>
             </div>
