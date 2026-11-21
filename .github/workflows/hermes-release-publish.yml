@@ -1,0 +1,54 @@
+name: Publish Hermes Agent Release Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_publish:
+        description: 'Type "publish" to upload all Hermes Agent packages to the GitHub Release.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish Hermes Agent packages to GitHub Release
+    if: github.event.inputs.confirm_publish == 'publish'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: hermes-agent-windows
+          path: release-assets/windows
+          if-no-files-found: error
+
+      - name: Download Linux package
+        uses: actions/download-artifact@v4
+        with:
+          name: hermes-agent-linux
+          path: release-assets/linux
+          if-no-files-found: error
+
+      - name: Download macOS package
+        uses: actions/download-artifact@v4
+        with:
+          name: hermes-agent-macos
+          path: release-assets/macos
+          if-no-files-found: error
+
+      - name: List all release assets
+        run: find release-assets -type f -exec ls -la {} \;
+
+      - name: Publish to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: bash .github/scripts/publish-release.sh

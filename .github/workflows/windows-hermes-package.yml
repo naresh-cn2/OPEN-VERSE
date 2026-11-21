@@ -1,0 +1,70 @@
+name: Windows Hermes Agent Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_build:
+        description: 'Type "build" to build Hermes Agent Windows package.'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Hermes Agent for Windows
+    if: github.event.inputs.confirm_build == 'build'
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: open-verse
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Run Hermes Agent installer (non-interactive)
+        shell: pwsh
+        working-directory: open-verse/sources/hermes-agent
+        env:
+          HERMES_HOME: C:\hermes-home
+        run: |
+          ./scripts/install.ps1 -NonInteractive -SkipBrowser -SkipComputerUse -InstallDir C:\hermes-agent
+
+      - name: Verify Hermes Agent installation
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\hermes-agent\cli.py")) {
+            Write-Error "Hermes Agent cli.py not found in C:\hermes-agent"
+            exit 1
+          }
+          Get-ChildItem -Path C:\hermes-agent | Select-Object Name, Length | Format-Table -AutoSize
+
+      - name: Package Hermes Agent ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "C:\hermes-agent\*" -DestinationPath "Hermes-Agent-0.2.8-windows.zip"
+          Get-Item "Hermes-Agent-0.2.8-windows.zip" | Select-Object Name, Length
+
+      - name: Upload Windows package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-agent-windows
+          path: Hermes-Agent-0.2.8-windows.zip
+          retention-days: 90
