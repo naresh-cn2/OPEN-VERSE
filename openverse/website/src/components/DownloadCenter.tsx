@@ -54,60 +54,32 @@ export const DownloadCenter: React.FC = () => {
   // Release version & repository configuration
   const DESKTOP_VERSION = "0.2.8";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
+  const RELEASE_TAG = "hermes-agent";
 
-  // Official release assets
+  // Official release assets — Hermes Agent packages under Open Verse branding
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-    windowsZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
-    windowsSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe.sig`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg`,
-    linuxDeb: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb`,
-    linuxDebSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb.sig`,
-    linuxRpm: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm`,
-    linuxRpmSig: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/desktop-latest/OPEN-VERSE-0.2.0-1.x86_64.rpm.sig`,
-    androidApk: "/open-verse-mobile.apk",
-    androidVersionedApk: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-v${DESKTOP_VERSION}-android.apk`,
-    androidZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/v${DESKTOP_VERSION}/open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-    iosTestFlight: `https://github.com/${GITHUB_RELEASES_ORG}/issues/new?title=iOS+TestFlight+Beta+Invite+Request&body=Please+grant+TestFlight+beta+access+for+my+Apple+ID.`,
-    iosZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/heads/main.zip`,
+    windows: `/Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
+    mac: `/Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
+    linux: `/Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
+    android: `/Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
   };
 
   const FILE_META = {
     windows: {
-      name: `OPEN-VERSE_${DESKTOP_VERSION}_x64-setup.exe`,
-      zipName: `OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip`,
-      size: "129.3 MB",
-      zipSize: "129.3 MB",
-      sha256: "481d43089055d8bfdc1f5c67f894814ece88078503a46eb90c286db15579d4dc",
-      zipSha256: "0a875ab71b13f3659a5be7d4527f862163e8a41736ae2c27725a5b7786e8a31c",
+      name: `Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
+      size: "107 MB",
     },
     mac: {
-      name: `OPEN-VERSE_0.2.0_aarch64.dmg`,
-      size: "172.8 MB",
-      sha256: "0ac01302a129a4a1676ea7d81b749355cdd8cdb52a898ec014a15ebe006e0e2c",
+      name: `Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
+      size: "107 MB",
     },
-    linuxDeb: {
-      name: `OPEN-VERSE_0.2.0_amd64.deb`,
-      size: "239.1 MB",
-      sha256: "ab5777a7c5716bbaf9b2e4dd2eebadec3f5244092cb1ee116fedb0fdbb311dc8",
-    },
-    linuxRpm: {
-      name: `OPEN-VERSE-0.2.0-1.x86_64.rpm`,
-      size: "239.1 MB",
-      sha256: "90dd67b89c31254c9b8f6edc9f45acd2a760bf20698e59539a82f0eca751bfb9",
+    linux: {
+      name: `Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
+      size: "107 MB",
     },
     android: {
-      name: `open-verse-mobile.apk`,
-      versionedName: `open-verse-v${DESKTOP_VERSION}-android.apk`,
-      zipName: `open-verse-mobile-v${DESKTOP_VERSION}.zip`,
-      size: "10.6 MB",
-      sha256: "623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960",
-    },
-    ios: {
-      name: `open-verse-ios-v${DESKTOP_VERSION}`,
-      version: DESKTOP_VERSION,
-      build: "9",
-      size: "Native Xcode Project (ARM64)",
+      name: `Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
+      size: "107 MB",
     },
   };
 
