@@ -29,41 +29,38 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '26'
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Copy Hermes Agent source
+        run: cp -r open-verse/sources/hermes-agent/* hermes-agent-pkg/
 
-      - name: Run Hermes Agent installer (non-interactive)
-        working-directory: open-verse/sources/hermes-agent
-        env:
-          HERMES_HOME: /tmp/hermes-home
-          HERMES_INSTALL_DIR: /tmp/hermes-agent
+      - name: Install Hermes Agent dependencies
+        working-directory: hermes-agent-pkg
+        run: uv sync --frozen --no-cache
+
+      - name: Create Linux launcher scripts
+        working-directory: hermes-agent-pkg
         run: |
-          bash scripts/install.sh --non-interactive --skip-browser --skip-computer-use --hermes-home /tmp/hermes-home --install-dir /tmp/hermes-agent
+          mkdir -p bin
+          printf '#!/bin/bash\nHERMES_HOME="$(cd "$(dirname "$0")/.." && pwd)"\nHERMES_PYTHON="$HERMES_HOME/.venv/bin/python"\nexec "$HERMES_PYTHON" "$HERMES_HOME/cli.py" "$@"\n' > bin/hermes
+          printf '#!/bin/bash\nHERMES_HOME="$(cd "$(dirname "$0")/.." && pwd)"\nHERMES_PYTHON="$HERMES_HOME/.venv/bin/python"\nexec "$HERMES_PYTHON" "$HERMES_HOME/cli.py" gateway "$@"\n' > bin/hermes-gateway
+          chmod +x bin/hermes bin/hermes-gateway
 
       - name: Verify Hermes Agent installation
+        working-directory: hermes-agent-pkg
         run: |
-          if [ ! -f /tmp/hermes-agent/cli.py ]; then
-            echo "❌ Hermes Agent cli.py not found in /tmp/hermes-agent"
-            exit 1
-          fi
-          ls -la /tmp/hermes-agent/ | head -30
+          test -f cli.py || { echo "cli.py not found"; exit 1; }
+          test -d .venv || { echo "venv not found"; exit 1; }
+          ls -1
 
       - name: Package Hermes Agent ZIP
-        run: |
-          cd /tmp/hermes-agent
-          zip -r /tmp/Hermes-Agent-0.2.8-linux.zip .
-          ls -la /tmp/Hermes-Agent-0.2.8-linux.zip
+        working-directory: hermes-agent-pkg
+        run: zip -r ../Hermes-Agent-0.2.8-linux.zip .
 
       - name: Upload Linux package artifact
         uses: actions/upload-artifact@v4
         with:
           name: hermes-agent-linux
-          path: /tmp/Hermes-Agent-0.2.8-linux.zip
+          path: Hermes-Agent-0.2.8-linux.zip
           retention-days: 90
