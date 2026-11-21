@@ -35,7 +35,6 @@ Thumbs.db
 
 # Upstream source repositories (original sources preserved independently with their own git histories)
 sources/cline/
-sources/hermes-agent/
 sources/opencode/
 sources/openclaw/
 sources/open-claw/
