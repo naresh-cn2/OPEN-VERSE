@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Monitor,
   Smartphone,
@@ -6,14 +6,11 @@ import {
   Check,
   Copy,
   Download,
-  Clock,
   ShieldCheck,
   Info,
   Apple,
   ExternalLink,
-  Layers,
   FolderArchive,
-  FileCode2,
 } from "lucide-react";
 
 export const DownloadCenter: React.FC = () => {
@@ -51,17 +48,15 @@ export const DownloadCenter: React.FC = () => {
     else if (ua.includes("linux")) setDetectedOS("linux");
   }, []);
 
-  // Release version & repository configuration
   const DESKTOP_VERSION = "0.2.8";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
   const RELEASE_TAG = "hermes-agent";
 
-  // Official release assets — Hermes Agent packages under Open Verse branding
   const ASSETS = {
-    windows: `/Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
-    mac: `/Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
-    linux: `/Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
-    android: `/Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
+    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
+    android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
   };
 
   const FILE_META = {
@@ -90,12 +85,10 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Native Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Official native builds for Windows, macOS, Linux, and Mobile. High-performance local runtime
-            with cryptographic Minisign integrity verification.
+            Official native builds for Windows, macOS, Linux, and Mobile. Hermes Agent full source running from your Open Verse repository.
           </p>
         </div>
 
-        {/* Platform Selection Tabs */}
         <div
           style={{
             display: "flex",
@@ -146,7 +139,6 @@ export const DownloadCenter: React.FC = () => {
         {/* Tab 1: Windows */}
         {activeTab === "windows" && (
           <div className="glass-card" style={{ padding: 36, maxWidth: 960, margin: "0 auto" }} id="download-windows">
-            {/* Header info */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
@@ -163,14 +155,13 @@ export const DownloadCenter: React.FC = () => {
                     }}
                   >
                     <ShieldCheck size={14} style={{ color: "#a78bfa" }} />
-                    <span>Verified Community Release • Minisign Signed</span>
+                    <span>Hermes Agent Source • MIT Licensed</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 640 }}>
-                  Native 64-bit application for Windows 10 & 11. Choose between the standard desktop setup installer or the portable standalone archive.
+                  Full Hermes Agent source package for Windows 10 &amp; 11. Extract and run scripts/hermes-openverse.bat to launch.
                 </p>
               </div>
-
               <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
                 <span>Latest:</span>
                 <span className="badge badge-green" style={{ fontSize: "0.75rem", padding: "2px 8px" }}>
@@ -179,183 +170,44 @@ export const DownloadCenter: React.FC = () => {
               </div>
             </div>
 
-            {/* Primary Download Options Grid */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: 20,
-                marginBottom: 28,
+                background: "#0c0c12",
+                borderRadius: 14,
+                padding: 24,
+                border: "1px solid var(--border-subtle)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
               }}
             >
-              {/* Option 1: Setup Installer */}
-              <div
-                style={{
-                  background: "#0c0c12",
-                  borderRadius: 14,
-                  padding: 24,
-                  border: "1px solid var(--border-subtle)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  transition: "border-color 0.2s ease",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#ffffff", fontWeight: 700, fontSize: "1.05rem" }}>
-                      <Monitor size={18} style={{ color: "var(--sky)" }} />
-                      <span>Setup Installer (.exe)</span>
-                    </div>
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                      {FILE_META.windows.size}
-                    </span>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#ffffff", fontWeight: 700, fontSize: "1.05rem" }}>
+                    <FolderArchive size={18} style={{ color: "var(--accent-light)" }} />
+                    <span>Hermes Agent Portable ZIP</span>
                   </div>
-                  <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
-                    Standard Windows installer with Start Menu integration, desktop shortcuts, and automated background updates.
-                  </p>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                    {FILE_META.windows.size}
+                  </span>
                 </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <a
-                    href={ASSETS.windows}
-                    download={FILE_META.windows.name}
-                    className="btn-primary"
-                    style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
-                  >
-                    <Download size={17} />
-                    <span>Download Windows Installer</span>
-                  </a>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span>SHA-256:</span>
-                      <code style={{ color: "var(--accent-light)" }}>{FILE_META.windows.sha256.slice(0, 14)}...</code>
-                      <button
-                        onClick={() => copyToClipboard(FILE_META.windows.sha256, "win-exe-sha")}
-                        style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                        title="Copy EXE SHA-256 Checksum"
-                      >
-                        {copiedKey === "win-exe-sha" ? <Check size={12} /> : <Copy size={12} />}
-                      </button>
-                    </div>
-                    <a
-                      href={ASSETS.windowsSig}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "var(--text-secondary)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: 4 }}
-                    >
-                      <span>Signature (.sig)</span>
-                    </a>
-                  </div>
-                </div>
+                <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
+                  Complete Hermes Agent source code. Extract anywhere and launch immediately.
+                </p>
               </div>
-
-              {/* Option 2: Portable Standalone ZIP */}
-              <div
-                style={{
-                  background: "#0c0c12",
-                  borderRadius: 14,
-                  padding: 24,
-                  border: "1px solid var(--border-subtle)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  transition: "border-color 0.2s ease",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#ffffff", fontWeight: 700, fontSize: "1.05rem" }}>
-                      <FolderArchive size={18} style={{ color: "var(--accent-light)" }} />
-                      <span>Portable Package (.zip)</span>
-                    </div>
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                      {FILE_META.windows.zipSize}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
-                    Self-contained standalone archive. Extract anywhere and launch immediately with zero registry changes or system administrator privileges required.
-                  </p>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <a
-                    href={ASSETS.windowsZip}
-                    download={FILE_META.windows.zipName}
-                    className="btn-secondary"
-                    style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
-                  >
-                    <Download size={17} />
-                    <span>Download Portable ZIP</span>
-                  </a>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span>SHA-256:</span>
-                      <code style={{ color: "var(--accent-light)" }}>{FILE_META.windows.zipSha256.slice(0, 14)}...</code>
-                      <button
-                        onClick={() => copyToClipboard(FILE_META.windows.zipSha256, "win-zip-sha")}
-                        style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
-                        title="Copy ZIP SHA-256 Checksum"
-                      >
-                        {copiedKey === "win-zip-sha" ? <Check size={12} /> : <Copy size={12} />}
-                      </button>
-                    </div>
-                    <span style={{ color: "var(--emerald)" }}>Zero Install</span>
-                  </div>
-                </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <a
+                  href={ASSETS.windows}
+                  download={FILE_META.windows.name}
+                  className="btn-primary"
+                  style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
+                >
+                  <Download size={17} />
+                  <span>Download Hermes Agent for Windows</span>
+                </a>
               </div>
             </div>
 
-            {/* CLI & Sideload Channels */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 24 }}>
-              {/* winget command */}
-              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: 18 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#ffffff", fontSize: "0.9rem" }}>
-                    <Terminal size={16} style={{ color: "var(--sky)" }} />
-                    <span>Windows Package Manager (winget)</span>
-                  </div>
-                  <span className="badge badge-green" style={{ fontSize: "0.7rem" }}>Official Manifest</span>
-                </div>
-                <div className="code-box" style={{ fontSize: "0.82rem", padding: "8px 12px" }}>
-                  <code>winget install OpenVerse.OpenVerse</code>
-                  <button
-                    onClick={() => copyToClipboard("winget install OpenVerse.OpenVerse", "winget-cmd")}
-                    className="copy-btn"
-                    title="Copy winget command"
-                  >
-                    {copiedKey === "winget-cmd" ? <Check size={14} /> : <Copy size={14} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Modern MSIX package */}
-              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: 18 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#ffffff", fontSize: "0.9rem" }}>
-                    <Layers size={16} style={{ color: "var(--accent-light)" }} />
-                    <span>PowerShell MSIX Package</span>
-                  </div>
-                  <span className="badge badge-purple" style={{ fontSize: "0.7rem" }}>SDK Sideload</span>
-                </div>
-                <div className="code-box" style={{ fontSize: "0.82rem", padding: "8px 12px" }}>
-                  <code>Add-AppxPackage -Path .\OPEN-VERSE_0.2.7_x64.msix</code>
-                  <button
-                    onClick={() => copyToClipboard("Add-AppxPackage -Path .\\OPEN-VERSE_0.2.7_x64.msix", "msix-cmd")}
-                    className="copy-btn"
-                    title="Copy PowerShell command"
-                  >
-                    {copiedKey === "msix-cmd" ? <Check size={14} /> : <Copy size={14} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Clean, Neutral First-Launch Guidance Note */}
             <div
               style={{
                 background: "rgba(255, 255, 255, 0.02)",
@@ -370,16 +222,17 @@ export const DownloadCenter: React.FC = () => {
             >
               <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
               <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-                <strong style={{ color: "#ffffff" }}>First-Launch Tip:</strong> When launching an open-source community release for the first time, Windows Defender SmartScreen may ask for confirmation. Click <strong>&ldquo;More info&rdquo;</strong> &rarr; <strong>&ldquo;Run anyway&rdquo;</strong> to continue. Alternatively, use the Portable ZIP package for zero-install execution.
+                <strong style={{ color: "#ffffff" }}>Launch:</strong> Extract the ZIP, then double-click{" "}
+                <code style={{ color: "var(--accent-light)" }}>scripts/hermes-openverse.bat</code>{" "}
+                to start Hermes Agent on your Windows device.
               </div>
             </div>
 
-            {/* Specs Footer */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
-              <div>• OS: Windows 10 (1903+) or Windows 11</div>
-              <div>• Architecture: 64-bit Intel / AMD (x86_64)</div>
-              <div>• Cryptography: Minisign Ed25519 (.sig)</div>
-              <div>• Updates: In-app background service</div>
+              <div>• OS: Windows 10 and 11</div>
+              <div>• Architecture: 64-bit (x86_64)</div>
+              <div>• Source: Hermes Agent (MIT-licensed)</div>
+              <div>• Config: Isolated Hermes home</div>
             </div>
           </div>
         )}
@@ -403,14 +256,13 @@ export const DownloadCenter: React.FC = () => {
                     }}
                   >
                     <Apple size={14} style={{ color: "var(--sky)" }} />
-                    <span>Apple Silicon DMG • Ad-Hoc Signed</span>
+                    <span>Hermes Agent for macOS</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Native Apple Silicon disk image (.dmg) built for macOS 11.0+. Includes embedded agent runtime, local LSP engine, and full offline execution.
+                  Hermes Agent for macOS — runs on Apple Silicon (M1-M4) and Intel x86_64.
                 </p>
               </div>
-
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
                   href={ASSETS.mac}
@@ -419,56 +271,11 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download for macOS (.dmg)</span>
+                  <span>Download Hermes Agent for macOS</span>
                 </a>
               </div>
             </div>
 
-            {/* Checksum and Asset Details */}
-            <div
-              style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: 10,
-                padding: "14px 18px",
-                marginBottom: 20,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                <Clock size={15} style={{ color: "var(--accent-light)" }} />
-                <span>Asset: <code>{FILE_META.mac.name}</code> (Apple Silicon / ARM64) • {FILE_META.mac.size}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                <span style={{ fontFamily: "var(--font-mono)" }}>SHA-256:</span>
-                <code style={{ color: "var(--accent-light)", wordBreak: "break-all" }}>{FILE_META.mac.sha256}</code>
-                <button
-                  onClick={() => copyToClipboard(FILE_META.mac.sha256, "mac-sha")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--accent-light)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: "0.78rem",
-                    padding: "3px 8px",
-                    borderRadius: 4,
-                  }}
-                  title="Copy SHA-256 Checksum"
-                >
-                  {copiedKey === "mac-sha" ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copiedKey === "mac-sha" ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Clean Installation Guidance */}
             <div
               style={{
                 background: "rgba(255, 255, 255, 0.02)",
@@ -483,15 +290,17 @@ export const DownloadCenter: React.FC = () => {
             >
               <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
               <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-                <strong style={{ color: "#ffffff" }}>Installation Tip:</strong> Open the disk image and drag <code>OPEN-VERSE.app</code> into your Applications folder. If macOS Gatekeeper prompts on first launch of this community release, right-click the application in Applications &rarr; select <strong>Open</strong> &rarr; click <strong>Open</strong>.
+                <strong style={{ color: "#ffffff" }}>Launch:</strong> Extract the ZIP, then run{" "}
+                <code style={{ color: "var(--accent-light)" }}>scripts/hermes-openverse.ps1</code>{" "}
+                in PowerShell or Terminal.
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
-              <div>• Architecture: Apple Silicon (M1/M2/M3/M4, ARM64)</div>
-              <div>• OS: macOS 11.0 Big Sur or later</div>
-              <div>• Signing: Ad-hoc signed community binary</div>
-              <div>• CLI alternative: <code>xattr -cr /Applications/OPEN-VERSE.app</code></div>
+              <div>• Architecture: Apple Silicon and Intel x86_64</div>
+              <div>• OS: macOS 11.0+</div>
+              <div>• Source: Hermes Agent (MIT-licensed)</div>
+              <div>• Config: Isolated Hermes home</div>
             </div>
           </div>
         )}
@@ -505,108 +314,55 @@ export const DownloadCenter: React.FC = () => {
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for Linux</h3>
                   <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <Check size={14} style={{ color: "var(--emerald)" }} />
-                    <span>Available • Minisign Verified</span>
+                    <span>Hermes Agent Source</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Native packages for 64-bit Linux distributions (Ubuntu, Debian, Fedora, RHEL). Includes Minisign signature verification and automated updates.
+                  Hermes Agent for 64-bit Linux — Ubuntu, Debian, Fedora, RHEL, and derivatives.
                 </p>
               </div>
-
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <a
-                  href={ASSETS.linuxDeb}
-                  download={FILE_META.linuxDeb.name}
+                  href={ASSETS.linux}
+                  download={FILE_META.linux.name}
                   className="btn-primary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
                   <Download size={17} />
-                  <span>Download .deb (Debian/Ubuntu)</span>
-                </a>
-                <a
-                  href={ASSETS.linuxRpm}
-                  download={FILE_META.linuxRpm.name}
-                  className="btn-primary"
-                  style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
-                >
-                  <Download size={17} />
-                  <span>Download .rpm (Fedora/RHEL)</span>
+                  <span>Download Hermes Agent for Linux</span>
                 </a>
               </div>
             </div>
 
-            {/* Asset Details */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
               <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "16px 18px" }}>
                 <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ffffff", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                   <Terminal size={16} style={{ color: "var(--sky)" }} />
-                  <span>Debian / Ubuntu (.deb)</span>
+                  <span>Hermes Agent for Linux (.zip)</span>
                 </div>
                 <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 6 }}>
-                  Size: <code>{FILE_META.linuxDeb.size}</code>
-                </div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                  <span>SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxDeb.sha256.slice(0, 16)}...</code></span>
-                  <button onClick={() => copyToClipboard(FILE_META.linuxDeb.sha256, "deb-sha")} style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center" }}>
-                    {copiedKey === "deb-sha" ? <Check size={12} /> : <Copy size={12} />}
-                  </button>
+                  Size: <code>{FILE_META.linux.size}</code>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <a href={ASSETS.linuxDebSig} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: "6px 12px", fontSize: "0.78rem", gap: 6 }}>
+                  <a
+                    href={ASSETS.linux}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                    style={{ padding: "6px 12px", fontSize: "0.78rem", gap: 6 }}
+                  >
                     <Download size={13} />
-                    <span>Download .sig</span>
+                    <span>Download for Linux</span>
                   </a>
                 </div>
-              </div>
-
-              <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "16px 18px" }}>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ffffff", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Terminal size={16} style={{ color: "var(--accent-light)" }} />
-                  <span>Fedora / RHEL (.rpm)</span>
-                </div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 6 }}>
-                  Size: <code>{FILE_META.linuxRpm.size}</code>
-                </div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", wordBreak: "break-all", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                  <span>SHA-256: <code style={{ color: "var(--accent-light)" }}>{FILE_META.linuxRpm.sha256.slice(0, 16)}...</code></span>
-                  <button onClick={() => copyToClipboard(FILE_META.linuxRpm.sha256, "rpm-sha")} style={{ background: "none", border: "none", color: "var(--accent-light)", cursor: "pointer", display: "inline-flex", alignItems: "center" }}>
-                    {copiedKey === "rpm-sha" ? <Check size={12} /> : <Copy size={12} />}
-                  </button>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <a href={ASSETS.linuxRpmSig} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: "6px 12px", fontSize: "0.78rem", gap: 6 }}>
-                    <Download size={13} />
-                    <span>Download .sig</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Terminal Command */}
-            <div style={{ background: "#0d0d12", borderRadius: 12, padding: 20, border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
-              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#ffffff", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <Info size={15} style={{ color: "var(--sky)" }} />
-                <span>Package Installation Commands</span>
-              </div>
-              <div className="code-box" style={{ marginBottom: 8 }}>
-                <span>sudo dpkg -i {FILE_META.linuxDeb.name}</span>
-                <button onClick={() => copyToClipboard(`sudo dpkg -i ${FILE_META.linuxDeb.name}`, "linux-deb")} className="copy-btn" title="Copy Debian install command">
-                  {copiedKey === "linux-deb" ? <Check size={16} /> : <Copy size={16} />}
-                </button>
-              </div>
-              <div className="code-box">
-                <span>sudo rpm -i {FILE_META.linuxRpm.name}</span>
-                <button onClick={() => copyToClipboard(`sudo rpm -i ${FILE_META.linuxRpm.name}`, "linux-rpm")} className="copy-btn" title="Copy RPM install command">
-                  {copiedKey === "linux-rpm" ? <Check size={16} /> : <Copy size={16} />}
-                </button>
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Requirements: glibc 2.31+</div>
-              <div>• Package formats: .deb (dpkg/apt) and .rpm (rpm/dnf)</div>
               <div>• Architecture: x86_64</div>
-              <div>• Updates: In-app background service</div>
+              <div>• Source: Hermes Agent (MIT-licensed)</div>
+              <div>• Config: Isolated Hermes home</div>
             </div>
           </div>
         )}
@@ -615,7 +371,6 @@ export const DownloadCenter: React.FC = () => {
         {activeTab === "mobile" && (
           <div className="glass-card" style={{ padding: 36, maxWidth: 960, margin: "0 auto" }} id="download-mobile">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
-              {/* Android Card */}
               <div style={{ background: "#0c0c12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -623,16 +378,15 @@ export const DownloadCenter: React.FC = () => {
                       <Smartphone size={22} style={{ color: "var(--emerald)" }} />
                       <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android Companion</h4>
                     </div>
-                    <span className="badge badge-green" style={{ fontSize: "0.72rem" }}>Direct APK</span>
+                    <span className="badge badge-green" style={{ fontSize: "0.72rem" }}>Hermes Agent</span>
                   </div>
                   <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 18, lineHeight: 1.5 }}>
-                    Native Android application with multi-provider AI streaming and encrypted pairing with your desktop workspace.
+                    Hermes Agent for Android via Termux — signed APT repository with Python, Node.js, and the TUI.
                   </p>
-
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                     <a
-                      href={ASSETS.androidApk}
-                      download="open-verse-mobile.apk"
+                      href={ASSETS.android}
+                      download={FILE_META.android.name}
                       className="btn-primary"
                       style={{
                         display: "flex",
@@ -648,62 +402,21 @@ export const DownloadCenter: React.FC = () => {
                       }}
                     >
                       <Download size={18} />
-                      <span>Download Android APK (v{DESKTOP_VERSION})</span>
-                    </a>
-                    <a
-                      href={ASSETS.androidVersionedApk}
-                      download={FILE_META.android.versionedName}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        width: "100%",
-                        padding: "9px 16px",
-                        fontSize: "0.82rem",
-                        fontWeight: 500,
-                        borderRadius: 8,
-                        border: "1px solid var(--border-subtle)",
-                        background: "rgba(255, 255, 255, 0.04)",
-                        color: "var(--text-secondary)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <span>Direct APK Mirror ({FILE_META.android.versionedName})</span>
+                      <span>Download Hermes Agent for Android</span>
                     </a>
                   </div>
-
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: 16 }}>
                     <span>Size: {FILE_META.android.size}</span>
-                    <button
-                      onClick={() => copyToClipboard(FILE_META.android.sha256, "android-sha")}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "var(--accent-light)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        fontSize: "0.78rem",
-                      }}
-                      title="Copy SHA-256 Checksum"
-                    >
-                      {copiedKey === "android-sha" ? <Check size={14} /> : <Copy size={14} />}
-                      <span>{copiedKey === "android-sha" ? "Copied" : "Copy SHA-256"}</span>
-                    </button>
                   </div>
                 </div>
-
                 <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
                   <div style={{ fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>Quick Installation:</div>
-                  <div>1. Tap the download button directly on your phone.</div>
-                  <div>2. Open the downloaded file to install (allow &quot;Install unknown apps&quot; if prompted).</div>
-                  <div>3. Launch OPEN-VERSE. Requires Android 7.0+ (API 24+).</div>
+                  <div>1. Install Termux from F-Droid or Google Play.</div>
+                  <div>2. Extract the ZIP and run the setup script.</div>
+                  <div>3. Launch Hermes Agent from the Termux prompt.</div>
                 </div>
               </div>
 
-              {/* iOS Card */}
               <div style={{ background: "#0c0c12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -716,10 +429,9 @@ export const DownloadCenter: React.FC = () => {
                   <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 18, lineHeight: 1.5 }}>
                     Native iOS companion app with Swift runtime, WKWebView container, and secure desktop workspace sync.
                   </p>
-
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                     <a
-                      href={ASSETS.iosTestFlight}
+                      href="https://github.com/naresh-cn2/OPEN-VERSE/issues/new?title=iOS+TestFlight+Beta+Invite+Request"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary"
@@ -740,32 +452,7 @@ export const DownloadCenter: React.FC = () => {
                       <span>Join iOS Beta (TestFlight Queue)</span>
                       <ExternalLink size={14} style={{ opacity: 0.8 }} />
                     </a>
-
-                    <a
-                      href={ASSETS.iosZip}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        width: "100%",
-                        padding: "10px 16px",
-                        fontSize: "0.84rem",
-                        fontWeight: 500,
-                        borderRadius: 8,
-                        border: "1px solid var(--border-subtle)",
-                        background: "rgba(255, 255, 255, 0.04)",
-                        color: "var(--text-secondary)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Download size={15} />
-                      <span>Download Native Xcode Project (.zip)</span>
-                    </a>
                   </div>
-
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: 16 }}>
                     <span>Target: iOS 15.0+ (ARM64)</span>
                     <span style={{ color: "var(--emerald)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -774,7 +461,6 @@ export const DownloadCenter: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
                 <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
                   <div style={{ fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>Distribution Options:</div>
                   <div>• <strong>TestFlight Queue:</strong> Join the public queue to receive automated beta slot allocation.</div>
