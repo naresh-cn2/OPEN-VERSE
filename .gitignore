@@ -58,3 +58,8 @@ open-verse/.vercel
 open-verse-2.0/.hermes/
 open-verse-2.0/**/__pycache__/
 open-verse-2.0/**/.pytest_cache/
+
+.vercel
+
+**/.cache/
+**/web_dist/
