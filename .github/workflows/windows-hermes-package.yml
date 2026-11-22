@@ -29,9 +29,6 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v3
-
       - name: Copy Hermes Agent source
         shell: pwsh
         run: Copy-Item -Path "open-verse/sources/hermes-agent/*" -Destination "hermes-agent-pkg" -Recurse -Force
@@ -39,17 +36,18 @@ jobs:
       - name: Install Hermes Agent dependencies
         shell: pwsh
         working-directory: hermes-agent-pkg
-        run: uv sync --frozen --no-cache
+        run: |
+          python -m venv .venv
+          .venv\Scripts\pip install --upgrade pip
+          .venv\Scripts\pip install -e .
 
       - name: Create Windows launcher scripts
         shell: pwsh
         working-directory: hermes-agent-pkg
         run: |
           New-Item -ItemType Directory -Path "bin" -Force | Out-Null
-          $hermesBat = "@echo off`nset HERMES_HOME=%~dp0`nset HERMES_PYTHON=%HERMES_HOME%\.venv\Scripts\python.exe`n`"%HERMES_PYTHON%`" `"%HERMES_HOME%\cli.py`" %*`n"
-          $hermesBat | Out-File -FilePath "bin\hermes.bat" -Encoding ascii
-          $gwBat = "@echo off`nset HERMES_HOME=%~dp0`nset HERMES_PYTHON=%HERMES_HOME%\.venv\Scripts\python.exe`n`"%HERMES_PYTHON%`" `"%HERMES_HOME%\cli.py`" gateway %*`n"
-          $gwBat | Out-File -FilePath "bin\hermes-gateway.bat" -Encoding ascii
+          '@echo off`nset HERMES_HOME=%~dp0`nset HERMES_PYTHON=%HERMES_HOME%\.venv\Scripts\python.exe`n"%HERMES_PYTHON%" "%HERMES_HOME%\cli.py" %*' | Out-File -FilePath "bin\hermes.bat" -Encoding ascii
+          '@echo off`nset HERMES_HOME=%~dp0`nset HERMES_PYTHON=%HERMES_HOME%\.venv\Scripts\python.exe`n"%HERMES_PYTHON%" "%HERMES_HOME%\cli.py" gateway %*' | Out-File -FilePath "bin\hermes-gateway.bat" -Encoding ascii
 
       - name: Verify Hermes Agent installation
         shell: pwsh

@@ -29,15 +29,15 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v3
-
       - name: Copy Hermes Agent source
         run: cp -r open-verse/sources/hermes-agent/* hermes-agent-pkg/
 
       - name: Install Hermes Agent dependencies
         working-directory: hermes-agent-pkg
-        run: uv sync --frozen --no-cache
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -e .
 
       - name: Create macOS launcher scripts
         working-directory: hermes-agent-pkg
