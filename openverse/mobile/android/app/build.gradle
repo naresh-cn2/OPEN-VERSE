@@ -57,6 +57,7 @@ android {
     }
     aaptOptions {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        noCompress = ["woff2", "woff", "ttf", "otf", "png", "jpg", "jpeg", "svg", "gif", "webp"]
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
