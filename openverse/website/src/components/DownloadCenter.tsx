@@ -69,7 +69,7 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Native Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Official native builds for Windows, macOS, and Linux. Hermes Agent full source running from your Open Verse repository.
+            Official native builds for Windows, macOS, and Linux. Open Verse full source running from your Open Verse repository.
           </p>
         </div>
 
@@ -130,11 +130,11 @@ export const DownloadCenter: React.FC = () => {
                     }}
                   >
                     <ShieldCheck size={14} style={{ color: "#a78bfa" }} />
-                    <span>Hermes Agent Source • MIT Licensed</span>
+                    <span>Open Verse Source • MIT Licensed</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 640 }}>
-                  Full Hermes Agent source package for Windows 10 &amp; 11. Extract and run scripts/hermes-openverse.bat to launch.
+                  Full Open Verse source package for Windows 10 &amp; 11. Extract and run scripts/hermes-openverse.bat to launch.
                 </p>
               </div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -160,14 +160,14 @@ export const DownloadCenter: React.FC = () => {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#ffffff", fontWeight: 700, fontSize: "1.05rem" }}>
                     <FolderArchive size={18} style={{ color: "var(--accent-light)" }} />
-                    <span>Hermes Agent Portable ZIP</span>
+                    <span>Open Verse Portable ZIP</span>
                   </div>
                   <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
                     {FILE_META.windows.size}
                   </span>
                 </div>
                 <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 12px 0" }}>
-                  Complete Hermes Agent source code. Extract anywhere and launch immediately.
+                  Complete Open Verse source code. Extract anywhere and launch immediately.
                 </p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -178,7 +178,7 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
                 >
                   <Download size={17} />
-                  <span>Download Hermes Agent for Windows</span>
+                  <span>Download Open Verse for Windows</span>
                 </a>
               </div>
             </div>
@@ -199,15 +199,15 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
                 <strong style={{ color: "#ffffff" }}>Launch:</strong> Extract the ZIP, then double-click{" "}
                 <code style={{ color: "var(--accent-light)" }}>scripts/hermes-openverse.bat</code>{" "}
-                to start Hermes Agent on your Windows device.
+                to start Open Verse on your Windows device.
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• OS: Windows 10 and 11</div>
               <div>• Architecture: 64-bit (x86_64)</div>
-              <div>• Source: Hermes Agent (MIT-licensed)</div>
-              <div>• Config: Isolated Hermes home</div>
+              <div>• Source: Open Verse (MIT-licensed)</div>
+              <div>• Config: Isolated Open Verse home</div>
             </div>
           </div>
         )}
@@ -231,11 +231,11 @@ export const DownloadCenter: React.FC = () => {
                     }}
                   >
                     <Apple size={14} style={{ color: "var(--sky)" }} />
-                    <span>Hermes Agent for macOS</span>
+                    <span>Open Verse for macOS</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Hermes Agent for macOS — runs on Apple Silicon (M1-M4) and Intel x86_64.
+                  Open Verse for macOS — runs on Apple Silicon (M1-M4) and Intel x86_64.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -246,7 +246,7 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download Hermes Agent for macOS</span>
+                  <span>Download Open Verse for macOS</span>
                 </a>
               </div>
             </div>
@@ -274,8 +274,8 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Architecture: Apple Silicon and Intel x86_64</div>
               <div>• OS: macOS 11.0+</div>
-              <div>• Source: Hermes Agent (MIT-licensed)</div>
-              <div>• Config: Isolated Hermes home</div>
+              <div>• Source: Open Verse (MIT-licensed)</div>
+              <div>• Config: Isolated Open Verse home</div>
             </div>
           </div>
         )}
@@ -289,11 +289,11 @@ export const DownloadCenter: React.FC = () => {
                   <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for Linux</h3>
                   <span className="badge badge-green" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <Check size={14} style={{ color: "var(--emerald)" }} />
-                    <span>Hermes Agent Source</span>
+                    <span>Open Verse Source</span>
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 620 }}>
-                  Hermes Agent for 64-bit Linux — Ubuntu, Debian, Fedora, RHEL, and derivatives.
+                  Open Verse for 64-bit Linux — Ubuntu, Debian, Fedora, RHEL, and derivatives.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -304,7 +304,7 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
                   <Download size={17} />
-                  <span>Download Hermes Agent for Linux</span>
+                  <span>Download Open Verse for Linux</span>
                 </a>
               </div>
             </div>
@@ -313,7 +313,7 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "16px 18px" }}>
                 <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#ffffff", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
                   <Terminal size={16} style={{ color: "var(--sky)" }} />
-                  <span>Hermes Agent for Linux (.zip)</span>
+                  <span>Open Verse for Linux (.zip)</span>
                 </div>
                 <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: 6 }}>
                   Size: <code>{FILE_META.linux.size}</code>
@@ -336,8 +336,8 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Requirements: glibc 2.31+</div>
               <div>• Architecture: x86_64</div>
-              <div>• Source: Hermes Agent (MIT-licensed)</div>
-              <div>• Config: Isolated Hermes home</div>
+              <div>• Source: Open Verse (MIT-licensed)</div>
+              <div>• Config: Isolated Open Verse home</div>
             </div>
           </div>
         )}
