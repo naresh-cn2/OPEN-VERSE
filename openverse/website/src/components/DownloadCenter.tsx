@@ -4,7 +4,6 @@ import {
   Smartphone,
   Terminal,
   Check,
-  Copy,
   Download,
   ShieldCheck,
   Info,
@@ -14,15 +13,8 @@ import {
 } from "lucide-react";
 
 export const DownloadCenter: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"windows" | "mac" | "linux" | "mobile">("windows");
-  const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | "mobile" | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
+  const [activeTab, setActiveTab] = useState<"windows" | "mac" | "linux">("windows");
+  const [detectedOS, setDetectedOS] = useState<"windows" | "mac" | "linux" | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,8 +23,6 @@ export const DownloadCenter: React.FC = () => {
       if (hash.includes("windows")) setActiveTab("windows");
       else if (hash.includes("mac")) setActiveTab("mac");
       else if (hash.includes("linux")) setActiveTab("linux");
-      else if (hash.includes("mobile") || hash.includes("android") || hash.includes("ios") || hash.includes("iphone"))
-        setActiveTab("mobile");
     };
     handleHash();
     window.addEventListener("hashchange", handleHash);
@@ -42,8 +32,7 @@ export const DownloadCenter: React.FC = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const ua = navigator.userAgent.toLowerCase();
-    if (ua.includes("android") || ua.includes("iphone") || ua.includes("ipad")) setDetectedOS("mobile");
-    else if (ua.includes("win")) setDetectedOS("windows");
+    if (ua.includes("win")) setDetectedOS("windows");
     else if (ua.includes("mac")) setDetectedOS("mac");
     else if (ua.includes("linux")) setDetectedOS("linux");
   }, []);
@@ -56,7 +45,6 @@ export const DownloadCenter: React.FC = () => {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
     mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
     linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
-    android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
   };
 
   const FILE_META = {
@@ -72,10 +60,6 @@ export const DownloadCenter: React.FC = () => {
       name: `Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
       size: "107 MB",
     },
-    android: {
-      name: `Hermes-Agent-${DESKTOP_VERSION}-android.zip`,
-      size: "107 MB",
-    },
   };
 
   return (
@@ -85,7 +69,7 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Native Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Official native builds for Windows, macOS, Linux, and Mobile. Hermes Agent full source running from your Open Verse repository.
+            Official native builds for Windows, macOS, and Linux. Hermes Agent full source running from your Open Verse repository.
           </p>
         </div>
 
@@ -124,15 +108,6 @@ export const DownloadCenter: React.FC = () => {
             <Terminal size={16} />
             <span>Linux</span>
             {detectedOS === "linux" && <Check size={13} style={{ color: "var(--emerald)" }} />}
-          </button>
-          <button
-            onClick={() => setActiveTab("mobile")}
-            className={`tab-btn ${activeTab === "mobile" ? "active" : ""}`}
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <Smartphone size={16} />
-            <span>Mobile Companion (Android & iOS)</span>
-            {detectedOS === "mobile" && <Check size={13} style={{ color: "var(--emerald)" }} />}
           </button>
         </div>
 
@@ -363,110 +338,6 @@ export const DownloadCenter: React.FC = () => {
               <div>• Architecture: x86_64</div>
               <div>• Source: Hermes Agent (MIT-licensed)</div>
               <div>• Config: Isolated Hermes home</div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Mobile (Android & iOS) */}
-        {activeTab === "mobile" && (
-          <div className="glass-card" style={{ padding: 36, maxWidth: 960, margin: "0 auto" }} id="download-mobile">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
-              <div style={{ background: "#0c0c12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Smartphone size={22} style={{ color: "var(--emerald)" }} />
-                      <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>Android Companion</h4>
-                    </div>
-                    <span className="badge badge-green" style={{ fontSize: "0.72rem" }}>Hermes Agent</span>
-                  </div>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 18, lineHeight: 1.5 }}>
-                    Hermes Agent for Android via Termux — signed APT repository with Python, Node.js, and the TUI.
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                    <a
-                      href={ASSETS.android}
-                      download={FILE_META.android.name}
-                      className="btn-primary"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        width: "100%",
-                        padding: "12px 20px",
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        borderRadius: 10,
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Download size={18} />
-                      <span>Download Hermes Agent for Android</span>
-                    </a>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: 16 }}>
-                    <span>Size: {FILE_META.android.size}</span>
-                  </div>
-                </div>
-                <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                  <div style={{ fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>Quick Installation:</div>
-                  <div>1. Install Termux from F-Droid or Google Play.</div>
-                  <div>2. Extract the ZIP and run the setup script.</div>
-                  <div>3. Launch Hermes Agent from the Termux prompt.</div>
-                </div>
-              </div>
-
-              <div style={{ background: "#0c0c12", borderRadius: 16, padding: 24, border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <Apple size={22} style={{ color: "var(--sky)" }} />
-                      <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ffffff" }}>OPEN-VERSE for iOS</h4>
-                    </div>
-                    <span className="badge badge-purple" style={{ fontSize: "0.72rem" }}>Native App</span>
-                  </div>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: 18, lineHeight: 1.5 }}>
-                    Native iOS companion app with Swift runtime, WKWebView container, and secure desktop workspace sync.
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                    <a
-                      href="https://github.com/naresh-cn2/OPEN-VERSE/issues/new?title=iOS+TestFlight+Beta+Invite+Request"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        width: "100%",
-                        padding: "12px 20px",
-                        fontSize: "0.92rem",
-                        fontWeight: 600,
-                        borderRadius: 10,
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Apple size={18} />
-                      <span>Join iOS Beta (TestFlight Queue)</span>
-                      <ExternalLink size={14} style={{ opacity: 0.8 }} />
-                    </a>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: 16 }}>
-                    <span>Target: iOS 15.0+ (ARM64)</span>
-                    <span style={{ color: "var(--emerald)", display: "flex", alignItems: "center", gap: 4 }}>
-                      <Check size={13} />
-                      <span>Swift Ready</span>
-                    </span>
-                  </div>
-                </div>
-                <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "12px 14px", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                  <div style={{ fontWeight: 600, color: "#ffffff", marginBottom: 2 }}>Distribution Options:</div>
-                  <div>• <strong>TestFlight Queue:</strong> Join the public queue to receive automated beta slot allocation.</div>
-                  <div>• <strong>Xcode Build:</strong> Clone the repo and run <code style={{ color: "var(--sky)" }}>mobile/ios/OPEN-VERSE.xcodeproj</code> with your personal Apple ID.</div>
-                </div>
-              </div>
             </div>
           </div>
         )}
