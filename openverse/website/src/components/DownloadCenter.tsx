@@ -42,23 +42,23 @@ export const DownloadCenter: React.FC = () => {
   const RELEASE_TAG = "hermes-agent";
 
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
-    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}-windows.zip`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}-macos.zip`,
+    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}-linux.zip`,
   };
 
   const FILE_META = {
     windows: {
-      name: `Hermes-Agent-${DESKTOP_VERSION}-windows.zip`,
-      size: "107 MB",
+      name: `OPEN-VERSE-${DESKTOP_VERSION}-windows.zip`,
+      size: "88.6 MB",
     },
     mac: {
-      name: `Hermes-Agent-${DESKTOP_VERSION}-macos.zip`,
-      size: "107 MB",
+      name: `OPEN-VERSE-${DESKTOP_VERSION}-macos.zip`,
+      size: "88.6 MB",
     },
     linux: {
-      name: `Hermes-Agent-${DESKTOP_VERSION}-linux.zip`,
-      size: "107 MB",
+      name: `OPEN-VERSE-${DESKTOP_VERSION}-linux.zip`,
+      size: "88.6 MB",
     },
   };
 
