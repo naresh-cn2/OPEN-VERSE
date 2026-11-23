@@ -1,0 +1,260 @@
+name: desktop-unsigned-build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to build"
+        required: true
+        type: choice
+        options:
+          - windows
+          - macos
+          - linux
+          - all
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    if: github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all'
+    name: Build Windows (unsigned)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: open-verse/desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+        working-directory: open-verse/desktop
+        env:
+          TELEMETRY_SERVICE_API_KEY: ${{ secrets.TELEMETRY_SERVICE_API_KEY }}
+          ERROR_SERVICE_API_KEY: ${{ secrets.ERROR_SERVICE_API_KEY }}
+          OTEL_TELEMETRY_ENABLED: ${{ secrets.OTEL_TELEMETRY_ENABLED }}
+          OTEL_LOGS_EXPORTER: otlp
+          OTEL_METRICS_EXPORTER: otlp
+          OTEL_TRACES_EXPORTER: otlp
+          CLINE_TRACE_RECORD_CONTENT: "true"
+          OTEL_EXPORTER_OTLP_PROTOCOL: ${{ secrets.OTEL_EXPORTER_OTLP_PROTOCOL }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+
+      - name: Build webview
+        run: bunx next build webview
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+
+      - name: Build Tauri (unsigned)
+        run: bunx tauri build --target x86_64-pc-windows-gnu --config src-tauri/tauri.windows.conf.json --no-before-build
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+
+      - name: Find installer
+        id: find-installer
+        run: |
+          SETUP=$(find src-tauri/target/release/bundle/nsis -name '*-setup.exe' -print -quit)
+          if [ -z "$SETUP" ]; then
+            echo "no NSIS installer produced"
+            exit 1
+          fi
+          echo "installer_path=$SETUP" >> $GITHUB_OUTPUT
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+        shell: bash
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-windows-installer
+          path: ${{ steps.find-installer.outputs.installer_path }}
+          retention-days: 30
+
+  build-macos:
+    if: github.event.inputs.platform == 'macos' || github.event.inputs.platform == 'all'
+    name: Build macOS (unsigned)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: open-verse/desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+        working-directory: open-verse/desktop
+        env:
+          TELEMETRY_SERVICE_API_KEY: ${{ secrets.TELEMETRY_SERVICE_API_KEY }}
+          ERROR_SERVICE_API_KEY: ${{ secrets.ERROR_SERVICE_API_KEY }}
+          OTEL_TELEMETRY_ENABLED: ${{ secrets.OTEL_TELEMETRY_ENABLED }}
+          OTEL_LOGS_EXPORTER: otlp
+          OTEL_METRICS_EXPORTER: otlp
+          OTEL_TRACES_EXPORTER: otlp
+          CLINE_TRACE_RECORD_CONTENT: "true"
+          OTEL_EXPORTER_OTLP_PROTOCOL: ${{ secrets.OTEL_EXPORTER_OTLP_PROTOCOL }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+
+      - name: Build webview
+        run: bunx next build webview
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+
+      - name: Build Tauri (unsigned, universal)
+        run: bunx tauri build --target universal-apple-darwin --config src-tauri/tauri.conf.json --no-before-build
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+        env:
+          APPLE_CERTIFICATE: ""
+          TAURI_SIGNING_PRIVATE_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+          TAURI_BUNDLER_DMG_IGNORE_CI: "true"
+
+      - name: Find DMG
+        id: find-dmg
+        run: |
+          DMG=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name '*.dmg' -print -quit)
+          if [ -z "$DMG" ]; then
+            echo "no DMG produced"
+            exit 1
+          fi
+          echo "dmg_path=$DMG" >> $GITHUB_OUTPUT
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-macos-dmg
+          path: ${{ steps.find-dmg.outputs.dmg_path }}
+          retention-days: 30
+
+  build-linux:
+    if: github.event.inputs.platform == 'linux' || github.event.inputs.platform == 'all'
+    name: Build Linux (unsigned)
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            deb_arch: amd64
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            deb_arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libxdo-dev libssl-dev build-essential
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: open-verse/desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build SDK packages
+        run: bun run build:sdk
+        working-directory: open-verse/desktop
+        env:
+          TELEMETRY_SERVICE_API_KEY: ${{ secrets.TELEMETRY_SERVICE_API_KEY }}
+          ERROR_SERVICE_API_KEY: ${{ secrets.ERROR_SERVICE_API_KEY }}
+          OTEL_TELEMETRY_ENABLED: ${{ secrets.OTEL_TELEMETRY_ENABLED }}
+          OTEL_LOGS_EXPORTER: otlp
+          OTEL_METRICS_EXPORTER: otlp
+          OTEL_TRACES_EXPORTER: otlp
+          CLINE_TRACE_RECORD_CONTENT: "true"
+          OTEL_EXPORTER_OTLP_PROTOCOL: ${{ secrets.OTEL_EXPORTER_OTLP_PROTOCOL }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+
+      - name: Build webview
+        run: bunx next build webview
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+
+      - name: Build Tauri (unsigned)
+        run: bunx tauri build --target ${{ matrix.target }} --bundles deb --config src-tauri/tauri.conf.json --no-before-build
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+
+      - name: Find DEB
+        id: find-deb
+        run: |
+          DEB=$(find src-tauri/target/release/bundle/deb -name '*.deb' -print -quit)
+          if [ -z "$DEB" ]; then
+            echo "no DEB produced"
+            exit 1
+          fi
+          echo "deb_path=$DEB" >> $GITHUB_OUTPUT
+        working-directory: open-verse/desktop/apps/examples/desktop-app
+
+      - name: Upload Linux DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-linux-${{ matrix.arch }}-deb
+          path: ${{ steps.find-deb.outputs.deb_path }}
+          retention-days: 30
