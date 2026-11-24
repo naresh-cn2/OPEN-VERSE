@@ -66,6 +66,10 @@ jobs:
         run: bunx next build webview
         working-directory: openverse/desktop/apps/examples/desktop-app
 
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked --version 2.5.0
+        working-directory: openverse/desktop/apps/examples/desktop-app
+
       - name: Build Tauri (unsigned)
         run: cargo tauri build --target x86_64-pc-windows-gnu --config src-tauri/tauri.windows.conf.json --no-before-build
         working-directory: openverse/desktop/apps/examples/desktop-app
