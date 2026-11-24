@@ -6,6 +6,7 @@
 ;
 ; Use FindProcDLL to identify processes holding our files - simpler and
 ; doesn't require the Win/RestartManager.nsh include which is missing on CI.
+!include "FindProcDLL.nsh"
 !macro StopDesktopProcesses
   Push $0
   Push $1
