@@ -4,14 +4,11 @@
 ; desktop able to spawn it again. code-sidecar.exe is the backend and Hub
 ; executable of earlier releases; its Hub may still be running on upgrade.
 ;
-; Use FindProcDLL to identify processes holding our files - simpler and
-; doesn't require the Win/RestartManager.nsh include which is missing on CI.
-!include "FindProcDLL.nsh"
+; Use simple ExecWait and built-in NSIS commands - no external includes needed.
 !macro StopDesktopProcesses
   Push $0
   Push $1
   Push $2
-  Push $3
 
   ; First try to gracefully close OPEN-VERSE via its protocol handler
   ; (this works if the app is running and registered the protocol)
@@ -22,66 +19,33 @@
     ExecWait '"$INSTDIR\cline-cli.exe" --quit' $0
   ${EndIf}
 
-  ; Fallback: use FindProcDLL to find and stop processes using our files
-  ; Note: FindProcDLL is included with NSIS
-  !insertmacro FindProcDLL_Init
+  ; Fallback: use System::Call to find and stop processes using our files
+  ; Using simple process enumeration via WMI/command line
   ${If} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
-    FindProcDLL::FindProcDLL "$INSTDIR\${MAINBINARYNAME}.exe" $1
-    ${If} $1 != ""
-      Loop $1 $2 $3
-        DetailPrint "Stopping process $2 (PID $3) using ${MAINBINARYNAME}.exe"
-        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
-        ${If} $0 != 0
-          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
-          System::Call 'kernel32::CloseHandle(i r0)'
-        ${EndIf}
-      LoopEnd
-    ${EndIf}
+    ExecWait 'cmd /c "taskkill /F /FI \"IMAGENAME eq ${MAINBINARYNAME}.exe\" /T 2>nul"' $0
   ${EndIf}
 
   ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
-    FindProcDLL::FindProcDLL "$INSTDIR\OPEN-VERSE.exe" $1
-    ${If} $1 != ""
-      Loop $1 $2 $3
-        DetailPrint "Stopping process $2 (PID $3) using OPEN-VERSE.exe"
-        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
-        ${If} $0 != 0
-          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
-          System::Call 'kernel32::CloseHandle(i r0)'
-        ${EndIf}
-      LoopEnd
-    ${EndIf}
+    ExecWait 'cmd /c "taskkill /F /FI \"IMAGENAME eq OPEN-VERSE.exe\" /T 2>nul"' $0
   ${EndIf}
 
   ${If} ${FileExists} "$INSTDIR\cline-cli.exe"
-    FindProcDLL::FindProcDLL "$INSTDIR\cline-cli.exe" $1
-    ${If} $1 != ""
-      Loop $1 $2 $3
-        DetailPrint "Stopping process $2 (PID $3) using cline-cli.exe"
-        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
-        ${If} $0 != 0
-          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
-          System::Call 'kernel32::CloseHandle(i r0)'
-        ${EndIf}
-      LoopEnd
-    ${EndIf}
+    ExecWait 'cmd /c "taskkill /F /FI \"IMAGENAME eq cline-cli.exe\" /T 2>nul"' $0
   ${EndIf}
 
   ${If} ${FileExists} "$INSTDIR\code-sidecar.exe"
-    FindProcDLL::FindProcDLL "$INSTDIR\code-sidecar.exe" $1
-    ${If} $1 != ""
-      Loop $1 $2 $3
-        DetailPrint "Stopping process $2 (PID $3) using code-sidecar.exe"
-        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
-        ${If} $0 != 0
-          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
-          System::Call 'kernel32::CloseHandle(i r0)'
-        ${EndIf}
-      LoopEnd
+    ExecWait 'cmd /c "taskkill /F /FI \"IMAGENAME eq code-sidecar.exe\" /T 2>nul"' $0
+  ${EndIf}
+
+  ; Nothing installs the earlier backend executable any more.
+  Delete "$INSTDIR\code-sidecar.exe"
+  ; Clean up legacy binary so it is not accidentally relaunched
+  ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
+    ${If} ${FileExists} "$INSTDIR\cline-app.exe"
+      Delete "$INSTDIR\cline-app.exe"
     ${EndIf}
   ${EndIf}
 
-  Pop $3
   Pop $2
   Pop $1
   Pop $0
