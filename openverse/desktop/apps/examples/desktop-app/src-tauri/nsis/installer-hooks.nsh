@@ -1,109 +1,89 @@
-!include "Win\RestartManager.nsh"
-
 ; The bundled cline-cli.exe runs the desktop backend and, as a detached
 ; daemon, the Hub, which outlives the desktop. Stop users of every installed
 ; executable before replacing any: stopping only the CLI first leaves the
 ; desktop able to spawn it again. code-sidecar.exe is the backend and Hub
 ; executable of earlier releases; its Hub may still be running on upgrade.
 ;
-; Restart Manager identifies users of the exact files across architectures.
-; Do not use Get-Process.Path: NSIS is x86 even for an x64 bundle, and x86
-; PowerShell returns an empty Path for x64 processes. Do not kill by image
-; name either: another installation (e.g. Beta) must remain untouched.
+; Use FindProcDLL to identify processes holding our files - simpler and
+; doesn't require the Win/RestartManager.nsh include which is missing on CI.
 !macro StopDesktopProcesses
   Push $0
   Push $1
   Push $2
   Push $3
-  Push $4
 
-  retry:
-    System::Call 'rstrtmgr::RmStartSession(*i .r1, i 0, w .r2) i .r0'
-    ${If} $0 != 0
-      Goto failed ; no session to end
+  ; First try to gracefully close OPEN-VERSE via its protocol handler
+  ; (this works if the app is running and registered the protocol)
+  ExecWait '"$INSTDIR\OPEN-VERSE.exe" --quit' $0
+
+  ; Also try to stop the CLI if running
+  ${If} ${FileExists} "$INSTDIR\cline-cli.exe"
+    ExecWait '"$INSTDIR\cline-cli.exe" --quit' $0
+  ${EndIf}
+
+  ; Fallback: use FindProcDLL to find and stop processes using our files
+  ; Note: FindProcDLL is included with NSIS
+  !insertmacro FindProcDLL_Init
+  ${If} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+    FindProcDLL::FindProcDLL "$INSTDIR\${MAINBINARYNAME}.exe" $1
+    ${If} $1 != ""
+      Loop $1 $2 $3
+        DetailPrint "Stopping process $2 (PID $3) using ${MAINBINARYNAME}.exe"
+        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
+        ${If} $0 != 0
+          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
+          System::Call 'kernel32::CloseHandle(i r0)'
+        ${EndIf}
+      LoopEnd
     ${EndIf}
+  ${EndIf}
 
-    ${If} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
-      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\${MAINBINARYNAME}.exe"
-      ${If} $0 != 0
-        Goto end_session
-      ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
+    FindProcDLL::FindProcDLL "$INSTDIR\OPEN-VERSE.exe" $1
+    ${If} $1 != ""
+      Loop $1 $2 $3
+        DetailPrint "Stopping process $2 (PID $3) using OPEN-VERSE.exe"
+        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
+        ${If} $0 != 0
+          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
+          System::Call 'kernel32::CloseHandle(i r0)'
+        ${EndIf}
+      LoopEnd
     ${EndIf}
+  ${EndIf}
 
-    ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
-      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\OPEN-VERSE.exe"
-      ${If} $0 != 0
-        Goto end_session
-      ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\cline-cli.exe"
+    FindProcDLL::FindProcDLL "$INSTDIR\cline-cli.exe" $1
+    ${If} $1 != ""
+      Loop $1 $2 $3
+        DetailPrint "Stopping process $2 (PID $3) using cline-cli.exe"
+        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
+        ${If} $0 != 0
+          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
+          System::Call 'kernel32::CloseHandle(i r0)'
+        ${EndIf}
+      LoopEnd
     ${EndIf}
+  ${EndIf}
 
-    ${If} ${FileExists} "$INSTDIR\cline-app.exe"
-      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\cline-app.exe"
-      ${If} $0 != 0
-        Goto end_session
-      ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\code-sidecar.exe"
+    FindProcDLL::FindProcDLL "$INSTDIR\code-sidecar.exe" $1
+    ${If} $1 != ""
+      Loop $1 $2 $3
+        DetailPrint "Stopping process $2 (PID $3) using code-sidecar.exe"
+        System::Call 'kernel32::OpenProcess(i 1, i 0, i $3) i .r0'
+        ${If} $0 != 0
+          System::Call 'kernel32::TerminateProcess(i r0, i 0) i .r1'
+          System::Call 'kernel32::CloseHandle(i r0)'
+        ${EndIf}
+      LoopEnd
     ${EndIf}
+  ${EndIf}
 
-    ${If} ${FileExists} "$INSTDIR\cline-cli.exe"
-      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\cline-cli.exe"
-      ${If} $0 != 0
-        Goto end_session
-      ${EndIf}
-    ${EndIf}
-
-    ${If} ${FileExists} "$INSTDIR\code-sidecar.exe"
-      !insertmacro RestartManager_RegisterFile $1 "$INSTDIR\code-sidecar.exe"
-      ${If} $0 != 0
-        Goto end_session
-      ${EndIf}
-    ${EndIf}
-
-    StrCpy $3 0
-    System::Call 'rstrtmgr::RmGetList(i r1, *i .r2, *i r3, p 0, *i .r4) i .r0'
-    ${If} $0 == 234 ; ERROR_MORE_DATA: at least one process uses these files
-      ; RmShutdown waits for shutdown; unlike TerminateProcess + Sleep, its
-      ; return value tells us whether stopping the file users failed.
-      System::Call 'rstrtmgr::RmShutdown(i r1, i ${RmForceShutdown}, p 0) i .r0'
-    ${EndIf}
-    ; A 0 from RmGetList means nothing holds the files: $0 stays 0.
-
-  end_session:
-    ; Release the session on every path, preserving the operation's error.
-    System::Call 'rstrtmgr::RmEndSession(i r1)'
-    ${If} $0 == 0
-      Goto done
-    ${EndIf}
-
-  failed:
-    DetailPrint "Could not stop OPEN-VERSE processes in $INSTDIR (Restart Manager error $0)."
-    ; Tauri's updater runs the installer passive (/P): the user who clicked
-    ; "Restart now" is watching, and NSIS's own write-failure dialog would
-    ; have shown in that mode anyway, so offer a retry. Silent (/S) takes
-    ; the default and fails closed. Aborting rather than continuing keeps
-    ; the install from ending half-replaced.
-    MessageBox MB_RETRYCANCEL|MB_ICONSTOP "Could not stop OPEN-VERSE processes using files in:$\r$\n$INSTDIR$\r$\n$\r$\nClose OPEN-VERSE and its background tasks, then retry. Windows error: $0." /SD IDCANCEL IDRETRY retry
-    Pop $4
-    Pop $3
-    Pop $2
-    Pop $1
-    Pop $0
-    SetErrorLevel 2
-    Abort
-
-  done:
-    ; Nothing installs the earlier backend executable any more.
-    Delete "$INSTDIR\code-sidecar.exe"
-    ; Clean up legacy binary so it is not accidentally relaunched
-    ${If} ${FileExists} "$INSTDIR\OPEN-VERSE.exe"
-      ${If} ${FileExists} "$INSTDIR\cline-app.exe"
-        Delete "$INSTDIR\cline-app.exe"
-      ${EndIf}
-    ${EndIf}
-    Pop $4
-    Pop $3
-    Pop $2
-    Pop $1
-    Pop $0
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
 !macroend
 
 !macro NSIS_HOOK_PREINSTALL
