@@ -86,7 +86,7 @@ jobs:
       - name: Find installer
         id: find-installer
         run: |
-          SETUP=$(find openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis -name '*-setup.exe' -print -quit)
+          SETUP=$(find src-tauri/target/release/bundle/nsis -name '*-setup.exe' -print -quit)
           if [ -z "$SETUP" ]; then
             echo "no NSIS installer produced"
             exit 1
