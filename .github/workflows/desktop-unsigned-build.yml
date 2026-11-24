@@ -70,14 +70,14 @@ jobs:
         run: bun run scripts/build-desktop-runtime.ts
         working-directory: openverse/desktop/apps/examples/desktop-app
         env:
-          TAURI_ENV_TARGET_TRIPLE: x86_64-pc-windows-gnu
+          TAURI_ENV_TARGET_TRIPLE: x86_64-pc-windows-msvc
 
       - name: Install Tauri CLI
         run: cargo install tauri-cli --locked --version 2.5.0
         working-directory: openverse/desktop/apps/examples/desktop-app
 
       - name: Build Tauri (unsigned)
-        run: cargo tauri build --target x86_64-pc-windows-gnu --config src-tauri/tauri.windows.conf.json
+        run: cargo tauri build --target x86_64-pc-windows-msvc --config src-tauri/tauri.windows.conf.json
         working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
