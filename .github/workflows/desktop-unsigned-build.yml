@@ -67,7 +67,7 @@ jobs:
         working-directory: openverse/desktop/apps/examples/desktop-app
 
       - name: Build Tauri (unsigned)
-        run: bunx tauri build --target x86_64-pc-windows-gnu --config src-tauri/tauri.windows.conf.json --no-before-build --
+        run: bunx -- tauri build --target x86_64-pc-windows-gnu --config src-tauri/tauri.windows.conf.json --no-before-build
         working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
