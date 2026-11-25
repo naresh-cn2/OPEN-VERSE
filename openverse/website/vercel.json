@@ -1,9 +1,9 @@
 {
-  "buildCommand": "npm run build",
-        "outputDirectory": "dist",
-        "framework": "vite",
-        "installCommand": "npm install",
-        "devCommand": "npm run dev",
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "bun install",
+  "devCommand": "bun run dev",
   "regions": ["iad1"],
   "redirects": [
     {
