@@ -102,16 +102,16 @@ async function runDownloadSimulation() {
   assert(existsSync(downloadCenterPath), "DownloadCenter.tsx exists");
   const downloadCenterCode = readFileSync(downloadCenterPath, "utf-8");
 
-  assert(downloadCenterCode.includes("OPEN-VERSE_${DESKTOP_VERSION}_x64-windows.zip"), "DownloadCenter offers Windows ZIP download");
-  assert(downloadCenterCode.includes("Windows Defender SmartScreen & Chrome Note"), "DownloadCenter explains Windows SmartScreen & Chrome Keep bypass");
-  assert(downloadCenterCode.includes("open-verse-mobile-v${DESKTOP_VERSION}.zip"), "DownloadCenter offers Android ZIP archive fallback");
-  assert(downloadCenterCode.includes("Android Download & Install Guidance"), "DownloadCenter provides clear Android PackageInstaller & Files app guidance");
+  assert(downloadCenterCode.includes("OPEN-VERSE-0.2.8-windows-setup.exe"), "DownloadCenter offers Windows native setup installer");
+  assert(downloadCenterCode.includes("SmartScreen Notice"), "DownloadCenter explains Windows SmartScreen & Chrome Keep bypass");
+  assert(downloadCenterCode.includes("OPEN-VERSE-${MOBILE_VERSION}.apk") || downloadCenterCode.includes("OPEN-VERSE-0.2.8.apk"), "DownloadCenter offers Android APK package");
+  assert(downloadCenterCode.includes("Install from unknown sources"), "DownloadCenter provides clear Android PackageInstaller & Files app guidance");
   assert(!downloadCenterCode.includes("v0.1.0"), "No legacy v0.1.0 references remain in DownloadCenter");
 
   const heroPath = join(ROOT_DIR, "website", "src", "components", "Hero.tsx");
   assert(existsSync(heroPath), "Hero.tsx exists");
   const heroCode = readFileSync(heroPath, "utf-8");
-  assert(heroCode.includes("v0.2.6"), "Hero component displays v0.2.6 release badge");
+  assert(heroCode.includes("v0.2.8"), "Hero component displays v0.2.8 release badge");
   assert(!heroCode.includes("v0.1.0"), "No legacy v0.1.0 references remain in Hero");
 
   // Summary

@@ -1,15 +1,19 @@
 import React from "react";
-import { ArrowDownCircle, Laptop, Menu, Radio, Sparkles } from "lucide-react";
+import { ArrowDownCircle, Laptop, Menu, Radio } from "lucide-react";
 import { type OpenVerseMobileUser } from "../services/auth";
+import { OpenVerseSymbol } from "./OpenVerseSymbol";
 
 interface MobileHeaderProps {
   onOpenMenu: () => void;
   onOpenHub: () => void;
+  onOpenDevices: () => void;
   onOpenSettings: () => void;
   onOpenUpdate?: () => void;
   updateAvailable?: boolean;
   isHubConnected: boolean;
-  executionMode?: "direct" | "hub";
+  activeHostName?: string | null;
+  isHostOnline?: boolean;
+  executionMode?: "direct" | "remote_agent" | "hub";
   onToggleExecutionMode?: () => void;
   activeProvider: string;
   activeModel: string;
@@ -19,10 +23,13 @@ interface MobileHeaderProps {
 export function MobileHeader({
   onOpenMenu,
   onOpenHub,
+  onOpenDevices,
   onOpenSettings,
   onOpenUpdate,
   updateAvailable = false,
   isHubConnected,
+  activeHostName,
+  isHostOnline = false,
   executionMode = "direct",
   onToggleExecutionMode,
   activeProvider,
@@ -31,7 +38,7 @@ export function MobileHeader({
 }: MobileHeaderProps) {
   const appVersion = typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion 
     ? (window as any).AndroidInterface.getAppVersion() 
-    : "0.2.2";
+    : "0.2.8";
   const initial = user?.displayName?.charAt(0).toUpperCase() || (user?.isOfflineMode ? "L" : "O");
 
   return (
@@ -45,10 +52,8 @@ export function MobileHeader({
           <Menu className="size-5" />
         </button>
 
-        <div className="flex items-center gap-1.5">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 shadow-sm shadow-violet-900/30">
-            <Sparkles className="size-4 text-white" />
-          </div>
+        <div className="flex items-center gap-2">
+          <OpenVerseSymbol size={30} />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-bold tracking-tight text-white leading-none">
@@ -77,6 +82,29 @@ export function MobileHeader({
             <span>Update</span>
           </button>
         )}
+
+        {/* Personal Agent Host / Devices button */}
+        <button
+          onClick={onOpenDevices}
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all ${
+            activeHostName
+              ? isHostOnline
+                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+                : "border-amber-500/40 bg-amber-500/15 text-amber-300"
+              : "border-zinc-800 bg-surface-card text-zinc-400 hover:text-zinc-200"
+          }`}
+          title="Personal Device Network & Hermes Agent Host"
+        >
+          <Laptop className={`size-3 ${isHostOnline ? "text-emerald-400" : "text-amber-400"}`} />
+          <span className="font-mono text-[10px] max-w-[100px] truncate">
+            {activeHostName || "Devices"}
+          </span>
+          <span
+            className={`size-1.5 rounded-full ${
+              isHostOnline ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+            }`}
+          />
+        </button>
 
         {/* Hub status badge & Mode toggle */}
         <button

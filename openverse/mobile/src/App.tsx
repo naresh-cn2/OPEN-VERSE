@@ -3,6 +3,7 @@ import { MobileHeader } from "./components/MobileHeader";
 import { MobileChat } from "./components/MobileChat";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { MobileHubPairing } from "./components/MobileHubPairing";
+import { MobileDeviceManager } from "./components/MobileDeviceManager";
 import { MobileSettings } from "./components/MobileSettings";
 import { MobileUpdateModal } from "./components/MobileUpdateModal";
 import {
@@ -22,8 +23,12 @@ import {
 import { streamDirectAI } from "./services/direct-ai";
 import { remoteHub, type HubStatusMessage } from "./services/remote-hub";
 import { checkMobileUpdate, type MobileUpdateInfo } from "./services/updater";
-import { mobileDeviceNetwork } from "./services/device-network";
-import { parseCrossDeviceIntent, executeCrossDeviceIntent } from "./services/cross-device-dispatcher";
+import { mobileDeviceNetwork, type OpenVerseDevice } from "./services/device-network";
+import {
+  parseCrossDeviceIntent,
+  executeCrossDeviceIntent,
+  dispatchRemoteAgentTask,
+} from "./services/cross-device-dispatcher";
 
 export function App() {
   const [user, setUser] = useState<OpenVerseMobileUser | null>(() => {
@@ -40,12 +45,14 @@ export function App() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isDeviceManagerOpen, setIsDeviceManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<MobileUpdateInfo | null>(null);
 
   const [isHubConnected, setIsHubConnected] = useState(remoteHub.isConnected());
-  const [executionMode, setExecutionMode] = useState<"direct" | "hub">("direct");
+  const [activeHostId, setActiveHostId] = useState<string | null>(null);
+  const [executionMode, setExecutionMode] = useState<"direct" | "remote_agent" | "hub">("remote_agent");
   const [isStreaming, setIsStreaming] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -171,14 +178,37 @@ export function App() {
       timestamp: Date.now(),
     };
 
+    // Active host resolution
+    const knownDevs = mobileDeviceNetwork.getKnownDevices();
+    const targetHost =
+      knownDevs.find((d) => d.deviceId === activeHostId) ||
+      knownDevs.find(
+        (d) =>
+          (d.platform === "windows" || d.platform === "macos" || d.platform === "linux") &&
+          d.deviceId !== mobileDeviceNetwork.getDeviceId()
+      ) ||
+      knownDevs.find((d) => d.platform === "windows" || d.platform === "macos" || d.platform === "linux");
+
     const assistantMessageId = `msg-${Date.now()}-a`;
     const initialAssistantMessage: ChatMessage = {
       id: assistantMessageId,
       role: "assistant",
       content: "",
       timestamp: Date.now(),
-      provider: executionMode === "hub" ? "Desktop Hub Agent" : providerKeys.selectedProvider,
-      model: executionMode === "hub" ? "Desktop Autonomous Worker" : providerKeys.selectedModel,
+      provider:
+        executionMode === "remote_agent"
+          ? `Personal Agent (${targetHost?.deviceName || "Host Computer"})`
+          : executionMode === "hub"
+          ? "Desktop Hub Agent"
+          : providerKeys.selectedProvider,
+      model:
+        executionMode === "remote_agent"
+          ? targetHost?.isOnline
+            ? "Hermes Agent (Host Online)"
+            : "Hermes Agent (Queued)"
+          : executionMode === "hub"
+          ? "Desktop Autonomous Worker"
+          : providerKeys.selectedModel,
       isStreaming: true,
     };
 
@@ -199,10 +229,10 @@ export function App() {
     saveSessions(currentSessions);
     setIsStreaming(true);
 
-    // Check for Cross-Device Intent (e.g. "Open YouTube on my laptop", "Call my dad")
+    // MODE 1: Check for Cross-Device Intent (e.g. "Open YouTube on my laptop", "Call my dad")
     const crossDeviceIntent = parseCrossDeviceIntent(
       text,
-      mobileDeviceNetwork.getKnownDevices(),
+      knownDevs,
       mobileDeviceNetwork.getDeviceId()
     );
 
@@ -225,17 +255,42 @@ export function App() {
       return;
     }
 
-    // MODE 1: Execute via Desktop Hub Agent if active
+    // MODE 2: Remote Personal Hermes Agent Mode (Cross-device task assignment)
+    if (executionMode === "remote_agent" && targetHost) {
+      const result = await dispatchRemoteAgentTask(text, targetHost, currentSessionId);
+      setSessions((prev) =>
+        prev.map((s) => {
+          if (s.id === currentSessionId) {
+            const updated = s.messages.map((m) =>
+              m.id === assistantMessageId
+                ? {
+                    ...m,
+                    content: result.message,
+                    provider: `Personal Agent (${targetHost.deviceName})`,
+                    model: result.status === "queued" ? "Queued Offline" : "Hermes Agent Active",
+                    isStreaming: false,
+                  }
+                : m
+            );
+            return { ...s, messages: updated };
+          }
+          return s;
+        })
+      );
+      setIsStreaming(false);
+      return;
+    }
+
+    // MODE 3: Execute via Desktop Hub Agent if active on Wi-Fi
     if (executionMode === "hub" && isHubConnected) {
       const sent = remoteHub.executeDesktopTask(text);
       if (!sent) {
-        // Fallback to direct client
         runDirectAIStreaming(currentSessionId, assistantMessageId, userMessage);
       }
       return;
     }
 
-    // MODE 2: Direct Client Streaming
+    // MODE 4: Direct Client Streaming fallback
     await runDirectAIStreaming(currentSessionId, assistantMessageId, userMessage);
   };
 
@@ -339,18 +394,38 @@ export function App() {
     });
   };
 
+  const knownDevs = mobileDeviceNetwork.getKnownDevices();
+  const targetHost =
+    knownDevs.find((d) => d.deviceId === activeHostId) ||
+    knownDevs.find(
+      (d) =>
+        (d.platform === "windows" || d.platform === "macos" || d.platform === "linux") &&
+        d.deviceId !== mobileDeviceNetwork.getDeviceId()
+    ) ||
+    knownDevs.find((d) => d.platform === "windows" || d.platform === "macos" || d.platform === "linux") ||
+    null;
+
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-zinc-100 overflow-hidden font-sans">
       <MobileHeader
         onOpenMenu={() => setIsDrawerOpen(true)}
         onOpenHub={() => setIsHubOpen(true)}
+        onOpenDevices={() => setIsDeviceManagerOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenUpdate={() => setIsUpdateModalOpen(true)}
         updateAvailable={Boolean(updateInfo?.available)}
         isHubConnected={isHubConnected}
+        activeHostName={targetHost?.deviceName}
+        isHostOnline={Boolean(targetHost?.isOnline)}
         executionMode={executionMode}
         onToggleExecutionMode={() =>
-          setExecutionMode((prev) => (prev === "direct" ? "hub" : "direct"))
+          setExecutionMode((prev) =>
+            prev === "remote_agent"
+              ? "direct"
+              : prev === "direct"
+              ? "hub"
+              : "remote_agent"
+          )
         }
         activeProvider={providerKeys.selectedProvider}
         activeModel={providerKeys.selectedModel}
@@ -363,8 +438,22 @@ export function App() {
         onSendMessage={handleSendMessage}
         onStopStreaming={handleStopStreaming}
         onNewSession={createNewChat}
-        activeProvider={executionMode === "hub" ? "Desktop Hub Agent" : providerKeys.selectedProvider}
-        activeModel={executionMode === "hub" ? "Autonomous Desktop" : providerKeys.selectedModel}
+        activeProvider={
+          executionMode === "remote_agent"
+            ? `Personal Agent (${targetHost?.deviceName || "Host Computer"})`
+            : executionMode === "hub"
+            ? "Desktop Hub Agent"
+            : providerKeys.selectedProvider
+        }
+        activeModel={
+          executionMode === "remote_agent"
+            ? targetHost?.isOnline
+              ? "Hermes Agent (Host Online)"
+              : "Hermes Agent (Queued)"
+            : executionMode === "hub"
+            ? "Autonomous Desktop"
+            : providerKeys.selectedModel
+        }
       />
 
       <MobileDrawer
@@ -376,9 +465,18 @@ export function App() {
         onNewChat={createNewChat}
         onDeleteSession={deleteSession}
         onOpenHub={() => setIsHubOpen(true)}
+        onOpenDevices={() => setIsDeviceManagerOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         isHubConnected={isHubConnected}
         user={user}
+      />
+
+      <MobileDeviceManager
+        isOpen={isDeviceManagerOpen}
+        onClose={() => setIsDeviceManagerOpen(false)}
+        user={user}
+        activeHostId={activeHostId || targetHost?.deviceId || null}
+        onSelectHost={(id) => setActiveHostId(id)}
       />
 
       <MobileHubPairing

@@ -16,6 +16,8 @@ target/
 .openverse-cloud-sync/
 desktop/apps/examples/desktop-app/src-tauri/bin/
 open-verse/desktop/apps/examples/desktop-app/src-tauri/bin/
+openverse/desktop/apps/examples/desktop-app/src-tauri/bin/
+*.zip
 website/saved_preview.html
 open-verse/website/saved_preview.html
 

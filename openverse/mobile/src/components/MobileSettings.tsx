@@ -39,7 +39,7 @@ export function MobileSettings({
 }: MobileSettingsProps) {
   const appVersion = typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion 
     ? (window as any).AndroidInterface.getAppVersion() 
-    : "0.2.6";
+    : "0.2.8";
   const [providerKeys, setProviderKeys] = useState<ModelProviderKeys>(getStoredProviderKeys());
   const [savedSuccess, setSavedSuccess] = useState(false);
 

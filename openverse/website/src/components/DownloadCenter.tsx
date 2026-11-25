@@ -39,7 +39,7 @@ export const DownloadCenter: React.FC = () => {
   }, []);
 
   const DESKTOP_VERSION = "0.2.8";
-  const MOBILE_VERSION = "0.2.6";
+  const MOBILE_VERSION = "0.2.8";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
   const RELEASE_TAG = "hermes-agent";
 
@@ -527,13 +527,18 @@ export const DownloadCenter: React.FC = () => {
                 padding: "16px 20px",
                 marginBottom: 24,
                 display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
+                flexDirection: "column",
+                gap: 10,
               }}
             >
-              <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
-              <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-                <strong style={{ color: "#ffffff" }}>Install:</strong> Enable "Install from unknown sources" in Android settings, then open the downloaded .apk to install.{" "}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
+                <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                  <strong style={{ color: "#ffffff" }}>Install:</strong> Enable "Install from unknown sources" in Android settings, then open the downloaded .apk to install.{" "}
+                </div>
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", wordBreak: "break-all", background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 6 }}>
+                SHA-256: 623410f27b0409f11fb3c4c73d34cc2efc2be1e6407c429920777bc550454960
               </div>
             </div>
 

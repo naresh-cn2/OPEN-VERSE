@@ -2,16 +2,17 @@ import React from "react";
 import {
   FolderKanban,
   HardDrive,
+  Laptop,
   MessageSquare,
   Plus,
   Radio,
   Settings,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { type ChatSession } from "../services/storage";
 import { type OpenVerseMobileUser } from "../services/auth";
+import { OpenVerseSymbol } from "./OpenVerseSymbol";
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface MobileDrawerProps {
   onNewChat: () => void;
   onDeleteSession: (id: string) => void;
   onOpenHub: () => void;
+  onOpenDevices: () => void;
   onOpenSettings: () => void;
   isHubConnected: boolean;
   user: OpenVerseMobileUser | null;
@@ -55,9 +57,7 @@ export function MobileDrawer({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600">
-              <Sparkles className="size-4 text-white" />
-            </div>
+            <OpenVerseSymbol size={30} />
             <span className="font-bold tracking-tight text-white text-base">
               OPEN-VERSE
             </span>
@@ -134,6 +134,23 @@ export function MobileDrawer({
 
         {/* Bottom Actions */}
         <div className="border-t border-border pt-3 space-y-2">
+          {/* Personal Devices & Hermes Agent Host */}
+          <button
+            onClick={() => {
+              onOpenDevices();
+              onClose();
+            }}
+            className="flex w-full items-center justify-between rounded-xl border border-violet-500/30 bg-violet-950/20 px-3 py-2 text-xs text-violet-200 hover:border-violet-500/50 hover:bg-violet-900/30 transition-all"
+          >
+            <div className="flex items-center gap-2">
+              <Laptop className="size-4 text-violet-400" />
+              <span className="font-medium">Personal Devices</span>
+            </div>
+            <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-mono text-violet-300">
+              Agent Host
+            </span>
+          </button>
+
           {/* Desktop Hub pairing trigger */}
           <button
             onClick={() => {
@@ -144,7 +161,7 @@ export function MobileDrawer({
           >
             <div className="flex items-center gap-2">
               <Radio className={`size-4 ${isHubConnected ? "text-emerald-400" : "text-zinc-400"}`} />
-              <span>Desktop Hub</span>
+              <span>Direct Hub Wi-Fi</span>
             </div>
             <span
               className={`rounded px-1.5 py-0.5 text-[9px] font-mono ${

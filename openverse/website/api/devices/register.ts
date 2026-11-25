@@ -20,13 +20,26 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 	}
 
 	const userId = resolveUserId(req.headers.authorization);
-	const body = req.body as Partial<OpenVerseDevice> & { deviceId: string; platform: any };
+	const body = req.body as Partial<OpenVerseDevice> & { deviceId: string; platform?: any; action?: string };
 
-	if (!body.deviceId || !body.platform) {
-		return res.status(400).json({ error: "deviceId and platform are required" });
+	if (!body.deviceId) {
+		return res.status(400).json({ error: "deviceId is required" });
 	}
 
 	const devices = getDevicesMap(userId);
+
+	if (body.action === "revoke") {
+		devices.delete(body.deviceId);
+		return res.status(200).json({
+			success: true,
+			revoked: body.deviceId,
+			devices: Array.from(devices.values()),
+		});
+	}
+
+	if (!body.platform) {
+		return res.status(400).json({ error: "platform is required" });
+	}
 	const existing = devices.get(body.deviceId);
 	const now = new Date().toISOString();
 

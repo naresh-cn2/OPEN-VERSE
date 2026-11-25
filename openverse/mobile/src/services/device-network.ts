@@ -368,6 +368,29 @@ class MobileDeviceNetwork {
 			return { success: false, error: String(err) };
 		}
 	}
+
+	public async revokeDevice(deviceId: string): Promise<boolean> {
+		try {
+			const res = await fetch(`${this.apiEndpoint}/register`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${this.getAuthToken()}`,
+				},
+				body: JSON.stringify({
+					deviceId,
+					action: "revoke",
+				}),
+			});
+			if (res.ok) {
+				this.knownDevices = this.knownDevices.filter((d) => d.deviceId !== deviceId);
+				return true;
+			}
+			return false;
+		} catch {
+			return false;
+		}
+	}
 }
 
 export const mobileDeviceNetwork = new MobileDeviceNetwork();

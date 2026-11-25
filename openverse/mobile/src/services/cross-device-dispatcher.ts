@@ -120,3 +120,46 @@ export async function executeCrossDeviceIntent(intent: IntentResult): Promise<st
 	return `✅ Command sent to ${target.deviceName} (Status: ${res.command?.status || "dispatched"}).`;
 }
 
+export async function dispatchRemoteAgentTask(
+	prompt: string,
+	targetDevice: OpenVerseDevice,
+	conversationId?: string,
+): Promise<{ status: "queued" | "executed" | "dispatched" | "failed"; message: string }> {
+	if (!targetDevice.isOnline) {
+		const res = await mobileDeviceNetwork.sendCommand(targetDevice.deviceId, "continue_conversation", {
+			command: prompt,
+			conversationId,
+			message: prompt,
+		});
+		if (res.success) {
+			return {
+				status: "queued",
+				message: `⏳ **[Task Queued for ${targetDevice.deviceName}]**\n\nYour host computer is currently **offline** (last seen ${new Date(targetDevice.lastSeenAt).toLocaleTimeString()}).\n\nTask: *"${prompt}"*\nhas been preserved in your persistent task queue and will automatically execute on your host computer as soon as it reconnects.`,
+			};
+		}
+		return {
+			status: "failed",
+			message: `❌ Failed to queue task for ${targetDevice.deviceName}: ${res.error}`,
+		};
+	}
+
+	const res = await mobileDeviceNetwork.sendCommand(targetDevice.deviceId, "continue_conversation", {
+		command: prompt,
+		conversationId,
+		message: prompt,
+	});
+
+	if (!res.success) {
+		return {
+			status: "failed",
+			message: `❌ Remote execution error on ${targetDevice.deviceName}: ${res.error}`,
+		};
+	}
+
+	return {
+		status: "dispatched",
+		message: `⚡ **[Task Dispatched to ${targetDevice.deviceName}]**\n\nTask: *"${prompt}"*\n\nYour personal Hermes Agent on **${targetDevice.deviceName}** is executing this workflow in your synchronized workspace. Results and conversation turns are synced back to your OPEN-VERSE account.`,
+	};
+}
+
+
