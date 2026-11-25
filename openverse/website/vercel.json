@@ -4,6 +4,7 @@
   "framework": "vite",
   "installCommand": "bun install",
   "devCommand": "bun run dev",
+  "rootDirectory": "openverse/website",
   "regions": ["iad1"],
   "redirects": [
     {
