@@ -285,5 +285,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-linux-${{ matrix.arch }}-deb
-          path: ${{ steps.find-deb.outputs.deb_path }}
+          path: openverse/desktop/apps/examples/desktop-app/src-tauri/target/${{ matrix.target }}/release/bundle/deb/OPEN-VERSE_0.2.8_${{ matrix.deb_arch }}.deb
           retention-days: 30
