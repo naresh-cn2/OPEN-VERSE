@@ -99,7 +99,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-windows-installer
-          path: ${{ steps.find-installer.outputs.installer_path }}
+          path: openverse/desktop/apps/examples/desktop-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/OPEN-VERSE_0.2.8_x64-setup.exe
+          retention-days: 30
+
+      - name: Upload Windows MSI installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-verse-windows-msi
+          path: openverse/desktop/apps/examples/desktop-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/OPEN-VERSE_0.2.8_x64_en-US.msi
           retention-days: 30
 
   build-macos:
