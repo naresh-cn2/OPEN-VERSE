@@ -188,7 +188,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-macos-dmg
-          path: ${{ steps.find-dmg.outputs.dmg_path }}
+          path: openverse/desktop/apps/examples/desktop-app/src-tauri/target/universal-apple-darwin/release/bundle/dmg/OPEN-VERSE_0.2.8_universal.dmg
           retention-days: 30
 
   build-linux:
@@ -273,7 +273,7 @@ jobs:
       - name: Find DEB
         id: find-deb
         run: |
-          DEB=$(find src-tauri/target/release/bundle/deb -name '*.deb' -print -quit)
+          DEB=$(find src-tauri/target/${{ matrix.target }}/release/bundle/deb -name '*.deb' -print -quit)
           if [ -z "$DEB" ]; then
             echo "no DEB produced"
             exit 1
