@@ -44,7 +44,7 @@ export const DownloadCenter: React.FC = () => {
   const RELEASE_TAG = "hermes-agent";
 
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-Setup-${DESKTOP_VERSION}-x64.exe`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows-setup.exe`,
     mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}.dmg`,
     linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}-amd64.deb`,
     android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${MOBILE_VERSION}.apk`,
@@ -53,8 +53,8 @@ export const DownloadCenter: React.FC = () => {
 
   const FILE_META = {
     windows: {
-      name: `OPEN-VERSE-Setup-${DESKTOP_VERSION}-x64.exe`,
-      size: "~150 MB",
+      name: `OPEN-VERSE-0.2.8-windows-setup.exe`,
+      size: "~134 MB",
       typeLabel: "Installer (.exe)",
     },
     mac: {
@@ -204,7 +204,16 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
                 >
                   <Download size={17} />
-                  <span>Download OPEN-VERSE for Windows</span>
+                  <span>Download OPEN-VERSE for Windows (NSIS)</span>
+                </a>
+                <a
+                  href="https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows.msi"
+                  download="OPEN-VERSE-0.2.8-windows.msi"
+                  className="btn-secondary"
+                  style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
+                >
+                  <Download size={17} />
+                  <span>Download OPEN-VERSE for Windows (MSI)</span>
                 </a>
               </div>
             </div>
