@@ -45,8 +45,8 @@ export const DownloadCenter: React.FC = () => {
 
   const ASSETS = {
     windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows-setup.exe`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}.dmg`,
-    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${DESKTOP_VERSION}-amd64.deb`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-macos.dmg`,
+    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-linux-amd64.deb`,
     android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${MOBILE_VERSION}.apk`,
     sourceZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-source.zip`,
   };
@@ -58,19 +58,19 @@ export const DownloadCenter: React.FC = () => {
       typeLabel: "Installer (.exe)",
     },
     mac: {
-      name: `OPEN-VERSE-${DESKTOP_VERSION}.dmg`,
-      size: "~180 MB",
+      name: `OPEN-VERSE-0.2.8-macos.dmg`,
+      size: "~224 MB",
       typeLabel: "Disk Image (.dmg)",
     },
     linux: {
-      name: `OPEN-VERSE-${DESKTOP_VERSION}-amd64.deb`,
-      size: "~90 MB",
-      typeLabel: "Debian Package (.deb)",
+      name: `OPEN-VERSE-0.2.8-linux-amd64.deb`,
+      size: "~193 MB",
+      typeLabel: "Package (.deb)",
     },
     android: {
       name: `OPEN-VERSE-${MOBILE_VERSION}.apk`,
-      size: "~45 MB",
-      typeLabel: "Android Package (.apk)",
+      size: "~10 MB",
+      typeLabel: "APK (.apk)",
     },
     sourceZip: {
       name: `OPEN-VERSE-0.2.8-source.zip`,
@@ -160,7 +160,7 @@ export const DownloadCenter: React.FC = () => {
                   </span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 640 }}>
-                  Install OPEN-VERSE on Windows 10 &amp; 11 with the native installer. Hermes Agent powers the AI coding engine inside OPEN-VERSE.
+                  Install OPEN-VERSE on Windows 10 &amp; 11 with the native installer.
                 </p>
               </div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -207,7 +207,7 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download OPEN-VERSE for Windows (NSIS)</span>
                 </a>
                 <a
-                  href="https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows.msi"
+                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows.msi`}
                   download="OPEN-VERSE-0.2.8-windows.msi"
                   className="btn-secondary"
                   style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
@@ -226,21 +226,26 @@ export const DownloadCenter: React.FC = () => {
                 padding: "16px 20px",
                 marginBottom: 24,
                 display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
+                flexDirection: "column",
+                gap: 10,
               }}
             >
-              <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
-              <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-                <strong style={{ color: "#ffffff" }}>Install:</strong> Run the .exe installer, follow the setup wizard, then launch OPEN-VERSE from your Start Menu.{" "}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
+                <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                  <strong style={{ color: "#ffffff" }}>Installation &amp; SmartScreen Notice:</strong> As an open-source release establishing download reputation, Microsoft Edge or Windows Defender SmartScreen may display <em>"isn't commonly downloaded"</em>. Click <strong>... &gt; Keep &gt; Keep anyway</strong> (or in Windows: <strong>More info &gt; Run anyway</strong>).
+                </div>
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", wordBreak: "break-all", background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 6 }}>
+                SHA-256: cf3950de41fd3d5a3f6ff19dd412209a294c6fe3658249eab70c04de89fa4934
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• OS: Windows 10 and 11</div>
               <div>• Architecture: 64-bit (x86_64)</div>
-              <div>• Installer: NSIS, signed and verified</div>
-              <div>• Engine: Hermes Agent (MIT-licensed)</div>
+              <div>• Installer: NSIS (SHA-256 verified)</div>
+              <div>• License: Open Source (MIT)</div>
             </div>
           </div>
         )}
@@ -338,8 +343,8 @@ export const DownloadCenter: React.FC = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Architecture: Apple Silicon and Intel x86_64</div>
               <div>• OS: macOS 11.0+</div>
-              <div>• Package: Signed DMG disk image</div>
-              <div>• Engine: Hermes Agent (MIT-licensed)</div>
+              <div>• Package: Native DMG disk image</div>
+              <div>• License: Open Source (MIT)</div>
             </div>
           </div>
         )}
@@ -401,7 +406,16 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
                   <Download size={17} />
-                  <span>Download OPEN-VERSE for Linux</span>
+                  <span>Download OPEN-VERSE for Linux (x86_64)</span>
+                </a>
+                <a
+                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-linux-arm64.deb`}
+                  download="OPEN-VERSE-0.2.8-linux-arm64.deb"
+                  className="btn-secondary"
+                  style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
+                >
+                  <Download size={17} />
+                  <span>Download OPEN-VERSE for Linux (ARM64)</span>
                 </a>
               </div>
             </div>
@@ -426,9 +440,9 @@ export const DownloadCenter: React.FC = () => {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, fontSize: "0.82rem", color: "var(--text-muted)" }}>
               <div>• Requirements: glibc 2.31+</div>
-              <div>• Architecture: x86_64</div>
+              <div>• Architecture: x86_64 and ARM64</div>
               <div>• Package: Debian (.deb) installer</div>
-              <div>• Engine: Hermes Agent (MIT-licensed)</div>
+              <div>• License: Open Source (MIT)</div>
             </div>
           </div>
         )}
@@ -527,7 +541,7 @@ export const DownloadCenter: React.FC = () => {
               <div>• OS: Android 7.0+ (API 24+)</div>
               <div>• Architecture: ARM64</div>
               <div>• Connects to: Desktop OPEN-VERSE via E2EE</div>
-              <div>• Engine: Hermes Agent (MIT-licensed)</div>
+              <div>• License: Open Source (MIT)</div>
             </div>
           </div>
         )}
@@ -547,7 +561,7 @@ export const DownloadCenter: React.FC = () => {
             <span style={{ fontWeight: 600, color: "#94a3b8" }}>Developer Download — Source Code</span>
           </div>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.86rem", marginBottom: 16, maxWidth: 700 }}>
-            Want to build from source? Download the complete OPEN-VERSE source repository. Hermes Agent remains the underlying AI/coding-agent engine.
+            Want to build from source? Download the complete OPEN-VERSE source repository.
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <a
