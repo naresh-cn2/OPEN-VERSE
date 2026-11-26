@@ -618,11 +618,14 @@ export default function App() {
               >
                 <PluginSlot name="header-left" />
 
-                <Typography className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground uppercase">
-                  Hermes
-                  <br />
-                  Agent
-                </Typography>
+                <div className="flex items-center gap-2">
+                  <img src="/openverse-symbol.png" alt="OPEN-VERSE" className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                  <Typography className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground uppercase">
+                    OPEN
+                    <br />
+                    VERSE
+                  </Typography>
+                </div>
               </div>
 
               <Button

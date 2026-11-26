@@ -205,6 +205,34 @@ async function runHermesIntegrationSuite() {
 		"Full session and message history synchronized across Google account devices"
 	);
 
+	// ── 5. Actual Hermes Agent Source Code & Web Dashboard Deployment ──
+	console.log("\n--- 5. Actual Hermes Agent Core Engine & Web Dist ---");
+	const hermesWebDistIndex = resolve(ROOT, "../sources/hermes-agent/hermes_cli/web_dist/index.html");
+	assert(existsSync(hermesWebDistIndex), "HERMES-5.1", "Canonical Hermes Agent web_dist compiled and present");
+	const hermesWebDistHtml = readFileSync(hermesWebDistIndex, "utf8");
+	assert(
+		hermesWebDistHtml.includes("<title>OPEN-VERSE</title>"),
+		"HERMES-5.2",
+		"Hermes Agent web dashboard branded as OPEN-VERSE"
+	);
+
+	const desktopWebviewIndex = resolve(ROOT, "desktop/apps/examples/desktop-app/webview/out/index.html");
+	const androidAssetIndex = resolve(ROOT, "mobile/android/app/src/main/assets/index.html");
+	assert(
+		existsSync(desktopWebviewIndex) && existsSync(androidAssetIndex),
+		"HERMES-5.3",
+		"Actual Hermes Agent dashboard deployed across Desktop and Mobile assets"
+	);
+
+	const productIdentityPath = resolve(ROOT, "../sources/hermes-agent/apps/desktop/product-identity.cjs");
+	assert(existsSync(productIdentityPath), "HERMES-5.4", "Hermes Agent native desktop product identity configured");
+	const productIdentityContent = readFileSync(productIdentityPath, "utf8");
+	assert(
+		productIdentityContent.includes("display: 'OPEN-VERSE'"),
+		"HERMES-5.5",
+		"Hermes desktop product identity configured to OPEN-VERSE"
+	);
+
 	console.log("\n==================================================================");
 	console.log(`  ALL HERMES AGENT INTEGRATION TESTS PASSED: ${passed}/${total} (100%)`);
 	console.log("==================================================================\n");

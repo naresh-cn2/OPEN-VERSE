@@ -9,16 +9,16 @@
 'use strict'
 
 const variants = {
-  '': { display: 'Hermes', kebab: 'hermes', pascal: 'Hermes' },
+  '': { display: 'OPEN-VERSE', kebab: 'open-verse', pascal: 'OpenVerse' },
   light: {
-    display: 'Hermes Light',
-    kebab: 'hermes-light',
-    pascal: 'HermesLight'
+    display: 'OPEN-VERSE Light',
+    kebab: 'open-verse-light',
+    pascal: 'OpenVerseLight'
   },
   bundled: {
-    display: 'Hermes Agent',
-    kebab: 'hermes-bundled',
-    pascal: 'HermesBundled'
+    display: 'OPEN-VERSE Agent',
+    kebab: 'open-verse-bundled',
+    pascal: 'OpenVerseBundled'
   }
 }
 

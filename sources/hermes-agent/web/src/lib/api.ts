@@ -22,10 +22,21 @@ import { dashboardServingProfile } from "./profile-bootstrap";
 function readBasePath(): string {
   if (typeof window === "undefined") return "";
   const raw = window.__HERMES_BASE_PATH__ ?? "";
-  if (!raw) return "";
-  // Normalise: ensure leading slash, strip trailing slash.
-  const withLead = raw.startsWith("/") ? raw : `/${raw}`;
-  return withLead.replace(/\/+$/, "");
+  if (raw) {
+    const withLead = raw.startsWith("/") ? raw : `/${raw}`;
+    return withLead.replace(/\/+$/, "");
+  }
+  // If running in Tauri or mobile webview or file protocol, default to local gateway port 9119
+  if (
+    typeof window !== "undefined" &&
+    (window.location.protocol === "tauri:" ||
+      window.location.protocol === "file:" ||
+      window.location.port === "3125" ||
+      window.location.port === "1420")
+  ) {
+    return "http://127.0.0.1:9119";
+  }
+  return "";
 }
 
 export const HERMES_BASE_PATH = readBasePath();
