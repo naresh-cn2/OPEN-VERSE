@@ -108,7 +108,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
             <span style={{ fontSize: "13px", fontWeight: 600 }}>Profile Isolation</span>
           </div>
           <p style={{ fontSize: "12px", color: "#8a8f9f", lineHeight: "1.5" }}>
-            OPEN VERSE runs on an isolated profile (`openverse.*`), completely separate from any external personal Cline accounts or global configurations.
+            OPEN VERSE runs on an isolated profile (`openverse.*`), completely separate from any external personal accounts or global configurations.
           </p>
         </div>
 

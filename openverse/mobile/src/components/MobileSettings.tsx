@@ -171,7 +171,7 @@ export function MobileSettings({
                     if (prov === "ollama") defaultModel = "llama3.2";
                     if (prov === "openrouter") defaultModel = "anthropic/claude-3.5-sonnet";
                     if (prov === "deepseek") defaultModel = "deepseek-chat";
-                    if (prov === "cline") defaultModel = "claude-3-7-sonnet-latest";
+                    if (prov === "hermes" || prov === "cline") defaultModel = "nousresearch/hermes-3-llama-3.1-8b";
                     if (prov === "opencode") defaultModel = "opencode-zen";
                     setProviderKeys({ ...providerKeys, selectedProvider: prov, selectedModel: defaultModel });
                   }}
@@ -183,7 +183,7 @@ export function MobileSettings({
                   <option value="openrouter">OpenRouter</option>
                   <option value="deepseek">DeepSeek</option>
                   <option value="ollama">Ollama (Local / LAN)</option>
-                  <option value="cline">Cline (Code Engine)</option>
+                  <option value="hermes">Hermes Agent Core</option>
                   <option value="opencode">OpenCode (AST Engine)</option>
                 </select>
               </div>

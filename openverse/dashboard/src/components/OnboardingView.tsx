@@ -23,13 +23,13 @@ interface OnboardingViewProps {
 
 export const OnboardingView = ({ onComplete }: OnboardingViewProps) => {
   const [step, setStep] = useState<"welcome" | "connect" | "github" | "done">("welcome");
-  const [selectedMethod, setSelectedMethod] = useState<"cline" | "api-key">("api-key");
+  const [selectedMethod, setSelectedMethod] = useState<"hermes" | "cline" | "api-key">("hermes");
   
   // Provider Setup state
-  const [selectedProviderId, setSelectedProviderId] = useState<string>("anthropic");
+  const [selectedProviderId, setSelectedProviderId] = useState<string>("hermes");
   const [apiKey, setApiKey] = useState<string>("");
   const [baseUrl, setBaseUrl] = useState<string>("http://localhost:11434");
-  const [selectedModelId, setSelectedModelId] = useState<string>("claude-3-7-sonnet-20250219");
+  const [selectedModelId, setSelectedModelId] = useState<string>("nousresearch/hermes-3-llama-3.1-8b");
   const [showKey, setShowKey] = useState<boolean>(false);
   const [isValidating, setIsValidating] = useState<boolean>(false);
   const [validationSuccess, setValidationSuccess] = useState<boolean | null>(null);
@@ -210,14 +210,14 @@ export const OnboardingView = ({ onComplete }: OnboardingViewProps) => {
                 </div>
               </div>
 
-              {/* Option: Cloud Sign-In */}
+              {/* Option: Hermes Agent Engine */}
               <div
-                onClick={() => setSelectedMethod("cline")}
+                onClick={() => setSelectedMethod("hermes")}
                 style={{
                   padding: "16px 18px",
                   borderRadius: "10px",
-                  backgroundColor: selectedMethod === "cline" ? "rgba(110,86,207,0.1)" : "#14151b",
-                  border: selectedMethod === "cline" ? "1.5px solid #6e56cf" : "1px solid #232530",
+                  backgroundColor: selectedMethod === "hermes" ? "rgba(16,185,129,0.1)" : "#14151b",
+                  border: selectedMethod === "hermes" ? "1.5px solid #10b981" : "1px solid #232530",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "flex-start",
@@ -230,24 +230,24 @@ export const OnboardingView = ({ onComplete }: OnboardingViewProps) => {
                     width: "36px",
                     height: "36px",
                     borderRadius: "8px",
-                    backgroundColor: "rgba(110,86,207,0.2)",
+                    backgroundColor: "rgba(16,185,129,0.2)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <Sparkles size={18} color="#baa7ff" />
+                  <Sparkles size={18} color="#10b981" />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <h3 style={{ fontSize: "14.5px", fontWeight: 600, color: "#f0f0f4" }}>
-                      Sign In with Account
+                      Canonical Hermes Agent Core
                     </h3>
-                    {selectedMethod === "cline" && <CheckCircle2 size={16} color="#baa7ff" />}
+                    {selectedMethod === "hermes" && <CheckCircle2 size={16} color="#10b981" />}
                   </div>
                   <p style={{ fontSize: "12.5px", color: "#8a8f9f", marginTop: "4px", lineHeight: "1.4" }}>
-                    Sign in to use managed subscription accounts, promotions, or unified gateway.
+                    Autonomous engine with tools, terminal, filesystem actions, and cross-device routing.
                   </p>
                 </div>
               </div>

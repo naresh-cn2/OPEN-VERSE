@@ -65,7 +65,7 @@ import {
 } from "../marketplace-explorer-view";
 import { PageFrame, PageHeader } from "../page-layout";
 import { AboutContent } from "./about-view";
-import { AccountView } from "./account-view";
+import { HermesAgentSettingsView } from "./hermes-agent-settings-view";
 import { OpenVerseAccountView } from "./open-verse-account-view";
 import { AddProviderContent, type AddProviderPayload } from "./add-provider";
 import { ChannelsContent } from "./channels-view";
@@ -670,9 +670,9 @@ export function SettingsView({
 		) : activeNav === "Remote" ? (
 			<RemoteEnvironmentsContent />
 		) : activeNav === "Account" ? (
-			<OpenVerseAccountView onNavigateToProviders={() => onNavigateSection("Cline")} />
-		) : activeNav === "Cline" ? (
-			<AccountView />
+			<OpenVerseAccountView onNavigateToProviders={() => onNavigateSection("Hermes")} />
+		) : activeNav === "Hermes" || activeNav === "Cline" ? (
+			<HermesAgentSettingsView />
 		) : activeNav === "About" ? (
 			<AboutContent onOpenConnectors={() => onNavigateSection("Customize")} />
 		) : activeNav === "General" ? (

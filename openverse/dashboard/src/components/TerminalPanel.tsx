@@ -14,7 +14,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
 }) => {
   const [history, setHistory] = useState<Array<{ type: "input" | "output" | "error" | "info"; text: string }>>([
     { type: "info", text: "OPEN-VERSE Unified Environment v1.0.0 [Integrated Core]" },
-    { type: "info", text: "Connected Agents: Cline (Code Engine), OpenCode (Semantic AST), REA (Reverse Eng), Ptero (Free LLM Hub)" },
+    { type: "info", text: "Connected Agents: Hermes (Autonomous Core Engine), OpenCode (Semantic AST), REA (Reverse Eng), Ptero (Free LLM Hub)" },
     { type: "output", text: "Type 'help' for available commands or execute shell commands directly." }
   ]);
   const [inputVal, setInputVal] = useState("");
@@ -49,7 +49,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
         text: `Available commands:
   agents          List all 4 integrated Open-Verse agent engines
   status          Show health and connection state of agents
-  switch <name>   Switch active agent (cline, opencode, rea, ptero)
+  switch <name>   Switch active agent (hermes, opencode, rea, ptero)
   git status      Check current Open-Verse git status
   tools           Show available tools for current agent (${activeAgent})
   clear           Clear the terminal console`
@@ -57,7 +57,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
     } else if (lower === "agents") {
       newHistory.push({
         type: "output",
-        text: `[ACTIVE] cline      - Full Autonomous Coding & Refactoring Agent
+        text: `[ACTIVE] hermes     - Full Autonomous Coding & Refactoring Hermes Agent
 [READY]  opencode   - Deep Code Understanding, AST & Semantic Search
 [READY]  rea        - Binary & Application Behavior Reverse Engineering
 [READY]  ptero      - High-Throughput Free Multi-Model Chat & Inference`
@@ -69,7 +69,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   ● Core Workspace: C:\\Users\\nares\\Workspace\\OPEN-VERSE\\OPEN-VERSE
   ● Active Agent  : ${activeAgent.toUpperCase()}
   ● Sidecar State : Ready (Port: 3125)
-  ● Git Repos     : cline (main), opencode (dev), rea (main), ptero (main)`
+  ● Git Repos     : hermes (main), opencode (dev), rea (main), ptero (main)`
       });
     } else if (lower === "tools") {
       newHistory.push({

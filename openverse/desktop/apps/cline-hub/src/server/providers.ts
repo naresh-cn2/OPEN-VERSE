@@ -30,11 +30,15 @@ export function resolveBrowserDefaults(ctx: HubContext): {
 		provider:
 			lastUsed?.provider ??
 			ctx.lastSessionContext?.providerId ??
-			process.env.CLINE_PROVIDER?.trim(),
+			process.env.OPENVERSE_PROVIDER?.trim() ??
+			process.env.CLINE_PROVIDER?.trim() ??
+			"hermes",
 		model:
 			lastUsed?.model ??
 			ctx.lastSessionContext?.modelId ??
-			process.env.CLINE_MODEL?.trim(),
+			process.env.OPENVERSE_MODEL?.trim() ??
+			process.env.CLINE_MODEL?.trim() ??
+			"nousresearch/hermes-3-llama-3.1-8b",
 		workspaceRoot: ctx.lastSessionContext?.workspaceRoot ?? workspaceRoot,
 		cwd:
 			ctx.lastSessionContext?.cwd ??

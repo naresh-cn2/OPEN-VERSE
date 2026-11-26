@@ -30,7 +30,7 @@ use tauri_plugin_updater::UpdaterExt;
 const UPDATE_INITIAL_DELAY: Duration = Duration::from_secs(10);
 const UPDATE_CHECK_INTERVAL: Duration = Duration::from_secs(2 * 60 * 60);
 const MAIN_WINDOW_LABEL: &str = "main";
-const TRAY_ICON_ID: &str = "cline-code";
+const TRAY_ICON_ID: &str = "open-verse";
 const TRAY_OPEN_MENU_ID: &str = "tray-open";
 const TRAY_NEW_SESSION_MENU_ID: &str = "tray-new-session";
 const TRAY_SETTINGS_MENU_ID: &str = "tray-settings";
@@ -489,16 +489,17 @@ fn resolve_desktop_backend_script_path(context: &AppContext) -> Option<PathBuf> 
 /// desktop backend script executes on, so the app needs no Node or Bun.
 fn desktop_cli_binary_names() -> Vec<String> {
     let extension = if cfg!(windows) { ".exe" } else { "" };
-    let bundled_name = format!("cline-cli{extension}");
+    let mut names = vec![
+        format!("openverse-agent{extension}"),
+        format!("openverse-cli{extension}"),
+        format!("cline-cli{extension}"),
+    ];
     let target_triple = option_env!("TAURI_ENV_TARGET_TRIPLE").unwrap_or("").trim();
-    if target_triple.is_empty() {
-        return vec![bundled_name];
+    if !target_triple.is_empty() {
+        names.push(format!("openverse-agent-{target_triple}{extension}"));
+        names.push(format!("cline-cli-{target_triple}{extension}"));
     }
-
-    vec![
-        bundled_name,
-        format!("cline-cli-{target_triple}{extension}"),
-    ]
+    names
 }
 
 fn non_empty_env_path(name: &str) -> Option<PathBuf> {

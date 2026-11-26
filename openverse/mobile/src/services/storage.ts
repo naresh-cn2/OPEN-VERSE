@@ -9,7 +9,7 @@ export interface ModelProviderKeys {
   openrouterApiKey?: string;
   deepseekApiKey?: string;
   ollamaBaseUrl?: string;
-  selectedProvider: "gemini" | "anthropic" | "openai" | "ollama" | "openrouter" | "deepseek" | "cline" | "opencode";
+  selectedProvider: "hermes" | "gemini" | "anthropic" | "openai" | "ollama" | "openrouter" | "deepseek" | "cline" | "opencode";
   selectedModel: string;
 }
 

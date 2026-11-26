@@ -49,15 +49,17 @@ export function resolveLaunchContext(
 		override?.providerId ??
 		ctx.lastSessionContext?.providerId ??
 		providerSettingsManager.getLastUsedProviderSettings()?.provider ??
+		process.env.OPENVERSE_PROVIDER?.trim() ??
 		process.env.CLINE_PROVIDER?.trim() ??
-		"";
+		"hermes";
 	const modelId =
 		override?.model ??
 		override?.modelId ??
 		ctx.lastSessionContext?.modelId ??
 		providerSettingsManager.getLastUsedProviderSettings()?.model ??
+		process.env.OPENVERSE_MODEL?.trim() ??
 		process.env.CLINE_MODEL?.trim() ??
-		"";
+		"nousresearch/hermes-3-llama-3.1-8b";
 	const root =
 		override?.workspaceRoot ??
 		ctx.lastSessionContext?.workspaceRoot ??

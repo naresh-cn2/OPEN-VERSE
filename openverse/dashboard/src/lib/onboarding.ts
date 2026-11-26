@@ -3,7 +3,7 @@ export const ONBOARDING_RESET_EVENT = "openverse:onboarding-reset";
 
 export type OnboardingStorage = {
   completedAt: string | null;
-  setupMethod?: "cline" | "api-key" | null;
+  setupMethod?: "hermes" | "cline" | "api-key" | null;
   providerId?: string | null;
   modelId?: string | null;
 };

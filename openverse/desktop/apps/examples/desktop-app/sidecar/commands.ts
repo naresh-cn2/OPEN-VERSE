@@ -2934,70 +2934,15 @@ export async function handleCommand(
 		return { opened: true };
 	}
 
-	// ── Cline account ──────────────────────────────────────────────────
+	// ── Cline account (Disabled in OPEN-VERSE — Hermes Agent core used instead)
 	if (command === "cline_account") {
-		const operation = String(args?.operation ?? "").trim();
-		if (!operation) throw new Error("operation is required");
-		const manager = new ProviderSettingsManager();
-		// Signed out is an expected state, not a command failure: resolve the
-		// token up front and return a typed result the webview can act on
-		// instead of letting the account service throw a generic error that
-		// would be captured as error telemetry and shown raw to the user.
-		const authToken = await resolveFreshClineAuthToken(manager, ctx);
-		if (!authToken) {
-			// Backstop for credentials that go away without a settings write —
-			// an expired or server-revoked token. Explicit sign-out is handled
-			// at its source in `save_provider_settings`; this catches the rest
-			// so a stale account never keeps serving its rollout cohort.
-			syncSignedOutAccountContext(ctx);
-			return CLINE_ACCOUNT_NOT_AUTHENTICATED_RESULT;
-		}
-		const settings = manager.getProviderSettings("cline");
-		const accountService = new ClineAccountService({
-			apiBaseUrl:
-				settings?.baseUrl?.trim() || getClineEnvironmentConfig().apiBaseUrl,
-			getAuthToken: async () => authToken,
-		});
-		const result = await executeClineAccountAction(
-			args as ClineAccountActionRequest,
-			accountService,
-		);
-		if (operation === "switchAccount") {
-			if (isCloudAgentsEnabled()) {
-				try {
-					await getCloudSessionManager(ctx).refreshOrganization();
-				} catch (error) {
-					ctx.logger?.error?.(
-						"Failed to refresh cloud organization after account switch",
-						{ error },
-					);
-				}
-			}
-			await resetCloudSessionManager(ctx);
-			// The sidebar must re-scope immediately (personal ⇄ org), not on
-			// the next 12s poll.
-			broadcastEvent(ctx, "cloud_sessions_changed", {});
-		}
-		syncAccountContextFromResult(ctx, manager, operation, result);
-		return result;
+		return CLINE_ACCOUNT_NOT_AUTHENTICATED_RESULT;
 	}
 
-	// ── Cline integrations (GitHub App) ────────────────────────────────
+	// ── Cline integrations ─────────────────────────────────────────────
 	if (command === "cline_integrations") {
-		const operation = String(args?.operation ?? "").trim();
-		if (!operation) throw new Error("operation is required");
-		const manager = new ProviderSettingsManager();
-
-		const authToken = await resolveFreshClineAuthToken(manager, ctx);
-		if (!authToken) {
-			return CLINE_ACCOUNT_NOT_AUTHENTICATED_RESULT;
-		}
-		const settings = manager.getProviderSettings("cline");
-		const environment = getClineEnvironmentConfig();
-		const requestOptions = {
-			apiBaseUrl: settings?.baseUrl?.trim() || environment.apiBaseUrl,
-			appBaseUrl: environment.appBaseUrl,
-			authToken,
+		return CLINE_ACCOUNT_NOT_AUTHENTICATED_RESULT;
+	}
 		};
 		switch (operation) {
 			case "list":

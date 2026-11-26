@@ -18,15 +18,15 @@ export const AgentModal: FC<AgentModalProps> = ({
 
   const agents = [
     {
-      id: "cline",
-      name: "Cline Core",
+      id: "hermes",
+      name: "Hermes Agent Core",
       category: "Autonomous Coding",
       icon: Bot,
-      color: "#6e56cf",
-      description: "Autonomous software development agent with execution engine, diff editing, and task lifecycle management.",
+      color: "#10b981",
+      description: "Canonical Hermes Agent engine with execution loop, file tools, terminal shell, MCP, and cross-device routing.",
       status: "Installed & Active",
       branch: "main",
-      tools: ["File Operations", "Terminal Shell", "Browser Testing", "Context Analysis"]
+      tools: ["File Operations", "Terminal Shell", "Browser Testing", "Context Analysis", "MCP Protocol", "Cron Engine"]
     },
     {
       id: "opencode",

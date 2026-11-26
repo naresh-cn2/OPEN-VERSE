@@ -1337,6 +1337,20 @@ class DesktopClient {
 	private getStandaloneProviders(): Provider[] {
 		const defaultProviders: Provider[] = [
 			{
+				id: "hermes",
+				name: "Hermes Agent Core",
+				models: 5,
+				color: "#10B981",
+				letter: "H",
+				enabled: true,
+				configured: true,
+				defaultModelId: "nousresearch/hermes-3-llama-3.1-8b",
+				capabilities: ["streaming", "tools", "vision", "reasoning"],
+				docUrl: "https://github.com/NousResearch/hermes-agent",
+				docLabel: "Hermes Agent Core",
+				authDescription: "Canonical Hermes Agent autonomous coding engine",
+			},
+			{
 				id: "gemini",
 				name: "Google Gemini",
 				models: 5,
@@ -1435,17 +1449,17 @@ class DesktopClient {
 			},
 			{
 				id: "cline",
-				name: "Cline (Coding Engine)",
-				models: 3,
-				color: "#2563EB",
-				letter: "C",
+				name: "OPEN-VERSE Hermes",
+				models: 5,
+				color: "#10B981",
+				letter: "H",
 				enabled: true,
-				configured: false,
-				defaultModelId: "claude-3-7-sonnet-latest",
+				configured: true,
+				defaultModelId: "nousresearch/hermes-3-llama-3.1-8b",
 				capabilities: ["streaming", "tools"],
-				docUrl: "https://cline.bot",
-				docLabel: "Cline Integration",
-				authDescription: "Optional local CLI & coding engine integration",
+				docUrl: "https://github.com/NousResearch/hermes-agent",
+				docLabel: "Hermes Agent Core",
+				authDescription: "Canonical Hermes Agent execution engine",
 			},
 			{
 				id: "opencode",
@@ -1987,8 +2001,8 @@ class DesktopClient {
 		// Check configured keys from all storage locations
 		let apiKey = "";
 		let baseUrl = "";
-		const provider = (config?.provider as string) || "gemini";
-		const model = (config?.modelId as string) || "gemini-2.5-flash";
+		const provider = (config?.provider as string) || "hermes";
+		const model = (config?.modelId as string) || "nousresearch/hermes-3-llama-3.1-8b";
 
 		try {
 			if (typeof window !== "undefined") {
@@ -2010,6 +2024,48 @@ class DesktopClient {
 				}
 			}
 		} catch {}
+
+		// 0. Hermes Agent Core (Local Gateway on 9119 or Python Runner)
+		if (provider === "hermes" || provider === "hermes-agent" || provider === "cline") {
+			try {
+				const gatewayUrl = "http://127.0.0.1:9119/api/chat";
+				const response = await fetch(gatewayUrl, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						session_id: sessionId,
+						prompt,
+						model,
+					}),
+					signal: AbortSignal.timeout(2500),
+				}).catch(() => null);
+
+				if (response && response.ok) {
+					const reader = response.body?.getReader();
+					const decoder = new TextDecoder();
+					if (reader) {
+						while (true) {
+							const { done, value } = await reader.read();
+							if (done) break;
+							const chunkStr = decoder.decode(value, { stream: true });
+							const lines = chunkStr.split("\n");
+							for (const line of lines) {
+								if (line.startsWith("data: ")) {
+									try {
+										const data = JSON.parse(line.slice(6));
+										const token = data.text || data.chunk || data.choices?.[0]?.delta?.content;
+										if (token) emitChunk(token, false);
+									} catch {}
+								}
+							}
+						}
+						emitChunk("", true);
+						persistAssistantResponse(fullResponseText);
+						return;
+					}
+				}
+			} catch {}
+		}
 
 		// 1. Google Gemini
 		if (provider === "gemini" && apiKey) {
@@ -2180,8 +2236,8 @@ class DesktopClient {
 			}
 		}
 
-		// 4. Default helpful offline response
-		const defaultResponse = `I received your prompt: "${prompt}".\n\nTo enable autonomous model execution on your device, configure your API key in **Settings > AI Model Providers** (supporting Google Gemini, Anthropic Claude, OpenAI, and Ollama) or connect to your **Desktop Hub**.`;
+		// 4. Default helpful response
+		const defaultResponse = `I received your prompt: "${prompt}".\n\nI am **OPEN-VERSE** powered by the **Hermes Agent** autonomous coding engine.\nTo enable frontier model reasoning, connect your **Desktop Hermes Gateway** or configure your API key in **Settings > AI Model Providers** (supporting Nous Hermes 3, Google Gemini, Anthropic Claude, OpenAI, and Ollama).`;
 		emitChunk(defaultResponse, true);
 		persistAssistantResponse(defaultResponse);
 	}

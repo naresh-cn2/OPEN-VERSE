@@ -1,4 +1,4 @@
-export const MODEL_SELECTION_STORAGE_KEY = "cline.code.model-selection.v1";
+export const MODEL_SELECTION_STORAGE_KEY = "openverse.code.model-selection.v1";
 
 export type ModelSelectionStorage = {
 	lastProvider: string;
@@ -65,13 +65,21 @@ export function readModelSelectionStorageFromWindow(
 ): ModelSelectionStorage {
 	if (typeof window === "undefined") {
 		return {
-			lastProvider: "",
-			lastModelByProvider: {},
+			lastProvider: "hermes",
+			lastModelByProvider: { hermes: "nousresearch/hermes-3-llama-3.1-8b" },
 		};
 	}
-	return parseModelSelectionStorage(
-		window.localStorage.getItem(modelSelectionStorageKey(scope)),
-	);
+	const stored =
+		window.localStorage.getItem(modelSelectionStorageKey(scope)) ??
+		window.localStorage.getItem("cline.code.model-selection.v1");
+	const parsed = parseModelSelectionStorage(stored);
+	if (!parsed.lastProvider || parsed.lastProvider === "cline" || parsed.lastProvider === "cline-pass") {
+		parsed.lastProvider = "hermes";
+	}
+	if (!parsed.lastModelByProvider["hermes"]) {
+		parsed.lastModelByProvider["hermes"] = "nousresearch/hermes-3-llama-3.1-8b";
+	}
+	return parsed;
 }
 
 export function writeModelSelectionStorageToWindow(
@@ -87,7 +95,7 @@ export function writeModelSelectionStorageToWindow(
 	);
 }
 
-export const MODEL_SELECTION_CHANGED_EVENT = "cline:model-selection-changed";
+export const MODEL_SELECTION_CHANGED_EVENT = "openverse:model-selection-changed";
 
 export type ModelSelectionChangedDetail = {
 	providerId: string;
@@ -116,7 +124,7 @@ export function selectChatModel(providerId: string, modelId: string): void {
 }
 
 export const REASONING_SELECTION_STORAGE_KEY =
-	"cline.code.reasoning-selection.v1";
+	"openverse.code.reasoning-selection.v1";
 
 export const REASONING_SELECTION_VALUES = [
 	"none",

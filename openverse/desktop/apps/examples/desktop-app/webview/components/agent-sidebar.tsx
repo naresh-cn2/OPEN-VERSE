@@ -175,7 +175,7 @@ const SETTINGS_SECTION_ICONS = {
 	Import: Import,
 	Remote: Network,
 	Account: CircleUserRound,
-	Cline: Sparkles,
+	Hermes: Sparkles,
 	Debug: Bug,
 	About: Info,
 	Customize: Blocks,
@@ -315,7 +315,7 @@ function SettingsSectionNavigation({
 				if (collapsed || !isProviderSection(section)) {
 					return renderSectionButton(section);
 				}
-				return section === "Cline" ? renderProvidersGroup() : null;
+				return section === "Hermes" || section === "Cline" ? renderProvidersGroup() : null;
 			})}
 			{collapsed ? (
 				<>

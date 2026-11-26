@@ -376,7 +376,7 @@ export function OpenVerseAccountView({
 									</Badge>
 								</div>
 								<p className="text-[11px] text-muted-foreground">
-									ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Cline.
+									ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Hermes Agent.
 								</p>
 							</div>
 						</div>

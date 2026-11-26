@@ -157,7 +157,7 @@ export function buildProviderModelCatalog(
 // boot issues a single round-trip instead of one per consumer.
 const PROVIDER_CATALOG_CACHE_TTL_MS = 5_000;
 export const VOICE_INPUT_SETTINGS_CHANGED_EVENT =
-	"cline:voice-input-settings-changed";
+	"openverse:voice-input-settings-changed";
 
 let providerCatalogCache: {
 	fetchedAt: number;
@@ -221,6 +221,70 @@ export function subscribeToProviderModels(
 }
 
 export const DEFAULT_FALLBACK_PROVIDERS: Provider[] = [
+	{
+		id: "hermes",
+		name: "Hermes Agent Core",
+		color: "#10b981",
+		letter: "H",
+		models: 5,
+		enabled: true,
+		configured: true,
+		defaultModelId: "nousresearch/hermes-3-llama-3.1-8b",
+		modelList: [
+			{
+				id: "nousresearch/hermes-3-llama-3.1-8b",
+				name: "Nous Hermes 3 (Llama 3.1 8B)",
+				description: "Canonical Hermes Agent autonomous coding model",
+				featured: { tier: "free", rank: 1, tags: ["Hermes", "Recommended"] },
+				supportsAttachments: true,
+				supportsVision: true,
+				supportsReasoning: true,
+				contextWindow: 131072,
+				inputModalities: ["text", "image"],
+				outputModalities: ["text"],
+			},
+			{
+				id: "nousresearch/hermes-3-llama-3.1-70b",
+				name: "Nous Hermes 3 (Llama 3.1 70B)",
+				description: "High-parameter frontier reasoning model for full repository architecture",
+				featured: { tier: "free", rank: 2, tags: ["Hermes", "Advanced"] },
+				supportsAttachments: true,
+				supportsVision: true,
+				supportsReasoning: true,
+				contextWindow: 131072,
+				inputModalities: ["text", "image"],
+				outputModalities: ["text"],
+			},
+			{
+				id: "nousresearch/hermes-2-pro-llama-3-8b",
+				name: "Hermes 2 Pro (Llama 3 8B)",
+				description: "Structured JSON function calling and tool synthesis",
+				supportsAttachments: true,
+				contextWindow: 65536,
+				inputModalities: ["text"],
+				outputModalities: ["text"],
+			},
+			{
+				id: "deepseek/deepseek-chat",
+				name: "DeepSeek V3",
+				description: "State-of-the-art coding and language reasoning",
+				supportsAttachments: true,
+				contextWindow: 64000,
+				inputModalities: ["text"],
+				outputModalities: ["text"],
+			},
+			{
+				id: "deepseek/deepseek-r1",
+				name: "DeepSeek R1",
+				description: "Reinforcement-learning reasoning model",
+				supportsAttachments: true,
+				supportsReasoning: true,
+				contextWindow: 64000,
+				inputModalities: ["text"],
+				outputModalities: ["text"],
+			},
+		],
+	},
 	{
 		id: "gemini",
 		name: "Google Gemini",
@@ -842,13 +906,14 @@ export async function loadProviderModelCatalog(options?: {
 				(provider.modelList ?? []).map((model) => [model.id, model] as const),
 			),
 		);
-		// Cloud catalogs are billing choices on the same Cline transport. Only
+		// Cloud catalogs are billing choices on the same Hermes / OPEN-VERSE transport. Only
 		// the account-scoped cloud response determines which models are offered.
 		return buildProviderModelCatalog(
 			Object.entries({
-				cline: "OPEN-VERSE Usage",
-				"cline-pass": "ClinePass",
-				"cline-cloud": "ClineFree",
+				hermes: "Hermes Agent Core",
+				cline: "OPEN-VERSE Hermes",
+				"cline-pass": "Hermes Pro",
+				"cline-cloud": "Hermes Free",
 			}).map(([id, name]) => ({
 				id,
 				name,

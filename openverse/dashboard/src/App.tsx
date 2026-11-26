@@ -65,7 +65,7 @@ export function App() {
   const [isSearchActive, setIsSearchActive] = useState(false);
 
   // Active AI Engine & Model State (Derived from real configuration)
-  const [activeAgent, setActiveAgent] = useState<string>("cline");
+  const [activeAgent, setActiveAgent] = useState<string>("hermes");
   const [providerConfig, setProviderConfig] = useState(() => getStoredProviderConfig());
   const [effort, setEffort] = useState<"Low" | "Medium" | "High">("Low");
   
@@ -138,8 +138,8 @@ export function App() {
     // Simulate authentic provider turn execution
     setTimeout(() => {
       const activeName =
-        activeAgent === "cline"
-          ? "Cline Core"
+        activeAgent === "hermes" || activeAgent === "cline"
+          ? "Hermes Agent"
           : activeAgent === "opencode"
           ? "OpenCode"
           : activeAgent === "rea"
@@ -831,7 +831,7 @@ export function App() {
                     }}
                   >
                     {[
-                      { id: "cline", name: "Cline Core" },
+                      { id: "hermes", name: "Hermes Agent" },
                       { id: "opencode", name: "OpenCode" },
                       { id: "rea", name: "REA" },
                       { id: "ptero", name: "Ptero" },

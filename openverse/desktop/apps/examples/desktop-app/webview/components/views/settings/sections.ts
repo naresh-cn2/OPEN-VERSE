@@ -12,7 +12,7 @@ import { normalizeProviderId } from "@/lib/provider-id";
 const ALL_SETTINGS_SECTIONS = [
 	"General",
 	"Account",
-	"Cline",
+	"Hermes",
 	"Local Models",
 	"Providers",
 	"Voice",
@@ -28,16 +28,16 @@ const ALL_SETTINGS_SECTIONS = [
 // Everything that decides where the chat's models come from lives under one
 // "Provider" sidebar group, so users don't hunt across three pages.
 export const PROVIDER_SECTIONS = [
-	"Cline",
+	"Hermes",
 	"Local Models",
 	"Providers",
 ] as const;
 export type ProviderSection = (typeof PROVIDER_SECTIONS)[number];
 
 export const PROVIDER_SECTION_LABELS: Record<ProviderSection, string> = {
-	Cline: "OPEN-VERSE",
-	"Local Models": "Local",
-	Providers: "BYOK",
+	Hermes: "Hermes Agent",
+	"Local Models": "Local (Ollama)",
+	Providers: "BYOK Providers",
 };
 
 export function isProviderSection(
@@ -51,9 +51,9 @@ export function readProviderSectionInUse(): ProviderSection {
 	const provider = normalizeProviderId(
 		readModelSelectionStorageFromWindow().lastProvider,
 	);
-	// Without a saved choice the chat uses the default OPEN-VERSE provider.
-	if (!provider || provider === "cline" || provider === "cline-pass") {
-		return "Cline";
+	// Without a saved choice the chat uses the canonical OPEN-VERSE Hermes Agent engine.
+	if (!provider || provider === "hermes" || provider === "hermes-agent" || provider === "cline" || provider === "cline-pass") {
+		return "Hermes";
 	}
 	return isLocalRuntime(provider) ? "Local Models" : "Providers";
 }

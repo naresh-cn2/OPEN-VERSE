@@ -12,7 +12,6 @@ import {
 	Loader2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ClineLogo } from "@/components/cline-logo";
 import { ImportSessionsDialog } from "@/components/import-sessions-dialog";
 import { OpenVerseRobot } from "@/components/open-verse-robot";
 import { Badge } from "@/components/ui/badge";
