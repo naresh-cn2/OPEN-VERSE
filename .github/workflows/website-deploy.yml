@@ -15,7 +15,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: open-verse/website
+    working-directory: openverse/website
 
 jobs:
   deploy:

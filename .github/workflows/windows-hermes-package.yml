@@ -31,7 +31,7 @@ jobs:
 
       - name: Copy Hermes Agent source
         shell: pwsh
-        run: Copy-Item -Path "open-verse/sources/hermes-agent/*" -Destination "hermes-agent-pkg" -Recurse -Force
+        run: Copy-Item -Path "openverse/sources/hermes-agent/*" -Destination "hermes-agent-pkg" -Recurse -Force
 
       - name: Install Hermes Agent dependencies
         shell: pwsh

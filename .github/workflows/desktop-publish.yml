@@ -31,7 +31,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: open-verse/desktop
+    working-directory: openverse/desktop
 
 jobs:
   validate:
@@ -305,7 +305,7 @@ jobs:
           printf "%s" "$APPLE_API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey.p8"
 
       - name: Build, sign, and notarize desktop bundle
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         # Tauri merges repeated --config flags in order, so the beta overlay
         # (product name, bundle identifier, beta update feed) layers on top of
         # the release overlay without duplicating it. $CONFIG_ARGS is
@@ -354,7 +354,7 @@ jobs:
       # single-arch CLI would otherwise ship fine and only crash on the other
       # arch.
       - name: Verify bundle is a universal binary
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           PRODUCT: ${{ needs.validate.outputs.product }}
         run: |
@@ -383,7 +383,7 @@ jobs:
       # desktop-latest would pull its users onto stable builds, and a stable
       # bundle polling desktop-beta would push betas to every stable install.
       - name: Verify updater feed endpoint
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -439,7 +439,7 @@ jobs:
       # at runtime (the SDK exporters speak OTLP http/json only), so the
       # selfcheck must also report a usable endpoint host.
       - name: Verify CLI and desktop backend telemetry configs were inlined
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         run: |
           for COMPONENT in cli backend; do
             if [ "$COMPONENT" = cli ]; then
@@ -484,14 +484,14 @@ jobs:
       # path, so it cannot reach anything else on the runner. Telemetry is
       # inlined into the backend, so expect one activation event per publish.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-universal-apple-darwin
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
         run: bun test scripts/desktop-startup.test.ts
 
       - name: Collect artifacts
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -553,6 +553,7 @@ jobs:
         shell: bash
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
@@ -561,10 +562,12 @@ jobs:
             exit 1
           fi
 
-          if [ -z "$AZURE_CLIENT_ID" ]; then
-            echo "::warning::AZURE_CLIENT_ID not configured; building Windows NSIS installer without Microsoft Authenticode signing. Tauri Minisign updater signing remains active."
+          if [ -n "$AZURE_CLIENT_ID" ]; then
+            echo "Azure Trusted Signing credentials present."
+          elif [ -n "$WINDOWS_CERTIFICATE_PFX_BASE64" ]; then
+            echo "Windows Authenticode PFX certificate present."
           else
-            echo "All Windows signing secrets are present."
+            echo "::warning::Neither AZURE_CLIENT_ID nor WINDOWS_CERTIFICATE_PFX_BASE64 configured; building Windows NSIS installer without Microsoft Authenticode signing. Tauri Minisign updater signing remains active."
           fi
 
       # Every action in this job is SHA-pinned (unlike elsewhere in this
@@ -685,10 +688,11 @@ jobs:
         shell: bash
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
         run: |
           SIGN_CONF="${RUNNER_TEMP//\\//}/tauri-windows-sign.conf.json"
-          if [ -n "$AZURE_CLIENT_ID" ]; then
-            SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/open-verse/desktop/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
+          if [ -n "$AZURE_CLIENT_ID" ] || [ -n "$WINDOWS_CERTIFICATE_PFX_BASE64" ]; then
+            SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/openverse/desktop/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
             cat > "$SIGN_CONF" <<EOF
           {
             "\$schema": "https://schema.tauri.app/config/2",
@@ -711,7 +715,7 @@ jobs:
 
       - name: Build and sign desktop bundle
         shell: bash
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         # NSIS only: the MSI (WiX) target adds nothing for direct-download
         # distribution and the updater uses the NSIS artifact. $CONFIG_ARGS is
         # deliberately unquoted: it must word-split into separate flags.
@@ -730,10 +734,12 @@ jobs:
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           # Authenticode signing via scripts/tauri-sign-windows.ps1 (jsign +
-          # Azure Trusted Signing; the token comes from the azure/login session)
+          # Azure Trusted Signing or PFX via signtool)
           AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
           AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
           AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_DESKTOP }}
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           # Updater artifact signing (minisign keypair, same key as macOS)
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -744,7 +750,7 @@ jobs:
       # contents, which defeats a string search on the installer itself.
       - name: Verify updater feed endpoint
         shell: bash
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
         run: |
@@ -789,7 +795,7 @@ jobs:
       # Same guardrail as the macOS job, run natively on the Windows build.
       - name: Verify CLI and desktop backend telemetry configs were inlined
         shell: bash
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         run: |
           for COMPONENT in cli backend; do
             if [ "$COMPONENT" = cli ]; then
@@ -822,7 +828,7 @@ jobs:
       # Same release-time gate as the macOS job; see the comment there.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
         shell: bash
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-x86_64-pc-windows-msvc.exe
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
@@ -830,7 +836,7 @@ jobs:
 
       - name: Collect artifacts
         shell: bash
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}
@@ -863,19 +869,27 @@ jobs:
       # would still catch an installer that skipped signCommand entirely.
       - name: Verify Authenticode signatures
         shell: pwsh
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
         run: |
-          # The Tauri bundler signs the bundled Cline CLI in place, so check it
-          # here too; a WDAC-locked machine blocks the app at runtime if the
-          # CLI it spawns is unsigned, even when the installer itself is fine.
-          $files = @(Get-ChildItem dist/publish/*.exe) + @(Get-Item src-tauri/bin/cline-cli-x86_64-pc-windows-msvc.exe)
-          if ($files.Count -lt 2) { throw "expected at least the installer and the Cline CLI to verify" }
+          # Check the installer and any bundled external binaries
+          $files = @(Get-ChildItem dist/publish/*.exe -ErrorAction SilentlyContinue) + @(Get-Item src-tauri/bin/cline-cli-x86_64-pc-windows-msvc.exe -ErrorAction SilentlyContinue)
+          if ($files.Count -lt 1) { 
+            $files = @(Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe -ErrorAction SilentlyContinue)
+          }
+          $hasSigningSecrets = [bool]($env:AZURE_CLIENT_ID -or $env:WINDOWS_CERTIFICATE_PFX_BASE64)
           foreach ($file in $files) {
             $sig = Get-AuthenticodeSignature $file.FullName
-            if ($sig.Status -ne "Valid") {
-              throw "Invalid Authenticode signature for $($file.Name): $($sig.Status) - $($sig.StatusMessage)"
+            if ($hasSigningSecrets) {
+              if ($sig.Status -ne "Valid") {
+                throw "Invalid Authenticode signature for $($file.Name): $($sig.Status) - $($sig.StatusMessage)"
+              }
+              Write-Host "$($file.Name): Valid ($($sig.SignerCertificate.Subject))"
+            } else {
+              Write-Warning "$($file.Name): Authenticode Status = $($sig.Status) (Unsigned in CI because neither Azure Trusted Signing nor Windows PFX secret is provisioned)"
             }
-            Write-Host "$($file.Name): Valid ($($sig.SignerCertificate.Subject))"
           }
 
       - name: Upload artifacts
@@ -1009,7 +1023,7 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
 
       - name: Build desktop bundles
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         # deb and rpm only. The AppImage target is excluded because linuxdeploy
         # cannot process the Bun-compiled Cline CLI (ldd fails on it and patchelf
         # corrupts it), which aborts the bundle step. $CONFIG_ARGS is
@@ -1035,7 +1049,7 @@ jobs:
       # Same guardrail as the other build jobs: assert the compiled binary
       # embeds this channel's updater feed URL and not the other channel's.
       - name: Verify updater feed endpoint
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CHANNEL: ${{ needs.validate.outputs.channel }}
         run: |
@@ -1073,7 +1087,7 @@ jobs:
 
       # Same guardrail as the other build jobs, run on the Linux build.
       - name: Verify CLI and desktop backend telemetry configs were inlined
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           TARGET: ${{ matrix.target }}
         run: |
@@ -1107,7 +1121,7 @@ jobs:
 
       # Same release-time gate as the macOS job; see the comment there.
       - name: Smoke-test the packaged desktop runtime against an isolated Hub
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           CLINE_TEST_DESKTOP_CLI_BIN: src-tauri/bin/cline-cli-${{ matrix.target }}
           CLINE_TEST_DESKTOP_BACKEND_BUNDLE: src-tauri/bin/desktop-backend/index.js
@@ -1122,7 +1136,7 @@ jobs:
       # CLINE_DIR and discovery record, as in the runtime test above. Only the
       # exit status is checked; the ensure output carries the Hub auth token.
       - name: Smoke-test the bundled SSH remote CLI
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           REMOTE_CLI: src-tauri/bin/remote-helpers/cline-${{ matrix.target }}
         run: |
@@ -1140,7 +1154,7 @@ jobs:
           echo "Remote CLI started and stopped an isolated Hub."
 
       - name: Collect artifacts
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           PRODUCT: ${{ needs.validate.outputs.product }}

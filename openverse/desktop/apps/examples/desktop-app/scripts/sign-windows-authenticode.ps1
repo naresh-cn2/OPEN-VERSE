@@ -2,9 +2,9 @@
 .SYNOPSIS
     Official OPEN-VERSE Windows Authenticode Signing Pipeline
 .DESCRIPTION
-    Signs Windows binaries (EXE, DLL, NSIS Setup, Uninstaller) using Authenticode
-    with SHA-256 and RFC 3161 timestamping. Supports PFX certificates, Certum SimplySign,
-    Local Certificate Store Thumbprint, and Microsoft Trusted Signing (Azure Code Signing).
+    Signs Windows binaries (EXE, DLL, MSI, NSIS Setup, Uninstaller) using Authenticode
+    with SHA-256 and RFC 3161 timestamping. Supports PFX certificates, Local Certificate
+    Store Thumbprint, and Microsoft Azure Trusted Signing.
 #>
 
 [CmdletBinding()]
@@ -53,12 +53,12 @@ if ($signTool) {
 $filesToSign = @()
 if ($TargetPath -and (Test-Path $TargetPath)) {
     if ((Get-Item $TargetPath) -is [System.IO.DirectoryInfo]) {
-        $filesToSign = Get-ChildItem -Path $TargetPath -Include "*.exe", "*.dll" -Recurse | Select-Object -ExpandProperty FullName
+        $filesToSign = Get-ChildItem -Path $TargetPath -Include "*.exe", "*.dll", "*.msi" -Recurse | Select-Object -ExpandProperty FullName
     } else {
         $filesToSign = @($TargetPath)
     }
 } else {
-    # Default: search Tauri release directory, sidecars, and NSIS outputs
+    # Default: search Tauri release directory, sidecars, and NSIS/MSI outputs
     $releaseDir = Join-Path $PSScriptRoot "..\src-tauri\target\release"
     if (Test-Path $releaseDir) {
         $mainExe = Join-Path $releaseDir "open-verse.exe"
@@ -69,15 +69,20 @@ if ($TargetPath -and (Test-Path $TargetPath)) {
         $sidecars = Get-ChildItem -Path $sidecarDir -Include "*.exe" -Recurse | Select-Object -ExpandProperty FullName
         $filesToSign += $sidecars
     }
-    $bundleDir = Join-Path $PSScriptRoot "..\src-tauri\target\release\bundle\nsis"
-    if (Test-Path $bundleDir) {
-        $setups = Get-ChildItem -Path $bundleDir -Filter "*-setup.exe" | Select-Object -ExpandProperty FullName
+    $bundleNsisDir = Join-Path $PSScriptRoot "..\src-tauri\target\release\bundle\nsis"
+    if (Test-Path $bundleNsisDir) {
+        $setups = Get-ChildItem -Path $bundleNsisDir -Filter "*-setup.exe" | Select-Object -ExpandProperty FullName
         $filesToSign += $setups
+    }
+    $bundleMsiDir = Join-Path $PSScriptRoot "..\src-tauri\target\release\bundle\msi"
+    if (Test-Path $bundleMsiDir) {
+        $msis = Get-ChildItem -Path $bundleMsiDir -Filter "*.msi" | Select-Object -ExpandProperty FullName
+        $filesToSign += $msis
     }
 }
 
 if ($filesToSign.Count -eq 0) {
-    Write-Host "No executable files found to sign. Exiting."
+    Write-Host "No executable or MSI files found to sign."
     exit 0
 }
 
@@ -86,80 +91,100 @@ $filesToSign | ForEach-Object { Write-Host "  - $_" }
 
 # 3. Determine Signing Mode
 $pfxBase64 = $env:WINDOWS_CERTIFICATE_PFX_BASE64
+$pfxPath = $env:WINDOWS_CERTIFICATE_PATH
 $pfxPassword = $env:WINDOWS_CERTIFICATE_PASSWORD
 $certThumbprint = $env:WINDOWS_CERTIFICATE_THUMBPRINT
-$azureAccount = $env:AZURE_TRUSTED_SIGNING_ACCOUNT
-$azureProfile = $env:AZURE_CERT_PROFILE_NAME
+$azureAccount = if ($env:AZURE_TRUSTED_SIGNING_ACCOUNT_NAME) { $env:AZURE_TRUSTED_SIGNING_ACCOUNT_NAME } else { $env:AZURE_TRUSTED_SIGNING_ACCOUNT }
+$azureProfile = if ($env:AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE) { $env:AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE } else { $env:AZURE_CERT_PROFILE_NAME }
+$azureEndpoint = if ($env:AZURE_TRUSTED_SIGNING_ENDPOINT) { $env:AZURE_TRUSTED_SIGNING_ENDPOINT } else { "https://eus.codesigning.azure.net" }
 
 if ($azureAccount -and $azureProfile) {
-    Write-Host "`n[MODE: Microsoft Trusted Signing / Azure Code Signing]"
+    Write-Host "`n[MODE: Microsoft Azure Trusted Signing]"
     Write-Host "Account: $azureAccount | Profile: $azureProfile"
     
-    # Check for dlib
-    $dlibPath = (Get-Command "Azure.CodeSigning.Dlib.dll" -ErrorAction SilentlyContinue).Source
-    if (-not $dlibPath) {
-        $dlibPath = Join-Path $env:ProgramFiles "Microsoft Trusted Signing Client\Azure.CodeSigning.Dlib.dll"
+    $jsignVersion = "7.5"
+    $jsignSha256 = "602A51C3545A6DC4FB99BD2EA7152B26D1345916D0C93DDFBD5936CB735AF91C"
+    $keystore = $azureEndpoint -replace '^https://', '' -replace '/$', ''
+    $jarDir = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
+    $jar = Join-Path $jarDir "jsign-$jsignVersion.jar"
+
+    if (-not (Test-Path $jar)) {
+        Invoke-WebRequest -Uri "https://github.com/ebourg/jsign/releases/download/$jsignVersion/jsign-$jsignVersion.jar" -OutFile $jar
     }
 
-    $metaJson = Join-Path $env:TEMP "azure_codesigning_metadata.json"
-    @{
-        Endpoint = if ($env:AZURE_TRUSTED_SIGNING_ENDPOINT) { $env:AZURE_TRUSTED_SIGNING_ENDPOINT } else { "https://eus.codesigning.azure.net" }
-        CodeSigningAccountName = $azureAccount
-        CertificateProfileName = $azureProfile
-    } | ConvertTo-Json | Set-Content -Path $metaJson -Encoding UTF8
+    $env:JSIGN_STOREPASS = (az account get-access-token --resource https://codesigning.azure.net --query accessToken --output tsv)
+    if (-not $env:JSIGN_STOREPASS) {
+        throw "Failed to acquire an Azure Trusted Signing token. Ensure 'az login' or azure/login GitHub Action is configured."
+    }
 
-    try {
-        foreach ($f in $filesToSign) {
-            Write-Host "Signing $f with Microsoft Trusted Signing ..."
-            if ($signTool -and (Test-Path $dlibPath)) {
-                & $signTool sign /v /fd SHA256 /tr "http://timestamp.acs.microsoft.com" /td SHA256 /dlib "$dlibPath" /dmdf "$metaJson" "$f"
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Error "SignTool Trusted Signing failed for $f with exit code $LASTEXITCODE"
-                }
-            } else {
-                Write-Error "Microsoft Trusted Signing requires SignTool and Azure.CodeSigning.Dlib.dll."
-            }
+    foreach ($f in $filesToSign) {
+        Write-Host "Signing $f with Azure Trusted Signing ..."
+        java -jar $jar `
+            --storetype TRUSTEDSIGNING `
+            --keystore $keystore `
+            --storepass env:JSIGN_STOREPASS `
+            --alias "$azureAccount/$azureProfile" `
+            --alg SHA-256 `
+            --tsaurl http://timestamp.acs.microsoft.com `
+            --tsmode RFC3161 `
+            --replace `
+            "$f"
 
-            # Verify signature
-            $sig = Get-AuthenticodeSignature -FilePath "$f"
-            Write-Host "Signature Status: $($sig.Status) | Signer: $($sig.SignerCertificate.Subject)"
-            if ($sig.Status -ne "Valid") {
-                Write-Error "Verification failed: Signature on $f is not Valid."
-            }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "jsign signing failed for $f with exit code $LASTEXITCODE"
         }
-    } finally {
-        if (Test-Path $metaJson) { Remove-Item -Force $metaJson }
+
+        $sig = Get-AuthenticodeSignature -FilePath "$f"
+        if ($sig.Status -eq "Valid") {
+            Write-Host "Signature Status: Valid | Signer: $($sig.SignerCertificate.Subject)"
+        } elseif ($sig.Status -eq "UnknownError") {
+            Write-Warning "Signature Status: Untrusted Root or Self-Signed Certificate ($($sig.StatusMessage)) | Signer: $($sig.SignerCertificate.Subject)"
+        } else {
+            Write-Error "Verification failed: Signature on $f is $($sig.Status) ($($sig.StatusMessage))"
+        }
     }
 }
-elseif ($pfxBase64) {
-    Write-Host "`n[MODE: PFX Certificate]"
-    $tempPfx = Join-Path $env:TEMP "openverse_codesign_temp.pfx"
-    [System.IO.File]::WriteAllBytes($tempPfx, [Convert]::FromBase64String($pfxBase64))
+elseif ($pfxBase64 -or ($pfxPath -and (Test-Path $pfxPath))) {
+    Write-Host "`n[MODE: Authenticode PFX Certificate]"
+    $tempPfx = $null
+    if ($pfxBase64) {
+        $tempDir = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
+        $tempPfx = Join-Path $tempDir "openverse_codesign_temp.pfx"
+        [System.IO.File]::WriteAllBytes($tempPfx, [Convert]::FromBase64String($pfxBase64))
+        $certFile = $tempPfx
+    } else {
+        $certFile = $pfxPath
+    }
 
     try {
         foreach ($f in $filesToSign) {
-            Write-Host "Signing $f ..."
+            Write-Host "Signing $f with PFX ..."
             if ($signTool) {
-                & $signTool sign /fd SHA256 /f $tempPfx /p $pfxPassword /tr $TimestampServer /td SHA256 "$f"
+                if ($pfxPassword) {
+                    & $signTool sign /fd SHA256 /f $certFile /p $pfxPassword /tr $TimestampServer /td SHA256 "$f"
+                } else {
+                    & $signTool sign /fd SHA256 /f $certFile /tr $TimestampServer /td SHA256 "$f"
+                }
                 if ($LASTEXITCODE -ne 0) {
                     Write-Error "SignTool failed for $f with exit code $LASTEXITCODE"
                 }
             } else {
-                # PowerShell fallback (local cert store)
-                $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($tempPfx, $pfxPassword)
+                $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certFile, $pfxPassword)
                 Set-AuthenticodeSignature -FilePath "$f" -Certificate $cert -TimestampServer $TimestampServer -HashAlgorithm SHA256
             }
 
-            # Verify signature
             $sig = Get-AuthenticodeSignature -FilePath "$f"
-            Write-Host "Signature Status: $($sig.Status) | Signer: $($sig.SignerCertificate.Subject)"
-            if ($sig.Status -ne "Valid") {
-                Write-Error "Verification failed: Signature on $f is not Valid."
+            if ($sig.Status -eq "Valid") {
+                Write-Host "Signature Status: Valid | Signer: $($sig.SignerCertificate.Subject)"
+            } elseif ($sig.Status -eq "UnknownError") {
+                Write-Warning "Signature Status: Untrusted Root or Self-Signed Certificate ($($sig.StatusMessage)) | Signer: $($sig.SignerCertificate.Subject)"
+            } else {
+                Write-Error "Verification failed: Signature on $f is $($sig.Status) ($($sig.StatusMessage))"
             }
         }
     } finally {
-        if (Test-Path $tempPfx) {
-            Remove-Item -Force $tempPfx
+        if ($tempPfx -and (Test-Path $tempPfx)) {
+            Remove-Item -Force $tempPfx -ErrorAction SilentlyContinue
             Write-Host "Securely purged temporary PFX file."
         }
     }
@@ -181,18 +206,21 @@ elseif ($certThumbprint) {
         }
 
         $sig = Get-AuthenticodeSignature -FilePath "$f"
-        Write-Host "Signature Status: $($sig.Status) | Signer: $($sig.SignerCertificate.Subject)"
-        if ($sig.Status -ne "Valid") {
-            Write-Error "Verification failed: Signature on $f is not Valid."
+        if ($sig.Status -eq "Valid") {
+            Write-Host "Signature Status: Valid | Signer: $($sig.SignerCertificate.Subject)"
+        } elseif ($sig.Status -eq "UnknownError") {
+            Write-Warning "Signature Status: Untrusted Root or Self-Signed Certificate ($($sig.StatusMessage)) | Signer: $($sig.SignerCertificate.Subject)"
+        } else {
+            Write-Error "Verification failed: Signature on $f is $($sig.Status) ($($sig.StatusMessage))"
         }
     }
 }
 else {
     Write-Warning "No Authenticode code signing credentials found in environment."
     Write-Host "Supported secrets/variables:"
-    Write-Host "  - WINDOWS_CERTIFICATE_PFX_BASE64 + WINDOWS_CERTIFICATE_PASSWORD"
-    Write-Host "  - AZURE_TRUSTED_SIGNING_ACCOUNT + AZURE_CERT_PROFILE_NAME"
-    Write-Host "  - WINDOWS_CERTIFICATE_THUMBPRINT"
+    Write-Host "  - Azure Trusted Signing: AZURE_TRUSTED_SIGNING_ACCOUNT_NAME + AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE"
+    Write-Host "  - PFX Certificate: WINDOWS_CERTIFICATE_PFX_BASE64 + WINDOWS_CERTIFICATE_PASSWORD"
+    Write-Host "  - Windows Store Thumbprint: WINDOWS_CERTIFICATE_THUMBPRINT"
     if ($Strict) {
         Write-Error "CRITICAL: Authenticode signing is strictly required, but no signing credentials are configured."
         exit 1

@@ -233,7 +233,7 @@ export const DownloadCenter: React.FC = () => {
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <Info size={18} style={{ color: "var(--sky)", flexShrink: 0, marginTop: 2 }} />
                 <div style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-                  <strong style={{ color: "#ffffff" }}>Installation &amp; SmartScreen Notice:</strong> As an open-source release establishing download reputation, Microsoft Edge or Windows Defender SmartScreen may display <em>"isn't commonly downloaded"</em>. Click <strong>... &gt; Keep &gt; Keep anyway</strong> (or in Windows: <strong>More info &gt; Run anyway</strong>).
+                  <strong style={{ color: "#ffffff" }}>Installation &amp; SmartScreen Notice:</strong> As an open-source release establishing download reputation, Microsoft Edge or Windows Defender SmartScreen displays <em>"isn't commonly downloaded"</em> until community download reputation builds or an Extended Validation (EV) certificate is attached. Verify the authentic SHA-256 hash below before running.
                 </div>
               </div>
               <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", wordBreak: "break-all", background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 6 }}>

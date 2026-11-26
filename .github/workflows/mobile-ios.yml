@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'open-verse/mobile/**'
-      - 'open-verse/desktop/apps/examples/desktop-app/webview/**'
+      - 'openverse/mobile/**'
+      - 'openverse/desktop/apps/examples/desktop-app/webview/**'
       - '.github/workflows/mobile-ios.yml'
   workflow_dispatch:
 
@@ -29,11 +29,11 @@ jobs:
 
       - name: Sync Canonical Webview Assets
         run: |
-          mkdir -p open-verse/mobile/ios/OPEN-VERSE/www
-          if [ -d "open-verse/desktop/apps/examples/desktop-app/webview/out" ]; then
-            cp -r open-verse/desktop/apps/examples/desktop-app/webview/out/* open-verse/mobile/ios/OPEN-VERSE/www/
-          elif [ -d "open-verse/mobile/android/app/src/main/assets" ]; then
-            cp -r open-verse/mobile/android/app/src/main/assets/* open-verse/mobile/ios/OPEN-VERSE/www/
+          mkdir -p openverse/mobile/ios/OPEN-VERSE/www
+          if [ -d "openverse/desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r openverse/desktop/apps/examples/desktop-app/webview/out/* openverse/mobile/ios/OPEN-VERSE/www/
+          elif [ -d "openverse/mobile/android/app/src/main/assets" ]; then
+            cp -r openverse/mobile/android/app/src/main/assets/* openverse/mobile/ios/OPEN-VERSE/www/
           fi
 
       - name: Select Xcode Version
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build iOS Application for Simulator
         run: |
-          cd open-verse/mobile/ios
+          cd openverse/mobile/ios
           xcodebuild \
             -project OPEN-VERSE.xcodeproj \
             -scheme OPEN-VERSE \
@@ -56,7 +56,7 @@ jobs:
 
       - name: Archive iOS Application for Device / TestFlight
         run: |
-          cd open-verse/mobile/ios
+          cd openverse/mobile/ios
           xcodebuild \
             -project OPEN-VERSE.xcodeproj \
             -scheme OPEN-VERSE \
@@ -70,26 +70,26 @@ jobs:
 
       - name: Package iOS Deliverables
         run: |
-          mkdir -p open-verse/mobile/artifacts
+          mkdir -p openverse/mobile/artifacts
           # 1. Package Simulator App
           BUILD_APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "OPEN-VERSE.app" -type d | head -n 1)
           if [ -z "$BUILD_APP_PATH" ]; then
-            BUILD_APP_PATH=$(find open-verse/mobile/ios/build -name "OPEN-VERSE.app" -type d | head -n 1)
+            BUILD_APP_PATH=$(find openverse/mobile/ios/build -name "OPEN-VERSE.app" -type d | head -n 1)
           fi
           if [ -n "$BUILD_APP_PATH" ]; then
             cd "$(dirname "$BUILD_APP_PATH")"
             zip -r open-verse-ios-simulator.zip OPEN-VERSE.app
-            mv open-verse-ios-simulator.zip "$GITHUB_WORKSPACE/open-verse/mobile/artifacts/"
+            mv open-verse-ios-simulator.zip "$GITHUB_WORKSPACE/openverse/mobile/artifacts/"
           fi
 
           # 2. Package Device xcarchive if generated
-          if [ -d "$GITHUB_WORKSPACE/open-verse/mobile/ios/build/OPEN-VERSE.xcarchive" ]; then
-            cd "$GITHUB_WORKSPACE/open-verse/mobile/ios/build"
+          if [ -d "$GITHUB_WORKSPACE/openverse/mobile/ios/build/OPEN-VERSE.xcarchive" ]; then
+            cd "$GITHUB_WORKSPACE/openverse/mobile/ios/build"
             zip -r open-verse-ios-archive.zip OPEN-VERSE.xcarchive
-            mv open-verse-ios-archive.zip "$GITHUB_WORKSPACE/open-verse/mobile/artifacts/"
+            mv open-verse-ios-archive.zip "$GITHUB_WORKSPACE/openverse/mobile/artifacts/"
           fi
 
-          cd "$GITHUB_WORKSPACE/open-verse/mobile/artifacts"
+          cd "$GITHUB_WORKSPACE/openverse/mobile/artifacts"
           find . -name "*.zip" -exec sha256sum {} + > open-verse-ios.sha256
           cat open-verse-ios.sha256
 
@@ -97,12 +97,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-ios-simulator
-          path: open-verse/mobile/artifacts/open-verse-ios-simulator.zip
+          path: openverse/mobile/artifacts/open-verse-ios-simulator.zip
           if-no-files-found: ignore
 
       - name: Upload iOS Device Archive Artifact
         uses: actions/upload-artifact@v4
         with:
           name: open-verse-ios-archive
-          path: open-verse/mobile/artifacts/open-verse-ios-archive.zip
+          path: openverse/mobile/artifacts/open-verse-ios-archive.zip
           if-no-files-found: ignore

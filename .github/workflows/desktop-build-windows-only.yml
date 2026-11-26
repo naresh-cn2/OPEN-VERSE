@@ -18,7 +18,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: open-verse/desktop
+    working-directory: openverse/desktop
 
 jobs:
   build-windows-test:
@@ -51,15 +51,15 @@ jobs:
 
       - name: Build desktop runtime and web frontend
         run: bun run build
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
 
       - name: Build Windows NSIS installer (unsigned test build)
         run: bunx tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --config src-tauri/tauri.test.conf.json
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
 
       - name: Verify installer exists
         shell: pwsh
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         run: |
           $setup = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $setup) {
@@ -74,5 +74,5 @@ jobs:
         with:
           name: open-verse-windows-installer
           retention-days: 30
-          path: open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+          path: openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
           if-no-files-found: error

@@ -18,7 +18,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: open-verse/desktop
+    working-directory: openverse/desktop
 
 jobs:
   build-macos:
@@ -49,11 +49,11 @@ jobs:
 
       - name: Build desktop runtime and static web frontend
         run: bun run build
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
 
       - name: Import Apple Developer ID Certificate (if configured)
         id: import_cert
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -78,14 +78,14 @@ jobs:
           fi
 
       - name: Build macOS DMG Bundle
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
         run: |
           bunx tauri build --bundles dmg
 
       - name: Notarize DMG with Apple (if configured)
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Verify DMG Artifacts Exist & Calculate Checksums
         id: artifacts
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         run: |
           ls -la src-tauri/target/release/bundle/dmg/
           DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -n 1)
@@ -122,5 +122,5 @@ jobs:
         with:
           tag_name: v${{ github.event.inputs.version }}
           files: |
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg.sha256
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/dmg/*.dmg.sha256

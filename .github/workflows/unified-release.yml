@@ -57,12 +57,12 @@ jobs:
 
       - name: Run Quality Gate & Regression Tests
         run: |
-          cd open-verse/desktop/apps/examples/desktop-app
+          cd openverse/desktop/apps/examples/desktop-app
           bun install
           bunx vitest run webview/lib/open-verse-updater.test.ts webview/lib/open-verse-auth.test.ts --config vitest.config.ts
           cd "$GITHUB_WORKSPACE"
-          bun open-verse/tests/e2e-cross-device-updater-repair.ts
-          bun open-verse/tests/e2e-resilience-and-recovery.ts
+          bun openverse/tests/e2e-cross-device-updater-repair.ts
+          bun openverse/tests/e2e-resilience-and-recovery.ts
 
   build-android:
     name: 2. Build Android APK & AAB
@@ -85,9 +85,9 @@ jobs:
 
       - name: Ensure Canonical Assets Synced
         run: |
-          mkdir -p open-verse/mobile/android/app/src/main/assets
-          if [ -d "open-verse/desktop/apps/examples/desktop-app/webview/out" ]; then
-            cp -r open-verse/desktop/apps/examples/desktop-app/webview/out/* open-verse/mobile/android/app/src/main/assets/
+          mkdir -p openverse/mobile/android/app/src/main/assets
+          if [ -d "openverse/desktop/apps/examples/desktop-app/webview/out" ]; then
+            cp -r openverse/desktop/apps/examples/desktop-app/webview/out/* openverse/mobile/android/app/src/main/assets/
           fi
 
       - name: Setup Android Keystore from Secret (if configured)
@@ -95,9 +95,9 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > open-verse/mobile/android/app/release.keystore
+            echo "$KEYSTORE_BASE64" | base64 -d > openverse/mobile/android/app/release.keystore
             echo "Keystore decoded from repository secret."
-          elif [ -f "open-verse/mobile/android/app/release.keystore" ]; then
+          elif [ -f "openverse/mobile/android/app/release.keystore" ]; then
             echo "Using existing workspace keystore."
           fi
 
@@ -107,14 +107,14 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'openverse' }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || 'openverse_mobile' }}
         run: |
-          cd open-verse/mobile/android
+          cd openverse/mobile/android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
       - name: Prepare Deliverables & Checksums
         run: |
           mkdir -p dist/android
-          APK="open-verse/mobile/android/app/build/outputs/apk/release/app-release.apk"
+          APK="openverse/mobile/android/app/build/outputs/apk/release/app-release.apk"
           cp "$APK" "dist/android/open-verse-${{ needs.validate.outputs.tag }}-android.apk"
           cp "$APK" "dist/android/open-verse-mobile.apk"
           cd dist/android
@@ -145,7 +145,7 @@ jobs:
 
       - name: Build Windows Desktop & Updater Artifacts
         shell: pwsh
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -157,16 +157,19 @@ jobs:
 
       - name: Sign Windows Executables with Authenticode (if configured)
         shell: pwsh
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_DESKTOP }}
         run: |
           ./scripts/sign-windows-authenticode.ps1
 
       - name: Generate latest.json Update Manifest
         shell: pwsh
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         run: |
           $ver = "${{ needs.validate.outputs.version }}"
           $tag = "${{ needs.validate.outputs.tag }}"
@@ -177,10 +180,10 @@ jobs:
         with:
           name: windows-release-artifacts
           path: |
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.sig
-            open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*-setup.exe
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.nsis.zip
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/*.sig
+            openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/nsis/latest.json
           if-no-files-found: error
 
   build-linux:
@@ -210,7 +213,7 @@ jobs:
           bun-version: latest
 
       - name: Build Linux Desktop Packages
-        working-directory: open-verse/desktop/apps/examples/desktop-app
+        working-directory: openverse/desktop/apps/examples/desktop-app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -225,9 +228,9 @@ jobs:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
         run: |
           mkdir -p dist/linux
-          cp open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/deb/*.deb dist/linux/ || true
-          cp open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/rpm/*.rpm dist/linux/ || true
-          cp open-verse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/appimage/*.AppImage dist/linux/ || true
+          cp openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/deb/*.deb dist/linux/ || true
+          cp openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/rpm/*.rpm dist/linux/ || true
+          cp openverse/desktop/apps/examples/desktop-app/src-tauri/target/release/bundle/appimage/*.AppImage dist/linux/ || true
           chmod +x scripts/sign-linux-packages.sh
           ./scripts/sign-linux-packages.sh dist/linux
 
@@ -294,8 +297,8 @@ jobs:
             SIG=$(jq -r '.platforms["windows-x86_64"].signature // empty' release-deliverables/windows/latest.json)
           fi
           
-          # Extract dynamic versionCode from open-verse/mobile/android/app/build.gradle
-          VCODE=$(grep -oP 'versionCode\s+\K[0-9]+' open-verse/mobile/android/app/build.gradle || echo "7")
+          # Extract dynamic versionCode from openverse/mobile/android/app/build.gradle
+          VCODE=$(grep -oP 'versionCode\s+\K[0-9]+' openverse/mobile/android/app/build.gradle || echo "7")
           
           mkdir -p release-deliverables/manifests
           cat <<EOF > release-deliverables/manifests/open-verse-releases.json
