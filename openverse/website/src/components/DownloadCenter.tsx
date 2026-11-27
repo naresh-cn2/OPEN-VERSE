@@ -413,13 +413,13 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download OPEN-VERSE for Linux (x86_64)</span>
                 </a>
                 <a
-                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-linux-arm64.deb`}
-                  download="OPEN-VERSE-3.0.0-linux-arm64.deb"
+                  href="/api/download/linux-rpm"
+                  download="OPEN-VERSE-3.0.0-linux.rpm"
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >
                   <Download size={17} />
-                  <span>Download OPEN-VERSE for Linux (ARM64)</span>
+                  <span>Download OPEN-VERSE for Linux (RPM)</span>
                 </a>
               </div>
             </div>

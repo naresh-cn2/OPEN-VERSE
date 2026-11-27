@@ -33,12 +33,12 @@
     },
     {
       "source": "/api/download/mac",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE_0.2.0_aarch64.dmg",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v3.0.0/OPEN-VERSE_3.0.0_aarch64.dmg",
       "permanent": false
     },
     {
       "source": "/api/download/linux-deb",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/desktop-latest/OPEN-VERSE_0.2.0_amd64.deb",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v3.0.0/OPEN-VERSE_3.0.0_amd64.deb",
       "permanent": false
     },
     {
