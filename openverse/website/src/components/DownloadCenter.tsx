@@ -41,14 +41,18 @@ export const DownloadCenter: React.FC = () => {
   const DESKTOP_VERSION = "3.0.0";
   const MOBILE_VERSION = "3.0.0";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
-  const RELEASE_TAG = "hermes-agent";
+  const RELEASE_TAG = "v3.0.0";
 
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-windows-setup.exe`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-macos.dmg`,
-    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-linux-amd64.deb`,
-    android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${MOBILE_VERSION}.apk`,
-    sourceZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-source.zip`,
+    windows: `/api/download/windows`,
+    windowsDirect: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-windows-setup.exe`,
+    windowsZip: `/api/download/windows-zip`,
+    mac: `/api/download/mac`,
+    linux: `/api/download/linux-deb`,
+    android: `/open-verse-mobile.apk`,
+    androidRelease: `/api/download/android-apk`,
+    androidZip: `/api/download/android-zip`,
+    sourceZip: `https://github.com/${GITHUB_RELEASES_ORG}/archive/refs/tags/v3.0.0.zip`,
   };
 
   const FILE_META = {
@@ -207,13 +211,13 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download OPEN-VERSE for Windows (NSIS)</span>
                 </a>
                 <a
-                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-windows.msi`}
-                  download="OPEN-VERSE-3.0.0-windows.msi"
+                  href={ASSETS.windowsZip}
+                  download="OPEN-VERSE-3.0.0-windows.zip"
                   className="btn-secondary"
                   style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
                 >
                   <Download size={17} />
-                  <span>Download OPEN-VERSE for Windows (MSI)</span>
+                  <span>Download OPEN-VERSE for Windows (ZIP)</span>
                 </a>
               </div>
             </div>
@@ -514,7 +518,16 @@ export const DownloadCenter: React.FC = () => {
                   style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8 }}
                 >
                   <Download size={18} />
-                  <span>Download OPEN-VERSE for Android</span>
+                  <span>Download OPEN-VERSE for Android (APK)</span>
+                </a>
+                <a
+                  href={ASSETS.androidZip}
+                  download="OPEN-VERSE-3.0.0-android.zip"
+                  className="btn-secondary"
+                  style={{ padding: "12px 26px", fontSize: "0.95rem", gap: 8, marginTop: 8 }}
+                >
+                  <Download size={18} />
+                  <span>Download Android Package (ZIP)</span>
                 </a>
               </div>
             </div>
