@@ -57,3 +57,4 @@ jobs:
           [ -f "OPEN-VERSE_3.0.0_amd64.deb" ] && ASSETS+=(OPEN-VERSE_3.0.0_amd64.deb OPEN-VERSE-3.0.0-linux-amd64.deb)
 
           gh release upload v3.0.0 "${ASSETS[@]}" --clobber --repo naresh-cn2/OPEN-VERSE
+          gh release upload v3.0 "${ASSETS[@]}" --clobber --repo naresh-cn2/OPEN-VERSE
