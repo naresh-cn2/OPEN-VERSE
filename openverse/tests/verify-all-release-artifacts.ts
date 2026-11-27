@@ -23,7 +23,7 @@ if (!token) {
 
 const MANIFEST_PATH = resolve(__dirname, "../website/public/open-verse-releases.json");
 const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
-const VERSION = manifest.version || "0.2.8";
+const VERSION = manifest.version || "3.0.0";
 
 interface ArtifactTest {
   id: string;

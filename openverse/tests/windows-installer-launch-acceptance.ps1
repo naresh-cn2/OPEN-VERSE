@@ -17,7 +17,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 $manifestPath = Join-Path $PSScriptRoot "../website/public/open-verse-releases.json"
-$targetVer = "0.2.8"
+$targetVer = "3.0.0"
 if (Test-Path $manifestPath) {
     try {
         $manifestObj = Get-Content $manifestPath -Raw | ConvertFrom-Json

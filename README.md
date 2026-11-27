@@ -61,19 +61,19 @@ OPEN-VERSE/
 - **Autonomous Local Engine**: High-performance local runtime managing session execution, persistent context, tool sandboxing, and inter-process communication.
 - **In-App Automatic Updates**: Cryptographically verified background updates using Minisign for desktop and native `PackageInstaller` on Android.
 - **Privacy-First Isolation**: Independent workspace state and session data persisted in `~/.openverse` with strict sandboxing.
-- **Unified Release Pipeline**: Synchronized release coordination ensuring consistent versioning (`v0.2.8`) across all endpoints.
+- **Unified Release Pipeline**: Synchronized release coordination ensuring consistent versioning (`v3.0.0`) across all endpoints.
 
 ---
 
-## Supported Platforms (v0.2.8)
+## Supported Platforms (v3.0.0)
 
 | Platform | Distribution Channel | Installer / Package | Auto-Update Mechanism |
 | :--- | :--- | :--- | :--- |
-| **Windows** | Direct Download | `OPEN-VERSE_0.2.8_x64-setup.exe` | Tauri v2 Minisign Signed Feed |
-| **Windows (Portable)**| Standalone ZIP | `OPEN-VERSE_0.2.8_x64-windows.zip` | Manual / In-App Updater |
+| **Windows** | Direct Download | `OPEN-VERSE_3.0.0_x64-setup.exe` | Tauri v2 Minisign Signed Feed |
+| **Windows (Portable)**| Standalone ZIP | `OPEN-VERSE_3.0.0_x64-windows.zip` | Manual / In-App Updater |
 | **Android** | Website / Direct APK | `open-verse-mobile.apk` | Native `PackageInstaller` Intent Bridge |
-| **Linux (Deb)** | Direct Download | `OPEN-VERSE_0.2.8_amd64.deb` | Tauri In-App Updater |
-| **macOS** | Direct Download | `OPEN-VERSE_0.2.8_universal.dmg` | Tauri In-App Updater |
+| **Linux (Deb)** | Direct Download | `OPEN-VERSE_3.0.0_amd64.deb` | Tauri In-App Updater |
+| **macOS** | Direct Download | `OPEN-VERSE_3.0.0_universal.dmg` | Tauri In-App Updater |
 | **Web** | Cloud Portal | [open-verse-website.vercel.app](https://open-verse-website.vercel.app) | Continuous Deployment (Vercel) |
 | **iOS** | Preview | TestFlight | Apple TestFlight Distribution |
 

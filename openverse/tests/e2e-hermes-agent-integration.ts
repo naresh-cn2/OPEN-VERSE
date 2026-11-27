@@ -121,7 +121,7 @@ async function runHermesIntegrationSuite() {
 		deviceName: "Naresh's Windows Laptop",
 		platform: "windows",
 		capabilities: ["file_operations", "local_terminal", "desktop_automation"],
-		appVersion: "0.2.8",
+		appVersion: "3.0.0",
 	});
 
 	const droidPhone = registerDevice(GOOGLE_USER, {
@@ -129,7 +129,7 @@ async function runHermesIntegrationSuite() {
 		deviceName: "Naresh's Android Phone",
 		platform: "android",
 		capabilities: ["open_browser_url", "share_content"],
-		appVersion: "0.2.8",
+		appVersion: "3.0.0",
 	});
 
 	assert(

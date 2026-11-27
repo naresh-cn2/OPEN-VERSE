@@ -1,11 +1,11 @@
 {
-  "version": "v0.2.8",
-  "notes": "OPEN-VERSE v0.2.8 release with streamlined Google-only authentication, pre-login updater, and complete brand unification.",
+  "version": "v3.0.0",
+  "notes": "OPEN-VERSE v3.0.0 release with streamlined Google-only authentication, pre-login updater, and complete brand unification.",
   "pub_date": "2026-11-20T04:00:00.000Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVURDA2eUVwZFJiVFJYLzJESEVnelR3SEY4eW1yamFscnhmT1dyY1JhVUtJMnRvaUFWa3lIRHk5bHVhSXhJTCtRRTM4VlpaR0hybVJ4bEFBSUEvUWgxbmRsZW9KNWd1UHdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MTA5NDIwCWZpbGU6T1BFTi1WRVJTRV8wLjIuOF94NjQtc2V0dXAuZXhlCXZlcnNpb246MC4yLjgKMU80K042WGxPMWE4SmgyZ1RnTFJ2d0FBZW1MUXZBOVNYQmkvaVdMYjdLMWFsWWt3ZTdEWjVOdkZ1RFRnZmpOS3pHNmphczRaUlh4bGYzeVJwNVU2QlE9PQo=",
-      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/OPEN-VERSE_0.2.8_x64-setup.exe"
+      "url": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v3.0.0/OPEN-VERSE_3.0.0_x64-setup.exe"
     }
   }
 }

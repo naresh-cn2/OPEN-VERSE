@@ -38,32 +38,32 @@ export const DownloadCenter: React.FC = () => {
     else if (ua.includes("android")) setDetectedOS("android");
   }, []);
 
-  const DESKTOP_VERSION = "0.2.8";
-  const MOBILE_VERSION = "0.2.8";
+  const DESKTOP_VERSION = "3.0.0";
+  const MOBILE_VERSION = "3.0.0";
   const GITHUB_RELEASES_ORG = "naresh-cn2/OPEN-VERSE";
   const RELEASE_TAG = "hermes-agent";
 
   const ASSETS = {
-    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows-setup.exe`,
-    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-macos.dmg`,
-    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-linux-amd64.deb`,
+    windows: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-windows-setup.exe`,
+    mac: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-macos.dmg`,
+    linux: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-linux-amd64.deb`,
     android: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-${MOBILE_VERSION}.apk`,
-    sourceZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-source.zip`,
+    sourceZip: `https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-source.zip`,
   };
 
   const FILE_META = {
     windows: {
-      name: `OPEN-VERSE-0.2.8-windows-setup.exe`,
+      name: `OPEN-VERSE-3.0.0-windows-setup.exe`,
       size: "~134 MB",
       typeLabel: "Installer (.exe)",
     },
     mac: {
-      name: `OPEN-VERSE-0.2.8-macos.dmg`,
+      name: `OPEN-VERSE-3.0.0-macos.dmg`,
       size: "~224 MB",
       typeLabel: "Disk Image (.dmg)",
     },
     linux: {
-      name: `OPEN-VERSE-0.2.8-linux-amd64.deb`,
+      name: `OPEN-VERSE-3.0.0-linux-amd64.deb`,
       size: "~193 MB",
       typeLabel: "Package (.deb)",
     },
@@ -73,7 +73,7 @@ export const DownloadCenter: React.FC = () => {
       typeLabel: "APK (.apk)",
     },
     sourceZip: {
-      name: `OPEN-VERSE-0.2.8-source.zip`,
+      name: `OPEN-VERSE-3.0.0-source.zip`,
       size: "~85 MB",
       typeLabel: "Source Code (.zip)",
     },
@@ -207,8 +207,8 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download OPEN-VERSE for Windows (NSIS)</span>
                 </a>
                 <a
-                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-windows.msi`}
-                  download="OPEN-VERSE-0.2.8-windows.msi"
+                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-windows.msi`}
+                  download="OPEN-VERSE-3.0.0-windows.msi"
                   className="btn-secondary"
                   style={{ padding: "12px 20px", fontSize: "0.95rem", justifyContent: "center", width: "100%" }}
                 >
@@ -409,8 +409,8 @@ export const DownloadCenter: React.FC = () => {
                   <span>Download OPEN-VERSE for Linux (x86_64)</span>
                 </a>
                 <a
-                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-0.2.8-linux-arm64.deb`}
-                  download="OPEN-VERSE-0.2.8-linux-arm64.deb"
+                  href={`https://github.com/${GITHUB_RELEASES_ORG}/releases/download/${RELEASE_TAG}/OPEN-VERSE-3.0.0-linux-arm64.deb`}
+                  download="OPEN-VERSE-3.0.0-linux-arm64.deb"
                   className="btn-secondary"
                   style={{ padding: "12px 22px", fontSize: "0.92rem", gap: 8 }}
                 >

@@ -6,7 +6,7 @@ export const ReleasesSection: React.FC = () => {
 
   const releases = [
     {
-      version: "v0.2.8",
+      version: "v3.0.0",
       date: "November 2026",
       tag: "Current Stable Release",
       badgeClass: "badge-green",

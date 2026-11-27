@@ -98,7 +98,7 @@ export const Navbar: React.FC = () => {
             }}
           >
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
-            v0.2.8
+            v3.0.0
           </a>
         </div>
 

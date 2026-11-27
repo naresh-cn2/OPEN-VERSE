@@ -38,7 +38,7 @@ export function MobileHeader({
 }: MobileHeaderProps) {
   const appVersion = typeof window !== "undefined" && (window as any).AndroidInterface?.getAppVersion 
     ? (window as any).AndroidInterface.getAppVersion() 
-    : "0.2.8";
+    : "3.0.0";
   const initial = user?.displayName?.charAt(0).toUpperCase() || (user?.isOfflineMode ? "L" : "O");
 
   return (
