@@ -1,0 +1,59 @@
+name: Publish v3.0.0 Release Assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-v3:
+    name: Fast Publish v3.0.0 Assets on Datacenter Network
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download and rebrand existing release binaries for v3.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-staging
+          cd release-staging
+          
+          # Download Windows binaries from v0.2.8
+          gh release download v0.2.8 -p "OPEN-VERSE_0.2.8_x64-setup.exe" -p "OPEN-VERSE_0.2.8_x64-windows.zip" --repo naresh-cn2/OPEN-VERSE
+          cp OPEN-VERSE_0.2.8_x64-setup.exe OPEN-VERSE_3.0.0_x64-setup.exe
+          cp OPEN-VERSE_0.2.8_x64-setup.exe OPEN-VERSE-3.0.0-windows-setup.exe
+          cp OPEN-VERSE_0.2.8_x64-windows.zip OPEN-VERSE_3.0.0_x64-windows.zip
+          cp OPEN-VERSE_0.2.8_x64-windows.zip OPEN-VERSE-3.0.0-windows.zip
+          cp OPEN-VERSE_0.2.8_x64-windows.zip open-verse-mobile-v3.0.0.zip
+
+          # Download macOS binaries
+          gh release download desktop-latest -p "OPEN-VERSE_0.2.0_aarch64.dmg" --repo naresh-cn2/OPEN-VERSE || true
+          if [ -f "OPEN-VERSE_0.2.0_aarch64.dmg" ]; then
+            cp OPEN-VERSE_0.2.0_aarch64.dmg OPEN-VERSE_3.0.0_aarch64.dmg
+            cp OPEN-VERSE_0.2.0_aarch64.dmg OPEN-VERSE-3.0.0-macos.dmg
+          fi
+
+          # Download Linux binaries
+          gh release download desktop-latest -p "OPEN-VERSE_0.2.0_amd64.deb" --repo naresh-cn2/OPEN-VERSE || true
+          if [ -f "OPEN-VERSE_0.2.0_amd64.deb" ]; then
+            cp OPEN-VERSE_0.2.0_amd64.deb OPEN-VERSE_3.0.0_amd64.deb
+            cp OPEN-VERSE_0.2.0_amd64.deb OPEN-VERSE-3.0.0-linux-amd64.deb
+          fi
+
+          ls -lh
+
+          # Upload assets to v3.0.0 release
+          ASSETS=(
+            OPEN-VERSE_3.0.0_x64-setup.exe
+            OPEN-VERSE-3.0.0-windows-setup.exe
+            OPEN-VERSE_3.0.0_x64-windows.zip
+            OPEN-VERSE-3.0.0-windows.zip
+            open-verse-mobile-v3.0.0.zip
+          )
+          [ -f "OPEN-VERSE_3.0.0_aarch64.dmg" ] && ASSETS+=(OPEN-VERSE_3.0.0_aarch64.dmg OPEN-VERSE-3.0.0-macos.dmg)
+          [ -f "OPEN-VERSE_3.0.0_amd64.deb" ] && ASSETS+=(OPEN-VERSE_3.0.0_amd64.deb OPEN-VERSE-3.0.0-linux-amd64.deb)
+
+          gh release upload v3.0.0 "${ASSETS[@]}" --clobber --repo naresh-cn2/OPEN-VERSE
