@@ -1,9 +1,9 @@
 {
   "version": "0.2.8",
-  "releaseDate": "2026-11-20T04:00:00Z",
+  "releaseDate": "2026-11-27T12:00:00Z",
   "channel": "stable",
   "mandatory": false,
-  "releaseNotes": "• Pure Google Sign-In: Direct authentication with official Google Account Chooser on the application opening screen, eliminating guest bypass\n• Pre-Login In-App Updates: Integrated one-click update checking and automatic background delivery directly from the opening screen\n• Complete Brand Unification: Fully white-labeled desktop user interface, connectors, schedules, settings, and notifications to OPEN-VERSE\n• Verified Cross-Platform Release: Published verified v0.2.8 NSIS setup installer, portable ZIP, Android APK, and Minisign signatures",
+  "releaseNotes": "• Complete Hermes Agent AI Core: Canonical v0.21.5 engine with Nous Hermes 3 models (8B, 70B, Hermes 2 Pro, DeepSeek R1)\n• Purged Cline: Completely eliminated Cline usage-billing, billing redirects, and Cline provider references\n• Full Dashboard UI: Complete Hermes Agent interface (Chat, Sessions, Files, Models, Logs, Cron, Skills, Plugins, MCP, Channels, Webhooks)\n• Universal Google Sign-In: Cross-device device mesh and remote task dispatch between Android phone and Windows desktop\n• Verified Cross-Platform Release: Native NSIS Windows setup installer, Android APK, and release manifests",
   "platforms": {
     "windows-x86_64": {
       "version": "0.2.8",

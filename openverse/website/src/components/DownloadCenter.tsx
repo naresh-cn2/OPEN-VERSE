@@ -86,7 +86,7 @@ export const DownloadCenter: React.FC = () => {
           <div className="badge badge-purple">Official Native Release Portal</div>
           <h2 className="section-title">Download & Install OPEN-VERSE</h2>
           <p className="section-subtitle">
-            Official native builds for Windows, macOS, and Linux. Open Verse full source running from your Open Verse repository.
+            Official native builds for Windows, macOS, and Linux. Hermes Agent full source running under OPEN-VERSE.
           </p>
         </div>
 
