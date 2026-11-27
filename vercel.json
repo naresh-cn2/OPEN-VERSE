@@ -23,12 +23,12 @@
     },
     {
       "source": "/api/download/android-apk",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-v0.2.7-android.apk",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/open-verse-v0.2.8-android.apk",
       "permanent": false
     },
     {
       "source": "/api/download/android-zip",
-      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.7/open-verse-mobile-v0.2.7.zip",
+      "destination": "https://github.com/naresh-cn2/OPEN-VERSE/releases/download/v0.2.8/open-verse-mobile-v0.2.8.zip",
       "permanent": false
     },
     {
