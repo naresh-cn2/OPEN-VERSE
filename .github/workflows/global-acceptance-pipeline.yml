@@ -65,9 +65,11 @@ jobs:
 
       - name: Verify Digital Asset Links & Apple App Site Association
         run: |
-          python3 -c "import json; json.load(open('website/public/.well-known/apple-app-site-association'))"
-          python3 -c "import json; json.load(open('website/public/.well-known/assetlinks.json'))"
-          python3 -c "import json; json.load(open('website/public/manifest.webmanifest'))"
+          SITE_DIR="openverse/website/public"
+          [ ! -d "$SITE_DIR" ] && SITE_DIR="website/public"
+          python3 -c "import json; json.load(open('$SITE_DIR/.well-known/apple-app-site-association'))"
+          python3 -c "import json; json.load(open('$SITE_DIR/.well-known/assetlinks.json'))"
+          python3 -c "import json; json.load(open('$SITE_DIR/manifest.webmanifest'))"
 
   verify-windows-packaging-scripts:
     name: Windows Signing & Packaging Script Integrity

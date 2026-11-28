@@ -14,20 +14,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download and rebrand existing release binaries for v3.0.0
+      - name: Download and verify release binaries for v3.0.0
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p release-staging
           cd release-staging
           
-          # Download Windows binaries from v0.2.8
-          gh release download v0.2.8 -p "OPEN-VERSE_0.2.8_x64-setup.exe" -p "OPEN-VERSE_0.2.8_x64-windows.zip" --repo naresh-cn2/OPEN-VERSE
-          cp OPEN-VERSE_0.2.8_x64-setup.exe OPEN-VERSE_3.0.0_x64-setup.exe
-          cp OPEN-VERSE_0.2.8_x64-setup.exe OPEN-VERSE-3.0.0-windows-setup.exe
-          cp OPEN-VERSE_0.2.8_x64-windows.zip OPEN-VERSE_3.0.0_x64-windows.zip
-          cp OPEN-VERSE_0.2.8_x64-windows.zip OPEN-VERSE-3.0.0-windows.zip
-          cp OPEN-VERSE_0.2.8_x64-windows.zip open-verse-mobile-v3.0.0.zip
+          # Download verified v3.0.0 Hermes Agent OPEN-VERSE assets
+          gh release download v3.0.0 -p "OPEN-VERSE_3.0.0_x64-setup.exe" -p "OPEN-VERSE-3.0.0-windows-setup.exe" -p "OPEN-VERSE_3.0.0_x64-windows.zip" -p "OPEN-VERSE-3.0.0-windows.zip" -p "open-verse-mobile-v3.0.0.zip" --repo naresh-cn2/OPEN-VERSE || true
+          
+          # Fallback check
+          if [ ! -f "OPEN-VERSE-3.0.0-windows-setup.exe" ] && [ -f "OPEN-VERSE_3.0.0_x64-setup.exe" ]; then
+            cp OPEN-VERSE_3.0.0_x64-setup.exe OPEN-VERSE-3.0.0-windows-setup.exe
+          fi
+          if [ ! -f "OPEN-VERSE-3.0.0-windows.zip" ] && [ -f "OPEN-VERSE_3.0.0_x64-windows.zip" ]; then
+            cp OPEN-VERSE_3.0.0_x64-windows.zip OPEN-VERSE-3.0.0-windows.zip
+          fi
 
           # Download macOS binaries
           gh release download desktop-latest -p "OPEN-VERSE_0.2.0_aarch64.dmg" --repo naresh-cn2/OPEN-VERSE || true

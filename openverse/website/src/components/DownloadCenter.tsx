@@ -241,7 +241,7 @@ export const DownloadCenter: React.FC = () => {
                 </div>
               </div>
               <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", wordBreak: "break-all", background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 6 }}>
-                SHA-256: cf3950de41fd3d5a3f6ff19dd412209a294c6fe3658249eab70c04de89fa4934
+                SHA-256: f50bc79ac9839af45831baa25accf814f10042101bc8852ff6c0db5fea46f75f
               </div>
             </div>
 

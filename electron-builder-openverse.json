@@ -1,0 +1,29 @@
+{
+  "electronVersion": "44.10.2",
+  "appId": "com.openverse.desktop",
+  "productName": "OPEN-VERSE",
+  "publish": null,
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64"]
+      }
+    ],
+    "executableName": "OPEN-VERSE"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "artifactName": "OPEN-VERSE_3.0.0_x64-setup.exe",
+    "uninstallDisplayName": "OPEN-VERSE 3.0.0"
+  },
+  "directories": {
+    "output": "../dist-release"
+  }
+}
